@@ -1,0 +1,110 @@
+#!/bin/sh
+#
+# GMT script for plotting mean velocities
+#
+ 
+### Size of PS pixels on plot
+PLOTSIZE=0.1
+### Color bar tick interval in mm
+TICK_INTERVAL=5
+### Scale bar length in km
+SCALEBAR_LENGTH=20
+
+### Optionally restrict longitude and latitude to be smaller than DEM 
+#PLOTLON1=
+#PLOTLON2=
+#PLOTLAT1=
+#PLOTLAT2=
+
+### Optionally change min/max color spectrum
+#ZMIN=
+#ZMAX=
+
+PS_OUT=mean_v.eps
+
+
+gmtset DEGREE_FORMAT 5  FRAME_WIDTH  0.05 FRAME_PEN 4 BASEMAP_TYPE PLAIN \
+BASEMAP_TYPE fancy \
+DOTS_PR_INCH 300 TICK_LENGTH -0.10 GRID_CROSS_SIZE 0.0 \
+UNIX_TIME TRUE WANT_EURO_FONT TRUE ANOT_FONT_SIZE 14 ANOT_FONT Helvetica LABEL_FONT_SIZE 16 \
+ANOT_OFFSET 0.1 FRAME_PEN 1 MEASURE_UNIT cm \
+PAPER_MEDIA A4+
+
+
+if [ -e dem.dorisin ]; then
+   DEMINFILE="dem.dorisin"
+else
+   DEMINFILE="../dem.dorisin"
+fi
+DEMNAME=`grep CRD_IN_DEM $DEMINFILE | gawk '{if ($1=="CRD_IN_DEM") print $2}'`
+NROWS=`grep CRD_IN_SIZE $DEMINFILE | gawk '{if ($1=="CRD_IN_SIZE") print $2}'`
+NCOLS=`grep CRD_IN_SIZE $DEMINFILE | gawk '{if ($1=="CRD_IN_SIZE") print $3}'`
+LATMAX=`grep CRD_IN_UL $DEMINFILE | gawk '{if ($1=="CRD_IN_UL") print $2}'`
+LONMIN=`grep CRD_IN_UL $DEMINFILE | gawk '{if ($1=="CRD_IN_UL") print $3}'`
+DELTA=`grep CRD_IN_DELTA $DEMINFILE | gawk '{if ($1=="CRD_IN_DELTA") print $2}'`
+DEMFORMAT=`grep CRD_IN_FORMAT $DEMINFILE | gawk '{if ($1=="CRD_IN_FORMAT") print $2}'`
+FORMAT='f'
+LONMAX=`echo $LONMIN $NCOLS $DELTA | gawk '{printf "%11.10e", $1+($2-1)*$3}'`
+LONMEAN=`echo $LONMIN $NCOLS $DELTA | gawk '{printf "%10.9e", $1+($2-1)*$3/2}'`
+LATMIN=`echo $LATMAX $NROWS $DELTA | gawk '{printf "%11.10e", $1-($2-1)*$3}'`
+LATMEAN=`echo $LATMAX $NROWS $DELTA | gawk '{printf "%10.9e", $1-($2-1)*$3/2}'`
+SCALE=`echo $NCOLS $DELTA | gawk '{print 36/($1-1)/$2}'`
+minmax -C ps_mean_v.xy > tmp$$.minmax
+
+if [ -z $ZMIN ]; then
+    ZMIN=`cat tmp$$.minmax | gawk '{print $5-0.001}'`
+fi
+if [ -z $ZMAX ]; then
+    ZMAX=`cat tmp$$.minmax | gawk '{print $6}'`
+fi
+echo $ZMAX
+ZSTEP=`echo $ZMIN $ZMAX | gawk '{print ($2-$1)/128}'`
+
+if [ -z $PLOTLON1 ]; then
+    PLOTLON1=$LONMIN
+fi
+if [ -z $PLOTLON2 ]; then
+    PLOTLON2=$LONMAX
+fi
+if [ -z $PLOTLAT1 ]; then
+    PLOTLAT1=$LATMIN
+fi
+if [ -z $PLOTLAT2 ]; then
+    PLOTLAT2=$LATMAX
+fi
+
+echo "LON = $PLOTLON1 to $PLOTLON2"
+echo "LAT = $PLOTLAT1 to $PLOTLAT2"
+echo "DELTA = $DELTA"
+
+SCALELON=`echo $PLOTLON1 $PLOTLON2 | gawk '{printf "%10.9e", $1+($2-$1)/5}'`
+SCALELAT=`echo $PLOTLON1 $PLOTLON2 $PLOTLAT1| gawk '{printf "%10.9e", $3-($2-$1)/30}'`
+echo $SCALELON
+echo $SCALELAT
+#LONRANGE=`echo $PLOTLON1 $PLOTLON2 | gawk '{printf "%10.9e", $2-$1}'`
+#SCALELAT=`echo $PLOTLAT1 $PLOTLAT2 $LONRANGE | gawk '{printf "%10.9e", $1-($2-$1)/$3/10}'`
+
+xyz2grd $DEMNAME -N-9999 -ZTL$FORMAT -V -I$DELTA/$DELTA -R$LONMIN/$LONMAX/$LATMIN/$LATMAX -Gtmp$$.grd
+grdsample tmp$$.grd  -I0.050m/0.0500m -V -Gtmp$$.sub.grd
+makecpt -Cgray -T0/1.7/.01 -Z > tmp$$.cpt
+grdgradient -Nt1 tmp$$.sub.grd -A70 -Gtmp$$.grad.grd  -V
+grdclip tmp$$.sub.grd -Sa0/1 -Sb0/0 -Gtmp$$.nonzero.grd  -V
+grdimage -P  tmp$$.nonzero.grd -Itmp$$.grad.grd -R$PLOTLON1/$PLOTLON2/$PLOTLAT1/$PLOTLAT2 -Ctmp$$.cpt -JM$LONMEAN/$LATMEAN/15c -Ba15mf05m/a15mf05mWSne -K -V > $PS_OUT
+
+
+makecpt -Cseis -T$ZMIN/$ZMAX/$ZSTEP -Z > tmp$$.color.cpt
+psxy -R -JM -Sc$PLOTSIZE ps_mean_v.xy -Ctmp$$.color.cpt -O -K -P >> $PS_OUT
+psscale -B$TICK_INTERVAL:Mean\ LOS\ Velocity\ \(mm\/year\):  -S -D12c/-0.6c/4c/.3ch  -Ctmp$$.color.cpt -O -K -P >> $PS_OUT 
+ 
+ 
+psbasemap -R -JM \
+-Lf$SCALELON/$SCALELAT/$LATMEAN/$SCALEBAR_LENGTH -O -V >> $PS_OUT
+
+ex $PS_OUT <<END
+:g/^% Begin time-stamp/,/^% End time-stamp/d
+:wq
+END
+rm -f tmp$$*
+ 
+ggv $PS_OUT
+

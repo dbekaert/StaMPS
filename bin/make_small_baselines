@@ -1,0 +1,168 @@
+#!/bin/tcsh -f
+#
+#
+# Andy Hooper, July 2006
+#
+# USAGE: make_small_baselines [skip_az_filt_flag] [skip_rg_filt_flag]
+#
+# ===========================================================================
+# 04/2009 AH: Add option to skip azimuth filtering 
+# 09/2009 AH: Add option to skip range filtering 
+# ===========================================================================
+
+set PRG = `basename "$0"`
+set AUT = "Andy Hooper, July 2006"
+echo "$PRG $AUT"
+echo " "
+
+
+if ($#argv > 0) then
+    set SKIP_FILTAZI = $argv[1]
+else
+    set SKIP_FILTAZI = 0
+endif
+if ($SKIP_FILTAZI != 0) then
+    echo "Skipping azimuth filtering"
+endif
+
+if ($#argv > 1) then
+    set SKIP_FILTRG = $argv[2]
+else
+    set SKIP_FILTRG = 0
+endif
+if ($SKIP_FILTRG != 0) then
+    echo "Skipping range filtering"
+endif
+
+set WORKDIR=$cwd
+
+if (! -e SMALL_BASELINES) then
+    mkdir SMALL_BASELINES
+endif
+
+set SB_DIR = $cwd/SMALL_BASELINES
+
+if (! -e $SB_DIR/filtrange.dorisin) then
+    cp $DORIS_SCR/filtrange.dorisin $SB_DIR
+endif
+if (! -e $SB_DIR/filtazi.dorisin) then
+    cp $DORIS_SCR/filtazi.dorisin $SB_DIR
+endif
+if (! -e $SB_DIR/interfereonly.dorisin) then
+    cp $DORIS_SCR/interfereonly.dorisin $SB_DIR
+endif
+if (! -e $SB_DIR/looks.txt) then
+    cp $WORKDIR/looks.txt $SB_DIR
+endif
+if (! -e $SB_DIR/ar.txt) then
+    cp $WORKDIR/ar.txt $SB_DIR
+endif
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+set first = `grep 'First_pixel ' $WORKDIR/master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  $WORKDIR/master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+cd $WORKDIR
+set masterdate = `\ls *_crop.slc | gawk '{print substr($0,1,8)}'` 
+
+#cp -f $WORKDIR/small_baselines.list $SB_DIR
+set i = 0
+
+foreach slave(`cat $WORKDIR/small_baselines.list`)
+   echo $slave
+   if ($i == 1) then
+      set IFG_DIR = $SB_DIR/$master"_"$slave
+      if (! -e $IFG_DIR) then
+          mkdir $IFG_DIR
+      endif
+      if ($master == $masterdate) then
+          cp $WORKDIR/master.res  $IFG_DIR/master.res
+      else
+          sed -n '1,/_Start_crop:/p' $WORKDIR/$master/slave.res > $IFG_DIR/tmp_master.res
+          sed -e '/resample/d' $IFG_DIR/tmp_master.res > $IFG_DIR/master.res
+          rm -f $IFG_DIR/tmp_master.res
+          echo "******************************************************************* " >> $IFG_DIR/master.res 
+          echo "Data_output_file: " $WORKDIR"/"$master"/"slave_res.slc >> $IFG_DIR/master.res 
+          echo "Data_output_format:         complex_real4 " >> $IFG_DIR/master.res 
+          grep '(w.r.t. original_image):' $WORKDIR/master.res >> $IFG_DIR/master.res
+          echo "******************************************************************* " >> $IFG_DIR/master.res 
+          echo "* End_crop:_NORMAL" >> $IFG_DIR/master.res 
+          echo "******************************************************************* " >> $IFG_DIR/master.res 
+          sed -n '/_Start_precise_orbits/,/End_precise_orbits/p' $WORKDIR/$master/slave.res >> $IFG_DIR/master.res
+      endif
+      if ($slave == $masterdate) then
+          cp $WORKDIR/master.res $IFG_DIR/master.res
+          set pslave = $master
+      else
+          set pslave = $slave
+      endif
+      sed -n '1,/_Start_crop:/p' $WORKDIR/$pslave/slave.res > $IFG_DIR/slave.res
+      echo "******************************************************************* " >> $IFG_DIR/slave.res 
+      echo "Data_output_file: " $WORKDIR"/"$pslave"/"slave_res.slc >> $IFG_DIR/slave.res 
+      echo "Data_output_format:         complex_real4 " >> $IFG_DIR/slave.res 
+      grep '(w.r.t. original_image):' $WORKDIR/master.res >> $IFG_DIR/slave.res
+      echo "******************************************************************* " >> $IFG_DIR/slave.res 
+      sed -n '/End_crop:/,/End_resample/p' $WORKDIR/$pslave/slave.res > $IFG_DIR/tmp_slave.res
+      if ($SKIP_FILTAZI == 0) then
+          echo "s#slave_res.slc#slave_azifilt.slc#" > $WORKDIR/tmp_sed.in
+      else
+          echo "s#slave_res.slc#"$WORKDIR"/"$pslave"/"slave_res.slc"#" > $WORKDIR/tmp_sed.in
+      endif
+      sed -f $WORKDIR/tmp_sed.in $IFG_DIR/tmp_slave.res >> $IFG_DIR/slave.res 
+      rm -f $IFG_DIR/tmp_slave.res
+      cp $WORKDIR/$pslave/coreg.out $IFG_DIR/interferogram.out
+      cd $IFG_DIR 
+
+      if ($SKIP_FILTAZI == 0) then
+          doris $SB_DIR/filtazi.dorisin
+      endif
+
+      if ($SKIP_FILTRG == 0) then
+          doris $SB_DIR/filtrange.dorisin
+      else
+          doris $SB_DIR/interfereonly.dorisin
+      endif
+          
+      if ($master == $masterdate) then
+          cpxsum cint.raw $WORKDIR/$slave/cint.raw tmp_cint3.raw $width cr4 -1 1
+          cpxsum tmp_cint3.raw $WORKDIR/$slave/cint.minrefdem.raw cint.minrefdem.raw $width cr4 1 1
+      else if ($slave == $masterdate) then
+          cpxsum $WORKDIR/$master/cint.raw cint.raw tmp_cint.raw $width cr4 -1 1
+          cpxsum tmp_cint.raw $WORKDIR/$master/cint.minrefdem.raw cint.minrefdem.raw $width cr4 -1 1
+      else
+         
+          cpxsum cint.raw $WORKDIR/$master/cint.raw tmp_cint.raw $width cr4 1 1
+          cpxsum tmp_cint.raw $WORKDIR/$master/cint.minrefdem.raw tmp_cint2.raw $width cr4 -1 1
+          cpxsum tmp_cint2.raw $WORKDIR/$slave/cint.raw tmp_cint3.raw $width cr4 -1 1
+          cpxsum tmp_cint3.raw $WORKDIR/$slave/cint.minrefdem.raw cint.minrefdem.raw $width cr4 1 1
+      endif
+      rm -f tmp_cint*.raw
+      rm -f cint.raw
+      rm -f *azifilt.slc
+      set endras = l.ras
+      set endraw = l.raw
+      cpxfiddle -w$width -fcr4 -qmixed -M$looks/$azlooks -osunraster -e0.2 -s1.8 cint.minrefdem.raw > cint.minrefdem_$looks$endras
+      cpxfiddle -w$width -fcr4 -qnormal -M$looks/$azlooks -ofloat cint.minrefdem.raw > cint.minrefdem_$looks$endraw
+
+       set i = 0
+   else
+       set i = 1
+       set master = $slave
+   endif
+end
+rm -f tmp_sed.in
+cd $WORKDIR
+

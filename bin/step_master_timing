@@ -1,0 +1,62 @@
+#!/bin/tcsh -f
+#
+#==========================================================================
+# Andy Hooper March 2009
+#
+# 06/2009 AH: Increased window size 
+# 11/2009 AH: Use values from timing.dorisin unless too big
+#==========================================================================
+set WORKDIR = "."
+
+set first = `grep 'First_pixel ' $WORKDIR/master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  $WORKDIR/master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+set first_l = `grep 'First_line ' $WORKDIR/master.res | gawk 'END {print $4}'`
+set last_l = `grep 'Last_line ' $WORKDIR/master.res | gawk 'END {print $4}'`
+@ numlines = ($last_l - $first_l) + 1
+
+if (! -e $WORKDIR/timing.dorisin) then
+    cp $DORIS_SCR/timing.dorisin $WORKDIR
+endif               
+
+set win_l = `grep '^MTE_WINSIZE ' $WORKDIR/timing.dorisin | gawk 'END {print $2}'`
+set win_p = `grep '^MTE_WINSIZE ' $WORKDIR/timing.dorisin | gawk 'END {print $3}'`
+if ($win_l > $numlines) then
+   set win_l  = `echo $numlines | gawk '{printf "%4i", 2^int(log($1)/log(2))}'`
+endif
+if ($win_p > $width) then
+   set win_p  = `echo $width | gawk '{printf "%4i", 2^int(log($1)/log(2))}'`
+endif
+sed -n '1,/^MTE_WINSIZE/p' $WORKDIR/timing.dorisin > tmp_timing.$$
+head -n-1 tmp_timing.$$ > $WORKDIR/timing.dorisin
+echo "MTE_WINSIZE   $win_l $win_p // rectangular window" >> $WORKDIR/timing.dorisin
+echo "STOP" >> $WORKDIR/timing.dorisin
+rm tmp_timing.$$
+
+set processes = `grep '^PROCESS ' $WORKDIR/timing.dorisin | gawk '{print $2}'`
+if ($processes[1] == 'M_SIMAMP') then
+    sed -n '1,/*_Start_sim_amplitude:/p' master.res | head -n-2 > tmp_master.$$
+else
+    sed -n '1,/*_Start_master_timing:/p' master.res | head -n-2 > tmp_master.$$
+endif
+mv tmp_master.$$ master.res
+
+
+
+doris $WORKDIR/timing.dorisin > step_master_timing.log
+set outlines = `grep '^MTE_NWIN ' $WORKDIR/timing.dorisin | gawk 'END {print $2}'`
+@ outlines = $outlines + 6
+if ($? == 0) then 
+    echo ""
+    tail -n$outlines log.out
+endif
+
+\rm -f $WORKDIR/dem.dorisin >& /dev/null
+\rm -f $WORKDIR/geocode.dorisin >& /dev/null
+
+\ls -d */master.res >& $$.tmp
+foreach masterres(`grep master $$.tmp`)
+    cp -f master.res $masterres
+end
+\rm -f $$.tmp

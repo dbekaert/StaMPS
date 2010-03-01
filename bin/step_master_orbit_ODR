@@ -1,0 +1,39 @@
+#!/bin/tcsh -f
+#
+#==========================================================================
+# 03/2009 AH Error message suppressed when no match on ls
+# 07/2009 AH _ODR added to file name
+# 08/2009 AH: Allow for different product specification for ERS CEOS SLCs 
+#==========================================================================
+
+  set prod = `grep 'Product type specifier:' master.res | gawk '{print $4}'`
+  if ($prod == "PRODUCT:ERS-1.SAR.SLC") then
+      set prod = "ERS1"
+  endif
+  if ($prod == "PRODUCT:ERS-2.SAR.SLC") then
+      set prod = "ERS2"
+  endif
+  if ($prod == "ERS") then
+      set prod = `grep 'Product type specifier:' master.res | gawk '{print $5}'`
+  endif
+  if ($prod == "ASAR") then
+     set prod = "Envisat"
+  endif
+  if (-e $DORIS_SCR/master_orbit_$prod.dorisin) then
+      cp -f master.res master.res.$$
+      doris $DORIS_SCR/master_orbit_$prod.dorisin > step_master_orbit.log
+      set n_orbits = `grep NUMBER_OF_DATAPOINTS: master.res | gawk '{print $2}'`
+      if ($n_orbits == 0) then
+          \mv -f master.res.$$ master.res
+      else 
+          \rm -f master.res.$$ 
+      endif
+  else
+      echo "WARNING: No DEOS format precise orbit data found for this product"
+  endif
+
+\ls -d */master.res >& $$.tmp
+foreach masterres(`grep master $$.tmp`)
+    cp -f master.res $masterres
+end
+\rm -f $$.tmp

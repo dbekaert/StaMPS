@@ -1,0 +1,53 @@
+c **********************************************************************
+c ***
+c **********************************************************************
+ c
+ c
+ comment  ___general options___
+ c
+c SCREEN          debug                           // level of output to standard out
+c SCREEN          info                           // level of output to standard out
+SCREEN          error                           // level of output to standard out
+MEMORY          1000                             // MB
+OVERWRITE                                       // overwrite existing files
+BATCH                                           // non-interactive
+c LISTINPUT OFF                                 // prevents copy of this file to log
+c
+PROCESS          FINE
+PROCESS          COREGPM
+c                                              //
+ c                                              //
+ comment  ___the general io files___            //
+ c                                              //
+LOGFILE         log.out                         // log file
+M_RESFILE       master.res  // parameter file
+S_RESFILE       slave.res                       // parameter file
+I_RESFILE       coreg.out               // parameter file
+ c                                              //
+ c
+ c
+ comment ___FINE COREGISTRATION___
+ c
+FC_METHOD       oversample                          //
+c FC_METHOD       magfft                          //
+c FC_METHOD     magspace                        //
+c FC_NWIN         8000                             // number of windows
+FC_IN_POS       fc_pos.in                // file containing position of windows
+FC_WINSIZE      64 64                           // size of windows
+FC_ACC          8 8                             // search window, 2^n
+FC_INITOFF      coarsecorr                      // use result of coarse to compute first
+FC_OSFACTOR     32                              // oversampling factor
+c FC_PLOT         0.65 BG
+ c
+ c
+ comment ___COMPUTE COREGISTRATION PARAMETERS___
+ c
+CPM_THRESHOLD   0.30
+CPM_DEGREE      2
+CPM_WEIGHT      bamler                          // none
+c CPM_WEIGHT      linear                          // none
+c CPM_WEIGHT      quadratic                          // none
+CPM_MAXITER     8000
+c CPM_PLOT        BG
+ c
+STOP

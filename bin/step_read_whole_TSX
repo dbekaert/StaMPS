@@ -1,0 +1,53 @@
+#!/bin/tcsh -f
+# 
+# Andy Hooper, March 2009
+# ===========================================================================
+# 09/2009 AH: Fix check on existence of master_crop_geo.in
+# ===========================================================================
+
+set WORKDIR = ".." 
+rm -f master.res
+rm -f slave.res
+
+cp -f $DORIS_SCR/master_readfiles_TSX.dorisin $WORKDIR/master_readfiles.dorisin
+cp -f $DORIS_SCR/readfiles_TSX.dorisin $WORKDIR/readfiles.dorisin 
+cp -f $DORIS_SCR/cropfiles_TSX.dorisin $WORKDIR/cropfiles.dorisin
+
+if (! -e $WORKDIR/master_crop_geo.in) then
+    cp $DORIS_SCR/master_crop_geo.in $WORKDIR
+endif
+if (! -e $WORKDIR/looks.txt) then
+    set looks = 10
+    echo $looks > $WORKDIR/looks.txt
+else
+    set looks = `cat $WORKDIR/looks.txt`
+endif
+if (! -e $WORKDIR/ar.txt) then
+    set ar = 1
+    echo $ar > $WORKDIR/ar.txt
+else
+    set ar = `cat $WORKDIR/ar.txt`
+endif
+
+@ azlooks = $looks * $ar
+
+
+doris $WORKDIR/master_readfiles.dorisin >> step_master_read_whole.log
+
+set first = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+set endras = l.ras
+set endraw = l.raw
+cpxfiddle -w$width -fci2 -qmag -M$looks/$azlooks -osunraster -e0.5 -s1.0 master.slc > image.slc_$looks$endras
+
+cpxfiddle -w$width -fci2 -qnormal -M$looks/$azlooks -ofloat master.slc > image.slc_$looks$endraw
+
+@ lwidth = $width / $looks
+
+echo "Number of azimuth looks is" $azlooks "\n"
+echo "Number of range looks is" $looks "\n"
+echo "Looked filewidth is" $lwidth "\n"
+
+#rm -f master.slc

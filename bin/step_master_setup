@@ -1,0 +1,109 @@
+#!/bin/tcsh -f
+#
+# ===========================================================================
+# 09/2008 AH: Generalised for variable mutilooking in range and az
+# 09/2008 AH: Extract orbits from slave.res if present
+# 01/2010 KS: Added raster file creation of cropped master
+# ===========================================================================
+
+set masterdate = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
+set CURRDIR = `echo $cwd` 
+set WORKDIR = ".." 
+set INSARDIR = "../../INSAR_$masterdate"
+
+if (! -e $INSARDIR) then
+    mkdir $INSARDIR
+endif
+cd $INSARDIR
+set INSARDIR = $cwd
+cd $CURRDIR
+
+if (! -e $WORKDIR/looks.txt) then
+    set looks = 4
+    echo $looks > $WORKDIR/looks.txt
+else
+    set looks = `cat $WORKDIR/looks.txt`
+endif
+if (! -e $WORKDIR/ar.txt) then
+    set ar = 5
+    echo $ar > $WORKDIR/ar.txt
+else
+    set ar = `cat $WORKDIR/ar.txt`
+endif
+@ azlooks = $looks * $ar
+
+rm -f master.res
+roipac2doris $masterdate
+
+set first = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+set first_l = `grep first_l master_crop.in | gawk '{print $NF}'`
+set last_l = `grep last_l master_crop.in | gawk '{print $NF}'`
+set first_p = `grep first_p master_crop.in | gawk '{print $NF}'`
+set last_p = `grep last_p master_crop.in | gawk '{print $NF}'`
+
+@ first_l = $first_l - 1
+@ last_l = $last_l - 1
+@ first_p = $first_p - 1
+@ last_p = $last_p - 1
+
+set master_slc = $masterdate"_crop.slc"
+
+sed -n '1,/*_Start_crop/p' master.res > tmp_master.$$
+echo "*******************************************************************" >> tmp_master.$$
+echo "Data_output_file: $INSARDIR/$master_slc" >> tmp_master.$$
+grep 'Data_output_format:' master.res >> tmp_master.$$
+echo "First_line (w.r.t. original_image):  $first_l" >> tmp_master.$$
+echo "Last_line (w.r.t. original_image):   $last_l" >> tmp_master.$$
+echo "First_pixel (w.r.t. original_image): $first_p" >> tmp_master.$$
+echo "Last_pixel (w.r.t. original_image):  $last_p" >> tmp_master.$$
+echo "*******************************************************************" >> tmp_master.$$
+echo "* End_crop:_NORMAL"  >> tmp_master.$$
+echo "*******************************************************************" >> tmp_master.$$
+
+mv -f tmp_master.$$  master.res
+echo " " >> master.res
+echo "*******************************************************************" >> master.res
+sed -n '/*_Start_precise_orbits/,/* End_precise_orbits/p' slave.res >> master.res
+echo "*******************************************************************" >> master.res
+
+echo "cpxfiddle -qnormal -w$width -l$first_l -L$last_l -p$first_p -P$last_p -fcr4 -ofloat $masterdate.slc > $master_slc"
+cpxfiddle -qnormal -w$width -l$first_l -L$last_l -p$first_p -P$last_p -fcr4 -ofloat $masterdate.slc > $master_slc
+
+cd $WORKDIR
+\ls -d [1,2]* | sed "/$masterdate/ d" > make_slcs.list
+cd $CURRDIR
+
+
+cp *.slc.rsc $INSARDIR
+cp master.res $INSARDIR
+mv $master_slc $INSARDIR
+cd $INSARDIR
+
+if (! -e timing.dorisin) then
+    cp $DORIS_SCR/timing.dorisin .
+endif
+
+if (! -e dem.dorisin) then
+    cp $DORIS_SCR/dem.dorisin .
+endif
+
+if (! -e geocode.dorisin) then
+    cp $DORIS_SCR/geocode.dorisin .
+endif
+
+set prod = `grep 'Product type specifier:' master.res | gawk '{print $4}'`
+if ($prod == 'ALOS') then
+    echo 5 > looks.txt
+    echo 3 > ar.txt
+else
+    echo 4 > looks.txt
+    echo 5 > ar.txt
+endif
+
+cd $CURRDIR
+
+set endras = _crop.ras
+cpxfiddle -qmag -w$width -l$first_l -L$last_l -p$first_p -P$last_p -fcr4 -osunraster -e0.5 -s1.0 -M$looks/$azlooks $masterdate.slc > $masterdate$endras

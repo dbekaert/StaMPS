@@ -1,0 +1,88 @@
+#!/bin/csh -f
+
+# Extract info from various files for use by StaMPS
+#
+# Andy Hooper, November 2007
+
+### Initial welcome
+set PRG = `basename "$0"`
+set AUT = "Andy Hooper, November 2007"
+echo "$PRG $AUT"
+echo " "
+
+set WORKDIR = $cwd
+set dirname = `echo $WORKDIR | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
+
+if ($dirname == "SMALL_BASELINES") then
+    set INSARDIR = `echo $WORKDIR | gawk 'BEGIN {FS = "/SMALL_BASELINES"}{print $1}'`
+    echo "Small Baseline Processing"
+    echo " "
+else
+    set INSARDIR = $WORKDIR
+endif
+
+set first = `grep 'First_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+set last = `grep 'Last_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+@ width = ($last - $first) + 1
+echo $width > $WORKDIR/width.txt
+set firstl = `grep 'First_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+set lastl = `grep 'Last_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+@ length = ($lastl - $firstl) + 1
+echo $length > $WORKDIR/len.txt
+
+# Create other input files for PS candidates
+grep 'Bperp' $INSARDIR/*/interferogram.out | gawk '{print $4}' > bperp.1.in
+\ls $INSARDIR/*/cint.minrefdem.raw | gawk 'BEGIN {FS = "/"}{print $(NF-1)}' > day.1.in
+\ls $INSARDIR/[1,2]*_crop.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}' > master_day.1.in
+if ($dirname == "SMALL_BASELINES") then
+    \ls $WORKDIR/*/cint.minrefdem.raw | gawk 'BEGIN {FS = "/"}{print substr($(NF-1),1,8) " " substr($(NF-1),10,8)}' > ifgday.1.in
+endif
+
+grep HEADING $INSARDIR/*.slc.rsc | gawk 'END {print $2}' > heading.1.in
+if ( `head -n1 heading.1.in` == "" ) then
+    echo "ERROR: Heading info not found"
+    echo "$PRG Terminating prematurely"
+    exit 12
+endif
+grep Radar_wavelength $INSARDIR/master.res | gawk '{print $3}' > lambda.1.in
+
+#foreach blog(`\ls $INSARDIR/*/make_orbits.log`)
+foreach ifg(`\ls $INSARDIR/*/cint.minrefdem.raw`)
+    set ifgdir = `echo $ifg | gawk 'BEGIN {FS = "/cint.minrefdem.raw"}{print $1}'`
+    set bdate = `echo $ifgdir | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
+    set blog = $ifgdir/step_coarse.log
+    grep 'Bpar, Bperp' $blog | gawk '{print $6}' > bperp_$bdate.1.in
+    set bperphead = `head -n1 bperp_$bdate.1.in`
+    if ($bperphead == "") then
+        echo "trying make_orbits.log instead..."
+        set blog = $ifgdir/make_orbits.log
+        grep 'Bpar, Bperp' $blog | gawk '{print $6}' > bperp_$bdate.1.in
+        set bperphead = `head -n1 bperp_$bdate.1.in`
+        if ($bperphead == "") then
+            echo ""
+            echo "ERROR: cannot find bperp info for $bdate"
+            echo "$PRG terminated prematurely"
+            exit 12
+        else
+            echo "success!"
+            grep 'Look angle' $blog | gawk '{print $6}' > look_angle.1.in
+        endif
+    else
+        grep 'Look angle' $blog | gawk '{print $6}' > look_angle.1.in
+    endif
+    
+end
+
+grep CRD_IN_DEM $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_DEM") print $2}' > demparms.in 
+grep CRD_IN_SIZE $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_SIZE") print $3}' >> demparms.in 
+grep CRD_IN_SIZE $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_SIZE") print $2}' >> demparms.in 
+grep CRD_IN_UL $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_UL") print $3}' >> demparms.in 
+grep CRD_IN_UL $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_UL") print $2}' >> demparms.in 
+grep CRD_IN_DELTA $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_DELTA") print $2}' >> demparms.in 
+grep CRD_IN_FORMAT $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_FORMAT") print $2}' >> demparms.in 
+
+if ($dirname == "SMALL_BASELINES") then
+    matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/sb_parms_initial.m > sb_parms_initial.log
+else
+    matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/ps_parms_initial.m > ps_parms_initial.log
+endif

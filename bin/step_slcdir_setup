@@ -1,0 +1,81 @@
+#!/bin/bash
+##
+## MA - 20091021 
+##
+## Setup SLC directory structure for StaMPS
+##
+## Sensors: ERS and Envisat
+
+# Variable 
+DATADIR=$1
+sensor=$2
+CWD=`pwd`
+AWK=`which gawk`
+ 
+# rinloop.sh 'ls -1d /d2/wana_d_e_336-2835/data/*' ' eval echo :: ' '  ; d=`awk "/ORBIT/{print substr(\\$5,1,8)}" ${f}/L*` ; cd /d2/wana_d_e_336-2835/SLC; `mkdir $d` ; cd $d ; `ln -s ${f}/L*; ln -s ${f}/D*; ln -s ${f}/V*; ln -s ${f}/N*` ; `ln -s D* image.slc` '
+
+## Functions 
+goodERS(){
+
+  [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
+
+  for f in $(ls -1d ${DATADIR}/*); do
+    echo :: $f
+    date=$( ${AWK} '/ORBIT/{print substr($5,1,8)}' ${f}/L* )
+    cd $CWD/SLC
+    mkdir ${date}
+    cd  ${date}
+    ln -s ${f}/L*
+    ln -s ${f}/D*
+    ln -s ${f}/V*
+    ln -s ${f}/N*
+    ln -s D* image.slc
+    
+    ${AWK} '/ORBIT/{print  "HEADING   "$22 }' LEA_01.001 > image.slc.rsc # ERS
+    cd ..
+  done
+}
+
+
+# ASAR
+#rinloop.sh 'ls -1d /d2/wana_d_a_336-2835/data/*' ' eval echo :: ' '  ; bname=`basename ${f}/A*.N1` ; d=`basename ${f}/A*.N1 | awk -F "_" "{print substr(\\$3,7)}"` ; cd /d2/wana_d_a_336-2835/SLC; `mkdir $d` ; cd $d ; `ln -s ${f}/A*.N1` ; `ln -s ${bname} image.slc` ;'
+
+
+goodENV(){
+  [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
+
+  for f in $(ls -1d ${DATADIR}/*); do
+    echo :: $f
+    bname=$( basename ${f}/A*.N1 )
+    date=$( basename ${f}/A*.N1 | ${AWK} -F '_' '{print substr($3,7)}' )
+    cd $CWD/SLC
+    mkdir ${date}
+    cd  ${date}
+    ln -s ${f}/A*.N1
+    ln -s ${bname} image.slc
+    
+    envisat_dump_header ASA*.N1 | awk '/sub_sat_track/{print "HEADING   "$3}' > image.slc.rsc
+
+    cd ..
+  done
+}
+
+goodSENSE(){
+        local sense=$(ls -1 ${DATADIR}/*/ASA* &>/dev/null && echo ENV || echo ERS)
+        echo $sense
+}
+
+case $# in
+         1) sensor=`goodSENSE`
+            { [ "${sensor}" == "ERS" ] && goodERS ; } || \
+            { [ "${sensor}" == "ENV" ] && goodENV ; } || \
+            echo "Fout gemaakt: Something is wrong!"
+            ;;
+         *) echo -e "Usage: ${0##*/} <location of original SLC files> \n"
+            echo -e "       ${0##*/} /d2/projectname_d_e_336-2835/data \n"
+	    ;;
+esac
+
+
+
+#EOF

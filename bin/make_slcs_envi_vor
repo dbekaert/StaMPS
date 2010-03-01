@@ -1,0 +1,9 @@
+#!/bin/tcsh -f
+#
+# Andy Hooper, 2009
+#
+foreach dir(`cat make_slcs.list`)
+   cd $dir 
+   step_slc_envi_vor
+   cd .. 
+end

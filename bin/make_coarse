@@ -1,0 +1,18 @@
+#!/bin/tcsh -f
+
+set nonomatch # MA
+
+set WORKDIR = $cwd
+
+if (! -e make_ifgs.list) then
+    \ls -d $WORKDIR/[1,2]*/slave.res | gawk 'BEGIN {FS="slave.res"} {print $1}'  > make_ifgs.list
+endif
+
+foreach dir(`cat make_ifgs.list`)
+   echo "\n\nEntering : $dir \n"    # MA echo date
+   cd $dir
+   step_coarse
+end
+
+cd $WORKDIR
+tail -n32 */coreg.out

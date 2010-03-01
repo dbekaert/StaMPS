@@ -1,0 +1,6 @@
+#!/bin/tcsh -f
+
+set prf = `grep 'Pulse_Repetition_Frequency' ../master.res | gawk '{print $4}'`
+set rsr = `grep 'Range_sampling_rate '  ../master.res | gawk '{print $4}'`
+echo $prf > sar_parms.in
+echo $rsr >> sar_parms.in

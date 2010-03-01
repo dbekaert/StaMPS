@@ -1,0 +1,47 @@
+#!/bin/tcsh -f
+
+set WORKDIR=$cwd
+
+set first = `grep 'First_pixel ' master.res | gawk '{print $4}'`
+set last = `grep 'Last_pixel ' master.res | gawk '{print $4}'`
+@ width = ($last - $first) + 1
+echo $width > width.txt
+
+set first_l = `grep 'First_line ' master.res | gawk '{print $4}'`
+set last_l = `grep 'Last_line ' master.res | gawk '{print $4}'`
+@ numlines = ($last_l - $first_l) + 1
+@ numlines_ml= $numlines / 5
+
+echo "*****************************************************" > fake_int.out
+echo "*_Start_interfero:" >> fake_int.out
+echo "*****************************************************" >> fake_int.out
+echo "Data_output_file:                       cint.raw" >> fake_int.out
+echo "Data_output_format:                     complex_real4" >> fake_int.out
+echo "Flatearth correction subtracted:        no" >> fake_int.out
+echo "First_line (w.r.t. original_master):   " $first_l >> fake_int.out
+echo "Last_line (w.r.t. original_master):    " $last_l >> fake_int.out
+echo "First_pixel (w.r.t. original_master):  " $first >> fake_int.out
+echo "Last_pixel (w.r.t. original_master):   " $last >> fake_int.out
+echo "Multilookfactor_azimuth_direction:      5" >> fake_int.out
+echo "Multilookfactor_range_direction:        1" >> fake_int.out
+echo "Number of lines (multilooked):         " $numlines_ml >> fake_int.out
+echo "Number of pixels (multilooked):        " $width >> fake_int.out
+echo "*****************************************************" >> fake_int.out
+echo "* End_interfero:_NORMAL" >> fake_int.out
+echo "*****************************************************" >> fake_int.out
+
+if (! -e dem.dorisin) then
+    cp $DORIS_SCR/dem.dorisin .
+endif
+
+foreach dir(`cat make_ifgs.list`)
+   cd $dir
+   cat coreg.out $WORKDIR/fake_int.out > dem.out
+   doris $WORKDIR/dem.dorisin >> make_ifgs.log
+   echo "interp_dem $width" >matbgparms.txt      
+   matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m > interp_dem.log
+   get_sar_parms
+   cd ..
+end
+
+cd $WORKDIR

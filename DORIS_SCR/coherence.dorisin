@@ -1,0 +1,33 @@
+c **********************************************************************
+c * 08/2009 AH: Method changed to INCLUDE_REFDEM
+c **********************************************************************
+ c
+ c
+ comment  ___general options___
+ c
+c SCREEN          debug                           // level of output to standard out
+SCREEN          info                           // level of output to standard out
+MEMORY          1000                             // MB
+OVERWRITE                                       // overwrite existing files
+BATCH                                           // non-interactive
+PREVIEW         ON
+c
+PROCESS          COHERENCE
+c                                              //
+ c                                              //
+ comment  ___the general io files___            //
+ c                                              //
+LOGFILE         log.out                         // log file
+M_RESFILE       master.res  // parameter file
+S_RESFILE       slave.res                       // parameter file
+I_RESFILE       coherence.out               // parameter file
+ c
+ c
+ c
+ comment ___product generation___
+ c
+COH_METHOD     INCLUDE_REFDEM
+COH_OUT_COH    coh_4l.raw                  // real
+COH_MULTILOOK   20 4
+COH_WINSIZE     20 4
+STOP

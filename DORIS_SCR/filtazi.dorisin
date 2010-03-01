@@ -1,0 +1,37 @@
+c **********************************************************************
+c ***
+c **********************************************************************
+ c
+ c
+ comment  ___general options___
+ c
+c SCREEN          debug                           // level of output to standard out
+SCREEN          info                           // level of output to standard out
+MEMORY          1000                             // MB
+OVERWRITE                                       // overwrite existing files
+BATCH                                           // non-interactive
+c LISTINPUT OFF                                 // prevents copy of this file to log
+c
+PROCESS         m_filtazi
+PROCESS         s_filtazi
+c                                              //
+ c                                              //
+ comment  ___the general io files___            //
+ c                                              //
+LOGFILE         log.out                         // log file
+M_RESFILE       master.res  // parameter file
+S_RESFILE       slave.res                       // parameter file
+I_RESFILE       coreg.out               // parameter file
+ c                                              //
+ c                                              //
+ comment ___AZIMUTH FILTERING___                //
+ c                                              //
+c AF_METHOD
+AF_BLOCKSIZE    4096                            // fftlength each column
+AF_OVERLAP      64                              // hbs
+c AF_HAMMING      0.75
+AF_OUT_MASTER   master_azifilt.slc
+AF_OUT_SLAVE    slave_azifilt.slc
+AF_OUT_FORMAT   cr4
+c
+STOP

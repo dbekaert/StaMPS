@@ -1,0 +1,13 @@
+#!/bin/tcsh -f
+
+foreach dir(`cat make_slcs.list`)
+   cd $dir 
+   rm -rf $dir.slc.rsc
+   $MY_SCR/roi_prep.pl $dir ODR >> make_slcs.log
+   rm -rf $dir.slc
+   roi.pl $dir no 1 no >> make_slcs.log
+   rm -rf slave.res
+   roipac2doris $dir s >> make_slcs.log
+   cd .. 
+end
+

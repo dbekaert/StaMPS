@@ -1,0 +1,29 @@
+#!/bin/csh -f
+#
+# Andy Hooper, 2006
+# ===========================================================================
+# 09/2008 AH: Generalised for variable mutilooking in az
+# 09/2009 AH: Format option added
+# ===========================================================================
+
+if ($#argv < 2) then
+    echo "USAGE: multilook file width rg_looks(default 4) aspect_ratio (default 5) format (default r4)"
+else
+    if ($#argv < 3) then
+       set l_rg = 4
+    else
+       set l_rg = $3
+    endif
+    if ($#argv < 4) then
+       set ar = 5
+    else
+       set ar = $4
+    endif
+    if ($#argv < 5) then
+       set form = "r4"
+    else
+       set form = $5
+    endif
+    @ l_az = $ar * $l_rg
+    cpxfiddle -w$2 -fc$form -qnormal -M$l_rg/$l_az -ofloat $1 > $1."$l_rg"looks
+endif

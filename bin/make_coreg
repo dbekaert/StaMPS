@@ -1,0 +1,81 @@
+#!/bin/tcsh -f
+#
+# Coregisters master-slave pairs with baseline less than a specified
+# maximum and for other slave scenes coregisters the 3 nearest slave 
+# scenes closer to the master. Resulting coefficients are inverted
+# to get coefficients for each scene and the master
+#
+# make_coreg_sub is called twice, once for positive baselines and once
+# for negative baselines
+#
+# Andy Hooper, Jul 2006
+#
+
+######## Adjustable parameters #############
+set bperp_max = 100 # maximum bperp for master-slave coregistration 
+set count_max = 3 # number of near slave images to coregister to each slave image
+############################################
+
+set WORKDIR=$cwd
+
+if (! -e coreg.dorisin) then
+    cp $DORIS_SCR/coreg.dorisin .
+endif
+
+set insardir = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
+set masterdate = `echo $insardir | gawk 'BEGIN {FS="_"} {print $NF}'`
+if (! -e make_ifgs.list) then
+    \ls -d $WORKDIR/[1,2]*/coreg.out | gawk 'BEGIN {FS="coreg.out"} {print $1}'  > make_ifgs.list
+endif
+
+if (! -e coreg) then
+   mkdir coreg
+   cp make_ifgs.list coreg/make_coreg.list
+endif
+
+set  num_l_orig = `grep 'Number_of_lines_original:' master.res | gawk '{print $2}'`
+set  num_p_orig = `grep 'Number_of_pixels_original:' master.res | gawk '{print $2}'`
+set N_win = `grep 'FC_WINSIZE' $WORKDIR/coreg.dorisin | gawk '{print $2}'` 
+set osf = `grep 'FC_OSFACTOR' $WORKDIR/coreg.dorisin | gawk '{print $2}'` 
+
+cd coreg
+
+echo $num_l_orig > coreg_parms
+echo $num_p_orig >> coreg_parms
+echo $N_win >> coreg_parms
+echo $osf >> coreg_parms
+
+
+set ifg_num = 0
+foreach dir(`cat make_coreg.list`)
+   @ ifg_num = $ifg_num + 1
+   if (-e $dir/coreg.out) then
+     set bperp = `grep 'Bperp' $dir/coreg.out | gawk '{print $3}'`
+     set bperp_round  =  `echo $bperp | gawk '{printf"%12i",$1}'`
+     if ($bperp_round < 0) then
+       @ bperp_round= - $bperp_round
+       echo $bperp_round $dir $ifg_num >> tmp_negative.$$
+     else
+       echo $bperp_round $dir $ifg_num >> tmp_positive.$$
+     endif
+   endif
+end
+
+echo $ifg_num >> coreg_parms
+
+sort -n tmp_negative.$$  > tmp_negative.$$.sort 
+sort -n tmp_positive.$$  > tmp_positive.$$.sort 
+rm -f tmp_negative.$$
+rm -f tmp_positive.$$
+
+echo "Coregistering positive baselines...\n"
+make_coreg_sub $WORKDIR tmp_positive.$$.sort $bperp_max $count_max
+echo "Coregistering negative baselines...\n"
+make_coreg_sub $WORKDIR tmp_negative.$$.sort $bperp_max $count_max
+rm -f tmp_negative.$$.sort
+rm -f tmp_positive.$$.sort
+
+update_coreg
+cd $WORKDIR      
+
+

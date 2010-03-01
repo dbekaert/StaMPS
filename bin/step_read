@@ -1,0 +1,72 @@
+#!/bin/tcsh -f
+#
+# ===========================================================================
+# Andy Hooper, 2006
+# ===========================================================================
+# 03/2009 AH: Read readfiles.dorisin from WORKDIR
+# 08/2009 AH: Create multilooked files for display
+# ===========================================================================
+
+set WORKDIR = ".." 
+
+#if (! -e $WORKDIR/cropfiles.dorisin) then
+#    cp $DORIS_SCR/cropfiles.dorisin $WORKDIR
+#endif
+
+rm -f slave.res
+rm -f master.res
+doris $WORKDIR/readfiles.dorisin > step_read.log
+
+set max_l = `grep Number_of_lines_original slave.res | gawk '{print $NF}'`
+set max_p = `grep Number_of_pixels_original slave.res | gawk '{print $NF}'`
+if (! -e cropfiles.dorisin) then
+    cp -f $WORKDIR/cropfiles.dorisin cropfiles.dorisin
+endif
+set first_l = `grep S_DBOW cropfiles.dorisin | gawk '{print $2}'`
+set last_l = `grep S_DBOW cropfiles.dorisin | gawk '{print $3}'`
+set first_p = `grep S_DBOW cropfiles.dorisin | gawk '{print $4}'`
+set last_p = `grep S_DBOW cropfiles.dorisin | gawk '{print $5}'`
+if ( $last_l >= $max_l ) then
+    @ last_l = $max_l - 1
+endif
+if ( $last_p >= $max_p ) then
+    @ last_p = $max_p - 1
+endif
+
+sed -n '1,/S_CROP_OUT/p' cropfiles.dorisin > tmp_cropfiles.$$
+echo "S_DBOW  $first_l $last_l $first_p $last_p // line low/hi pixel low/hi" >> tmp_cropfiles.$$
+echo "STOP" >> tmp_cropfiles.$$
+mv tmp_cropfiles.$$ cropfiles.dorisin
+
+doris cropfiles.dorisin >> make_read.log
+
+echo 's#slave_crop.slc#'$cwd'/slave_crop.slc#' > tmp_sed.in
+sed -f tmp_sed.in slave.res > tmp_slave.res
+mv tmp_slave.res slave.res
+rm -f tmp_sed.in
+
+set first = `grep 'First_pixel ' slave.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  slave.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+
+set endras = l.ras
+set endraw = l.raw
+cpxfiddle -w$width -fci2 -qmag -M$looks/$azlooks -osunraster -e0.5 -s1.0 slave_crop.slc > image.slc_$looks$endras
+
+cpxfiddle -w$width -fci2 -qnormal -M$looks/$azlooks -ofloat slave_crop.slc > image.slc_$looks$endraw
+

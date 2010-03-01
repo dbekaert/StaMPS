@@ -1,0 +1,10 @@
+#!/bin/tcsh -f
+
+set WORKDIR=$cwd
+
+foreach dir(`cat make_ifgs.list`)
+   cd $dir
+   step_filtazi_resample
+end
+
+cd $WORKDIR

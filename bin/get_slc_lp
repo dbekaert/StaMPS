@@ -1,0 +1,44 @@
+#!/bin/bash
+##
+## MA - 20091104 rev. 2
+##
+## get lines and pixels from Doris SLC result file
+##
+## TUDelft - 2009
+
+# Variables
+iFile=$1
+AWK=`which gawk` 
+keyword=${2:-'crop'} # default is crop values
+
+
+# Functions 
+goodfunc(){
+ ${AWK} '/Start_'$keyword'/,/End_'$keyword'/ {a[i++]=$4}END{print a[4],a[5],a[6],a[7]}' $iFile
+}
+
+checkkeyword(){
+  if [ `grep -c 'Start_oversample' $iFile` -eq 1 ]; then
+    echo 'oversample'                          
+  else
+    echo 'crop'
+  fi 
+}
+
+case $# in
+         1) 
+            keyword=`checkkeyword`
+            goodfunc 
+	    ;;
+         2) goodfunc 
+	    ;;
+         *) 
+            echo -e "Usage  : ${0##*/} <doris result file> [crop | oversample]   (default is the last step in the file)\n"
+            echo -e "Example: ${0##*/} master.res \n"
+            echo -e "Example: ${0##*/} master.res oversample   (force)\n"
+	    ;;
+esac
+
+
+
+#EOF

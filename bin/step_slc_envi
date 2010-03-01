@@ -1,0 +1,49 @@
+#!/bin/tcsh -f
+#
+# ===========================================================================
+# 11/2009 AH:  Automatically generate multilooked images for viewing
+# ===========================================================================
+
+set WORKDIR = '..'
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+
+if (! -e $WORKDIR/roi.proc) then
+    cp $MY_SCR/roi.proc $WORKDIR
+endif
+
+if (! -e $WORKDIR/looks.txt) then
+    set looks = 4
+    echo $looks > $WORKDIR/looks.txt
+else
+    set looks = `cat $WORKDIR/looks.txt`
+endif
+if (! -e $WORKDIR/ar.txt) then
+    set ar = 5
+    echo $ar > $WORKDIR/ar.txt
+else
+    set ar = `cat $WORKDIR/ar.txt`
+endif
+@ azlooks = $looks * $ar
+
+
+\rm -f $dir.raw >& /dev/null
+\rm -f $dir.raw.rsc >& /dev/null
+\rm -f $dir.slc >& /dev/null
+\rm -f $dir.slc.rsc >& /dev/null
+
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+make_raw_envi.pl ASA_ ODR $dir > step_slc.log
+$MY_SCR/roi_prep.pl $dir ODR >> step_slc.log
+roi.pl $dir no 1 no >> step_slc.log
+roipac2doris $dir s >> step_slc.log
+
+set first = `grep 'First_pixel ' slave.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  slave.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+set endras = l.ras
+set endraw = l.raw
+cpxfiddle -w$width -fcr4 -qmag -M$looks/$azlooks -osunraster -e0.5 -s1.0 $dir.slc > image.slc_$looks$endras
+
+cpxfiddle -w$width -fcr4 -qnormal -M$looks/$azlooks -ofloat $dir.slc > image.slc_$looks$endraw
+

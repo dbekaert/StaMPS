@@ -1,0 +1,40 @@
+#!/bin/tcsh -f
+
+### 04/2008 AH: Add RS_DBOW card to resample.dorisin
+### 08/2009 AH: Change sed search criteria
+### 01/2010 MA: Change the way line and pixels are obtained from the .res
+
+#set WORKDIR = `cat .workdir`
+set WORKDIR = ".." 
+
+
+
+if (! -e $WORKDIR/resample.dorisin) then
+    cp $DORIS_SCR/resample.dorisin $WORKDIR
+endif
+                                                                                           
+
+#sed -n '1,/End_precise_orbits:_NORMAL/p' master.res > tmp_master.$$
+#mv tmp_master.$$ master.res
+#sed -n '1,/End_precise_orbits:_NORMAL/p' slave.res > tmp_slave.$$
+#mv tmp_slave.$$ slave.res
+sed -n '1,/*_Start_resample/p' slave.res > tmp_slave.$$
+head -n-1 tmp_slave.$$ > slave.res
+\rm -f tmp_slave.$$
+
+#set first_p = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
+#set last_p = `grep 'Last_pixel '  master.res | gawk 'END {print $4}'`
+#set first_l = `grep 'First_line ' master.res | gawk 'END {print $4}'`
+#set last_l = `grep 'Last_line ' master.res | gawk 'END {print $4}'`
+
+set first_p = `get_slc_lp master.res | awk '{print $3}'`
+set last_p = `get_slc_lp master.res  | awk '{print $4}'`
+set first_l = `get_slc_lp master.res | awk '{print $1}'`
+set last_l = `get_slc_lp master.res  | awk '{print $2}'`
+
+sed -n '1,/RS_OUT_FORMAT/p' $WORKDIR/resample.dorisin > $WORKDIR/tmp_resample.$$
+mv $WORKDIR/tmp_resample.$$ $WORKDIR/resample.dorisin
+echo "RS_DBOW $first_l $last_l $first_p $last_p" >> $WORKDIR/resample.dorisin
+echo "STOP" >>  $WORKDIR/resample.dorisin 
+
+doris $WORKDIR/resample.dorisin >> step_resample.log

@@ -1,0 +1,15 @@
+#!/bin/tcsh -f
+
+set WORKDIR=$cwd
+
+make_orbits
+make_coreg
+make_resample
+#make_filtazi_resample
+make_dems
+make_ifgs
+
+set firstdir = `head --lines=1 make_ifgs.list`
+cd $firstdir
+step_geo
+cd $WORKDIR

@@ -1,0 +1,52 @@
+#!/bin/tcsh -f
+
+set WORKDIR=$cwd
+
+
+set first = `grep 'First_pixel ' master.res | gawk '{print $4}'`
+set last = `grep 'Last_pixel ' master.res | gawk '{print $4}'`
+@ width = ($last - $first) + 1
+echo $width > width.txt
+
+set first_l = `grep 'First_line ' master.res | gawk '{print $4}'`
+set last_l = `grep 'Last_line ' master.res | gawk '{print $4}'`
+@ numlines = ($last_l - $first_l) + 1
+@ numlines_ml= $numlines / 5
+
+echo "*****************************************************" > fake_geo.out
+echo "*_Start_slant2h:" >> fake_geo.out
+echo "*****************************************************" >> fake_geo.out
+echo "Method:                                 schwabisch" >> fake_geo.out
+echo "Data_output_file:                       dem_radar_i.raw" >> fake_geo.out
+echo "Data_output_format:                     real4" >> fake_geo.out
+echo "First_line (w.r.t. original_master):   " $first_l >> fake_geo.out
+echo "Last_line (w.r.t. original_master):    " $last_l >> fake_geo.out
+echo "First_pixel (w.r.t. original_master):  " $first >> fake_geo.out
+echo "Last_pixel (w.r.t. original_master):   " $last >> fake_geo.out
+echo "Multilookfactor_azimuth_direction:      1" >> fake_geo.out
+echo "Multilookfactor_range_direction:        1" >> fake_geo.out
+echo "Ellipsoid (name,a,b):                   WGS84 6.37814e+06 6.35675e+06" >> fake_geo.out
+echo "*****************************************************" >> fake_geo.out
+echo "* End_slant2h:_NORMAL" >> fake_geo.out
+echo "*****************************************************" >> fake_geo.out
+
+if (! -e coarse.dorisin) then
+    cp $DORIS_SCR/coarse.dorisin .
+endif
+
+rm make_ifgs.list
+foreach dir(`cat slcs.list`)
+   set dirdate = `echo $dir | gawk 'BEGIN {FS="/"} {print $NF}'`
+   echo $WORKDIR/$dirdate >> make_ifgs.list
+   if (! -e $dirdate) then
+     mkdir $dirdate
+   endif
+   cd $dirdate
+   #echo $WORKDIR > .workdir
+   cp $dir/slave.res .
+   #cp $WORKDIR/master.res .
+   set ers = `grep ERS slave.res | gawk '{print $5}'`
+   doris $DORIS_SCR/orbit_$ers.dorisin > make_orbits.log
+   doris $WORKDIR/coarse.dorisin >> make_ifgs.log
+   cd ..
+end

@@ -1,0 +1,20 @@
+#!/bin/tcsh -f
+
+set WORKDIR=".."
+
+if (! -e $WORKDIR/filtazi.dorisin) then
+    cp $DORIS_SCR/filtazi.dorisin $WORKDIR
+endif
+if (! -e $WORKDIR/resample.dorisin) then
+    cp $DORIS_SCR/resample.dorisin $WORKDIR
+endif
+
+
+sed -n '1,/End_precise_orbits:_NORMAL/p' slave.res > tmp_slave.$$
+mv tmp_slave.$$ slave.res
+sed -n '1,/End_precise_orbits:_NORMAL/p' master.res > tmp_master.$$
+mv tmp_master.$$ master.res
+
+doris $WORKDIR/filtazi.dorisin > step_filtazi_resample.log
+doris $WORKDIR/resample.dorisin >> step_filtazi_resample.log
+

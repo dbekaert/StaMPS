@@ -1,0 +1,47 @@
+#!/bin/tcsh -f
+
+# Andy Hooper, January 2007
+#
+# 05/2008 AH: Corrected to select CEOS SLCs also
+
+set nonomatch   # MA for pattern matching on ls line
+
+set WORKDIR=$cwd
+
+set insardir = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
+set masterdate = `echo $insardir | gawk 'BEGIN {FS="_"} {print $NF}'`
+if (! -e slcs.list) then
+    \ls -d ../SLC/*/[1,2,s]*.slc | sed "/$masterdate/ d" | gawk 'BEGIN {FS="/"} {print $(NF-1)}' > slcs.list
+    echo "Processing all SLCs as slaves except $masterdate"
+endif
+
+#rm -f make_ifgs.list
+foreach dir(`cat slcs.list`)
+
+   set dirdate = `echo $dir | gawk 'BEGIN {FS="/"} {print $NF}'`
+   if ($dirdate == "") then
+       set dirdate = `echo $dir | gawk 'BEGIN {FS="/"} {print $(NF-1)}'`
+   endif
+   
+   set dir1 = `echo $dir | gawk '{print substr($0,1,1)}'`
+   if ( "$dir1" != "/") then
+       set dir = "../../SLC/$dirdate"
+   endif
+   
+   #echo $WORKDIR/$dirdate >> make_ifgs.list
+   if (! -e $dirdate) then
+     mkdir $dirdate
+   endif
+
+   echo "\n\nEntering : $dirdate \n" # MA tracking
+   cd $dirdate
+
+   if ( -e SLC ) then
+      rm -f SLC
+   endif
+
+   ln -s $dir SLC 
+   step_orbit
+
+   cd ..
+end

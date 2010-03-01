@@ -1,0 +1,4 @@
+#!/bin/tcsh -f
+
+rm -f */slave*.slc
+rm -f */master*.slc

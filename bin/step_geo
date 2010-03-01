@@ -1,0 +1,70 @@
+#!/bin/tcsh -f
+#
+# Andy Hooper, 2005
+# ===========================================================================
+# 09/2008 AH: Generalised for variable mutilooking in az
+# 03/2009 AH: Use DEM directly from Doris
+# 08/2009 AH: Multilooked versions also created
+# ===========================================================================
+
+#set WORKDIR = `cat .workdir`
+set WORKDIR = ".."
+
+if (! -e $WORKDIR/geocode.dorisin) then
+    cp $DORIS_SCR/geocode.dorisin $WORKDIR
+endif               
+
+set first = `grep 'First_pixel ' $WORKDIR/master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel ' $WORKDIR/master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+echo $width > width.txt
+                                                                                           
+set first_l = `grep 'First_line ' $WORKDIR/master.res | gawk 'END {print $4}'`
+set last_l = `grep 'Last_line ' $WORKDIR/master.res | gawk 'END {print $4}'`
+@ numlines = ($last_l - $first_l) + 1
+                                                                                           
+echo "*****************************************************" > fake_geo.out
+echo "*_Start_slant2h:" >> fake_geo.out
+echo "*****************************************************" >> fake_geo.out
+echo "Method:                                 schwabisch" >> fake_geo.out
+echo "Data_output_file:                       dem_radar.raw" >> fake_geo.out
+echo "Data_output_format:                     real4" >> fake_geo.out
+echo "First_line (w.r.t. original_master):   " $first_l >> fake_geo.out
+echo "Last_line (w.r.t. original_master):    " $last_l >> fake_geo.out
+echo "First_pixel (w.r.t. original_master):  " $first >> fake_geo.out
+echo "Last_pixel (w.r.t. original_master):   " $last >> fake_geo.out
+echo "Multilookfactor_azimuth_direction:      1" >> fake_geo.out
+echo "Multilookfactor_range_direction:        1" >> fake_geo.out
+echo "Ellipsoid (name,a,b):                   WGS84 6.37814e+06 6.35675e+06" >> fake_geo.out
+echo "*****************************************************" >> fake_geo.out
+echo "* End_slant2h:_NORMAL" >> fake_geo.out
+echo "*****************************************************" >> fake_geo.out
+
+\cat interferogram.out fake_geo.out > geocode.out
+\rm -f fake_geo.out
+doris $WORKDIR/geocode.dorisin >> step_geo.log
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+set endraw = l.raw
+
+cpxfiddle -w$width -M$looks/$azlooks -fr4 -qnormal -ofloat lon.raw > lon_$looks$endraw
+cpxfiddle -w$width -M$looks/$azlooks -fr4 -qnormal -ofloat lat.raw > lat_$looks$endraw
+cpxfiddle -w$width -M$looks/$azlooks -fr4 -qnormal -ofloat dem_radar.raw > dem_radar_$looks$endraw
+
+\mv -f lon*.raw $WORKDIR
+\mv -f lat*.raw $WORKDIR
+\mv -f dem_radar_*.raw $WORKDIR
+\cp -f dem_radar.raw $WORKDIR/dem_radar_i.raw

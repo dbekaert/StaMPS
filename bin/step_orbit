@@ -1,0 +1,50 @@
+#!/bin/tcsh -f
+#
+# ===========================================================================
+# Andy Hooper, 2005
+# ===========================================================================
+# 09/2008 AH: Skip orbit extraction if precise orbits already in slave.res
+# 03/2009 AH: Only run orbits step if dorisin file exists for the product 
+# 04/2009 AH: Allow for different product specification for ERS CEOS SLCs 
+# 11/2009 MA: Copy orbit_$prod.dorisin to each SLC dir for manually updating precise orbits
+# ===========================================================================
+
+set WORKDIR=$cwd
+
+set dirdate = `pwd | gawk 'BEGIN {FS="/"} {print $NF}'`
+if ($dirdate == "") then
+    set dirdate = `echo $dir | gawk 'BEGIN {FS="/"} {print $(NF-1)}'`
+endif
+
+cp -f SLC/slave.res  .
+cp -f ../master.res .
+
+set precise_orbits = `grep 'End_precise_orbits:' slave.res | gawk '{print $1}'`
+
+if ($precise_orbits == "") then
+  set prod = `grep 'Product type specifier:' slave.res | gawk '{print $4}'`
+  if ($prod == "PRODUCT:ERS-1.SAR.SLC") then
+      set prod = "ERS1" 
+  endif
+  if ($prod == "PRODUCT:ERS-2.SAR.SLC") then
+      set prod = "ERS2" 
+  endif
+  if ($prod == "ERS") then
+      set prod = `grep 'Product type specifier:' slave.res | gawk '{print $5}'`
+  endif
+  if ($prod == "ASAR") then
+     set prod = "Envisat"
+  endif
+  if (-e $DORIS_SCR/orbit_$prod.dorisin) then
+      #doris $DORIS_SCR/orbit_$prod.dorisin > step_orbit.log
+      cp $DORIS_SCR/orbit_$prod.dorisin .        # MA
+      doris orbit_$prod.dorisin > step_orbit.log # MA
+      set n_orbits = `grep NUMBER_OF_DATAPOINTS: slave.res | gawk '{print $2}'`
+      if ($n_orbits == 0) then
+          cp -f SLC/slave.res .
+      endif
+  else
+      echo "WARNING: No DEOS format precise orbit data found for this product"
+  endif
+endif
+

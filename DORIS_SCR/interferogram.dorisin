@@ -1,0 +1,56 @@
+c **********************************************************************
+c ***
+c **********************************************************************
+ c
+ c
+ comment  ___general options___
+ c
+c SCREEN          debug                           // level of output to standard out
+SCREEN          info                           // level of output to standard out
+MEMORY          1000                             // MB
+OVERWRITE                                       // overwrite existing files
+BATCH                                           // non-interactive
+c LISTINPUT OFF                                 // prevents copy of this file to log
+c
+PROCESS          INTERFERO
+PROCESS          COMPREFPHA
+PROCESS          SUBTRREFPHA
+PROCESS          SUBTRREFDEM
+c                                              //
+ c                                              //
+ comment  ___the general io files___            //
+ c                                              //
+LOGFILE         log.out                         // log file
+M_RESFILE       master.res  // parameter file
+S_RESFILE       slave.res                       // parameter file
+I_RESFILE       interferogram.out               // parameter file
+ c
+ c
+ comment ___interferogram generation___
+ c
+INT_OUT_CINT    cint.raw                 // optional
+c INT_OUT_INT   Output/int.raw                  // optional
+c INT_OUT_FE    Output/flatearth.raw            // optional
+INT_MULTILOOK   1 1                            // line, pixel
+ c
+ c
+ comment ___ COMPREFPHA ___
+ c
+FE_METHOD       porbits
+FE_DEGREE       3
+FE_NPOINTS      201
+c
+c ___ step subtrrefpha ___
+c SRP_METHOD      exact
+c 
+SRP_METHOD      polynomial
+SRP_OUT_CINT    cint.minrefpha.raw
+c
+c
+c ___ step subtrrefdem ___
+c SRD_METHOD    gtopo30         // this card will be added in future
+c SRD_METHOD    gtopo30corr     // this card will be added in future
+SRD_OUT_CINT    cint.minrefdem.raw
+SRD_OFFSET      0 0       // az,rg +ve shifts dem down and right
+c
+STOP

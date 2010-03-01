@@ -1,0 +1,21 @@
+#!/bin/tcsh -f
+
+set WORKDIR = '..'
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+
+if (! -e $WORKDIR/roi.proc) then
+    cp $MY_SCR/roi.proc $WORKDIR
+endif
+
+\rm -f $dir.raw
+\rm -f $dir.raw.rsc
+\rm -f $dir.slc
+\rm -f $dir.slc.rsc
+
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+make_raw_envi.pl ASA_ ODR $dir > step_slc.log
+#If problems occur with ODR orbits, try using DORIS VOR orbits:
+#make_raw_envi.pl ASA_ DOR $dir >> step_slc.log
+$MY_SCR/roi_prep_V2.2.pl $dir >> step_slc.log
+roi.pl $dir >> step_slc.log
+roipac2doris $dir s >> step_slc.log

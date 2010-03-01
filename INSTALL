@@ -1,0 +1,4 @@
+Edit the Makefile in src directory if necessary (usually not)
+
+make install
+

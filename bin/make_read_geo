@@ -1,0 +1,11 @@
+#!/bin/tcsh -f
+
+set WORKDIR = $cwd
+
+foreach dir(`cat make_slcs.list`)
+   cd $dir
+   step_read_geo
+   cd ..
+end
+
+cd $WORKDIR

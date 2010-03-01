@@ -1,0 +1,4 @@
+#!/bin/tcsh -f
+
+rm -f *.log
+rm -f */*.log

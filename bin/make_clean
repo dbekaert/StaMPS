@@ -1,0 +1,5 @@
+#!/bin/tcsh -f
+
+make_clean_ifgs
+make_clean_resample
+make_clean_raw

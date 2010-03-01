@@ -1,0 +1,27 @@
+#!/bin/bash
+##
+## MA - 20091021 
+##
+## TUDelft - 2009
+
+ 
+
+# Functions 
+goodfunc(){
+
+for f in `find . -name slave.res`; do
+   grep -H "^precise_orbits:" ${f}
+done 
+}
+
+
+case $# in
+         0) goodfunc 
+	    ;;
+         *) echo -e "Usage: ${0##*/} (run within INSAR processing directory) \n"
+	    ;;
+esac
+
+
+
+#EOF

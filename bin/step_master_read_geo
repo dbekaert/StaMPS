@@ -1,0 +1,134 @@
+#!/bin/tcsh -f
+#
+# ===========================================================================
+# Andy Hooper, 2009
+# ===========================================================================
+# 08/2009 AH: Change multilooked raster file to magnitude
+# ===========================================================================
+
+set masterdate = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
+set CURRDIR = `echo $cwd` 
+set WORKDIR = ".." 
+set INSARDIR = "../../INSAR_$masterdate"
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+#if (! -e $WORKDIR/master_readfiles.dorisin) then
+#    cp $DORIS_SCR/master_readfiles.dorisin $WORKDIR
+#endif
+#if (! -e $WORKDIR/readfiles.dorisin) then
+#    cp $DORIS_SCR/readfiles.dorisin $WORKDIR
+#endif
+#if (! -e $WORKDIR/cropfiles.dorisin) then
+#    cp $DORIS_SCR/cropfiles.dorisin $WORKDIR
+#endif
+
+set lon = `grep lon $WORKDIR/master_crop_geo.in | gawk '{print $NF}'`
+set lat = `grep lat $WORKDIR/master_crop_geo.in | gawk '{print $NF}'`
+set n_lines = `grep n_lines $WORKDIR/master_crop_geo.in | gawk '{print $NF}'`
+set n_pixels = `grep n_pixels $WORKDIR/master_crop_geo.in | gawk '{print $NF}'`
+
+sed -n '1,/M_CROP_OUT/p' $WORKDIR/master_readfiles.dorisin > tmp_master_readfiles.$$
+echo "M_DBOW_GEO  $lat $lon $n_lines $n_pixels // lat lon n_lines n_pixels" >> tmp_master_readfiles.$$
+echo "STOP" >> tmp_master_readfiles.$$
+mv tmp_master_readfiles.$$ $WORKDIR/master_readfiles.dorisin
+
+@ n_lines = $n_lines + 400
+@ n_pixels = $n_pixels + 100
+
+sed -n '1,/S_CROP_OUT/p' $WORKDIR/cropfiles.dorisin > tmp_cropfiles.$$
+echo "S_DBOW_GEO  $lat $lon $n_lines $n_pixels // lon lat n_lines n_pixels" >> tmp_cropfiles.$$
+echo "STOP" >> tmp_cropfiles.$$
+mv tmp_cropfiles.$$ $WORKDIR/cropfiles.dorisin
+
+rm -f master.res
+if ( -e master.slc ) then
+    rm -f master.slc
+endif
+
+doris $WORKDIR/master_readfiles.dorisin > step_master_read.log
+
+set first = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+set endras = l.ras
+set endraw = l.raw
+cpxfiddle -w$width -fci2 -qmag -M$looks/$azlooks -osunraster -e0.5 -s1.0 master.slc > image.slc_$looks$endras
+
+cpxfiddle -w$width -fci2 -qnormal -M$looks/$azlooks -ofloat master.slc > image.slc_$looks$endraw
+
+set master_slc = $masterdate"_crop.slc"
+#set mcrop = `\ls *crop.slc`
+set mcrop = "master.slc"
+
+echo 's#'$mcrop'#'$cwd'/'$master_slc'#' > tmp_sed.in
+sed -f tmp_sed.in master.res > tmp_master.res
+echo 's#SLC/'$masterdate'#INSAR_'$masterdate'#'  > tmp_sed.in
+sed -f tmp_sed.in tmp_master.res > master.res
+rm -f tmp_sed.in
+
+mv master.slc $master_slc
+
+cd $WORKDIR
+\ls -d [1,2]* | sed "/$masterdate/ d" > make_slcs.list
+cd $CURRDIR
+
+
+if (! -e $INSARDIR) then
+    mkdir $INSARDIR  
+endif
+
+#foreach masterres(`find $INSARDIR -name master.res`)
+#    cp -f master.res $masterres
+#end
+if (-e image.slc.rsc) then
+    cp -f image.slc.rsc $INSARDIR
+endif
+cp -f master.res $INSARDIR
+mv $master_slc $INSARDIR
+
+if (! -e $INSARDIR/timing.dorisin) then
+    cp $DORIS_SCR/timing.dorisin $INSARDIR
+endif
+
+if (! -e $INSARDIR/dem.dorisin) then
+    cp $DORIS_SCR/dem.dorisin $INSARDIR
+endif
+
+if (! -e $INSARDIR/geocode.dorisin) then
+    cp $DORIS_SCR/geocode.dorisin $INSARDIR
+endif
+
+if (! -e $INSARDIR/looks.txt) then
+    cp $WORKDIR/looks.txt $INSARDIR
+endif
+
+if (! -e $INSARDIR/ar.txt) then
+    cp $WORKDIR/ar.txt $INSARDIR
+endif
+#set prod = `grep 'Product type specifier:' master.res | gawk '{print $4}'`
+#if ($prod == 'ALOS') then
+#    echo 5 > $INSARDIR/looks.txt
+#    echo 3 > $INSARDIR/ar.txt
+#else if ($prod == 'RSAT') then
+#    echo 10 > $INSARDIR/looks.txt
+#    echo 1 > $INSARDIR/ar.txt
+#else
+#    echo 4 > $INSARDIR/looks.txt
+#    echo 5 > $INSARDIR/ar.txt
+#endif
+#endif
+

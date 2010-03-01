@@ -1,0 +1,49 @@
+#!/bin/csh -f
+
+set NEWDIR = `pwd | gawk 'BEGIN {FS="/INSAR"} {print $1}'`
+set master_slc = `grep -m1 'Data_output_file' master.res | gawk '{print $2}'`
+if ("$master_slc" ==  "" ) then
+   echo "Problem with master.res"
+   exit 4
+endif
+set OLDDIR = `echo $master_slc | gawk 'BEGIN {FS="/INSAR"} {print $1}'`
+if ("$OLDDIR" ==  "$NEWDIR" ) then
+   echo "The directory in master.res is the current directory" 
+   exit 4
+endif
+echo 's#'$OLDDIR'#'$NEWDIR'#'  > tmp_sed.$$
+
+foreach filen(`find .. -name master.res`)
+   if ( `grep $OLDDIR $filen` != "" )  then
+       echo $filen
+       set filedate=`date -r $filen +%Y%m%d_%H%M%S`
+       mv -f $filen $filen.$filedate
+       sed -f tmp_sed.$$ $filen.$filedate > $filen
+   endif
+end
+foreach filen(`find .. -name slave.res`)
+   if ( `grep $OLDDIR $filen` != "" )  then
+       echo $filen
+       set filedate=`date -r $filen +%Y%m%d_%H%M%S`
+       mv -f $filen $filen.$filedate
+       sed -f tmp_sed.$$ $filen.$filedate > $filen
+   endif
+end
+foreach filen(`find . -name '*.list'`)
+   if ( `grep $OLDDIR $filen` != "" )  then
+       echo $filen
+       set filedate=`date -r $filen +%Y%m%d_%H%M%S`
+       mv -f $filen $filen.$filedate
+       sed -f tmp_sed.$$ $filen.$filedate > $filen
+   endif
+end
+foreach filen(`find . -name '*.dorisin'`)
+   if ( `grep $OLDDIR $filen` != "" )  then
+       echo $filen
+       set filedate=`date -r $filen +%Y%m%d_%H%M%S`
+       mv -f $filen $filen.$filedate
+       sed -f tmp_sed.$$ $filen.$filedate > $filen
+   endif
+end
+#rm -f tmp_sed.$$
+

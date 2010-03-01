@@ -1,0 +1,87 @@
+#!/bin/tcsh -f
+#
+# 11/2008 AH: Deltaline/pixel added for Doris 3.96 compatibility
+
+\rm -f slave_corners.txt
+foreach dir(`cat make_coreg.list`)
+    if (-e $dir) then
+      set firstL=`sed -n '1,/* End_crop:/p' $dir/slave.res  | grep 'First_line ' | gawk '{print $4}'`
+      set lastL=`sed -n '1,/* End_crop:/p' $dir/slave.res  | grep 'Last_line ' | gawk '{print $4}'`
+      set firstP=`sed -n '1,/* End_crop:/p' $dir/slave.res  | grep 'First_pixel ' | gawk '{print $4}'`
+      set lastP=`sed -n '1,/* End_crop:/p' $dir/slave.res  | grep 'Last_pixel ' | gawk '{print $4}'`
+    else
+      set firstL=0
+      set lastL=0
+      set firstP=0
+      set lastP=0
+    endif
+    echo $firstL $lastL $firstP $lastP >> slave_corners.txt
+end
+
+matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/coreg_inv.m >> make_coreg.log
+
+set coeffs=`cat coreg_coeffs.txt`
+set corners=`cat corner_offsets.txt`
+set dirnum = 0
+foreach dir(`cat make_coreg.list`)
+    @ dirnum = $dirnum + 1
+    @ headnum = ($dirnum - 1) * 12 + 1
+    @ cornnum = ($dirnum - 1) * 8 + 1
+    if (-e $dir) then
+      sed -n '1,/* End_coarse_correl:/p' $dir/coreg.out > tmp_coreg.$$ 
+      echo "*******************************************************************" >> tmp_coreg.$$
+      echo "" >> tmp_coreg.$$
+      echo "*******************************************************************" >> tmp_coreg.$$
+      echo "*_Start_comp_coregpm:" >> tmp_coreg.$$
+      echo "*******************************************************************" >> tmp_coreg.$$
+      echo "Degree_cpm:     2" >> tmp_coreg.$$
+      echo "Estimated_coefficientsL:" >> tmp_coreg.$$
+      echo "$coeffs[$headnum]        0 0" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        1 0" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        0 1" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        2 0" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        1 1" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        0 2" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "" >> tmp_coreg.$$
+      echo "Estimated_coefficientsP:" >> tmp_coreg.$$
+      echo "$coeffs[$headnum]        0 0" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        1 0" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        0 1" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        2 0" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        1 1" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "$coeffs[$headnum]        0 2" >> tmp_coreg.$$
+      @ headnum = $headnum + 1
+      echo "" >> tmp_coreg.$$
+      echo "Deltaline_slave00_poly:      $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "Deltapixel_slave00_poly:     $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "Deltaline_slave0N_poly:      $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "Deltapixel_slave0N_poly:     $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "Deltaline_slaveN0_poly:      $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "Deltapixel_slaveN0_poly:     $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "Deltaline_slaveNN_poly:      $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "Deltapixel_slaveNN_poly:     $corners[$cornnum]" >> tmp_coreg.$$
+      @ cornnum = $cornnum + 1
+      echo "*******************************************************************" >> tmp_coreg.$$
+      echo "* End_comp_coregpm:_NORMAL" >> tmp_coreg.$$
+      echo "*******************************************************************" >> tmp_coreg.$$
+      mv -f tmp_coreg.$$ $dir/coreg.out
+    endif
+end

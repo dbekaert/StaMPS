@@ -1,0 +1,34 @@
+c **********************************************************************
+c ***
+c **********************************************************************
+ c
+ c
+ comment  ___general options___
+ c
+c SCREEN          debug                         // level of output to standard out
+SCREEN          info                          // level of output to standard out
+c SCREEN          error                           // level of output to standard out
+MEMORY          150                             // MB
+OVERWRITE                                       // overwrite existing files
+BATCH                                           // non-interactive
+c LISTINPUT OFF                                 // prevents copy of this file to log
+c
+PROCESS          COMPREFDEM
+c                                               //
+ c                                              //
+ comment  ___the general io files___            //
+ c                                              //
+LOGFILE         log.out                         // log file
+M_RESFILE       master.res                      // parameter file
+S_RESFILE       slave.res                       // parameter file
+I_RESFILE       dem.out                         // parameter file
+
+ c                                              //
+c
+c ___ step comprefdem ___
+CRD_METHOD      trilinear
+CRD_INCLUDE_FE  OFF                     // phase w.r.t. ellipsoid
+CRD_OUT_FILE    refdem_1l.raw           //
+CRD_OUT_DEM_LP  dem_radar.raw
+c
+STOP
