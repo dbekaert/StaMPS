@@ -5,8 +5,23 @@
 #
 # 06/2009 AH: Increased window size 
 # 11/2009 AH: Use values from timing.dorisin unless too big
+# 02/2010 AH: Create a multilooked image of simulated amplitude at the end
 #==========================================================================
 set WORKDIR = "."
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
 
 set first = `grep 'First_pixel ' $WORKDIR/master.res | gawk 'END {print $4}'`
 set last = `grep 'Last_pixel '  $WORKDIR/master.res | gawk 'END {print $4}'`
@@ -60,3 +75,6 @@ foreach masterres(`grep master $$.tmp`)
     cp -f master.res $masterres
 end
 \rm -f $$.tmp
+
+set endras = l.ras
+cpxfiddle -w$width -e1.0 -s1.0 -qnormal -osunraster -cgray -M$looks/$azlooks -fr4 master_sam.raw > master_sim_$looks$endras

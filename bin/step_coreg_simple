@@ -1,0 +1,26 @@
+#!/bin/tcsh -f
+#
+# Coregisters the slave image directly to the master (only recommended
+# for small baselines)
+#
+# Andy Hooper, Jul 2006
+#
+# ===================================================================
+# 02/2010 AH: Name changed from step_coreg and matlab call removed
+# ===================================================================
+
+set WORKDIR=".."
+
+if (! -e $WORKDIR/coreg_simple.dorisin) then
+    cp $DORIS_SCR/coreg_simple.dorisin $WORKDIR
+endif
+
+sed -n '1,/* End_coarse_correl:/p' coreg.out > tmp_coreg.$$
+echo "*******************************************************************" >> tmp_coreg.$$
+mv tmp_coreg.$$ coreg.out
+
+doris $WORKDIR/coreg_simple.dorisin >> step_coreg.log
+
+
+
+

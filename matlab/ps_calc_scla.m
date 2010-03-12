@@ -9,8 +9,10 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   01/2008 AH: Date processing changed for non-english locales
 %   06/2009 AH: Orbital ramps option added 
 %   06/2009 AH: Ramps option for small baselines corrected 
+%   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
+%   03/2010 AH: Include var/cov in inversion
 %   ===========================================================
-
+logit;
 fprintf('Estimating spatially-correlated look angle error...\n')
 
 if nargin<1
@@ -22,7 +24,7 @@ end
 
 
 small_baseline_flag=getparm('small_baseline_flag',1);
-unwrap_ifg_index=getparm('unwrap_ifg_index',1);
+drop_ifg_index=getparm('drop_ifg_index',1);
 scla_method=getparm('scla_method',1);
 scla_deramp=getparm('scla_deramp',1);
 
@@ -39,13 +41,14 @@ else
     fprintf('   Using small baseline interferograms\n')
 end
 
-unwrap_ifg_index=sort(unwrap_ifg_index);
-
 load psver
 psname=['ps',num2str(psver)];
+rcname=['rc',num2str(psver)];
 pmname=['pm',num2str(psver)];
 bpname=['bp',num2str(psver)];
 meanvname=['mv',num2str(psver)];
+ifgstdname=['ifgstd',num2str(psver)];
+phuwsbresname=['phuw_sb_res',num2str(psver)];
 if use_small_baselines==0
     phuwname=['phuw',num2str(psver)];
     sclaname=['scla',num2str(psver)];
@@ -55,6 +58,7 @@ else
     sclaname=['scla_sb',num2str(psver)];
     apsname=['aps_sb',num2str(psver)];
 end
+
 
 if use_small_baselines==0
     evalcmd=['!rm -f ',meanvname,'.mat'];
@@ -75,8 +79,8 @@ uw=load(phuwname);
 
 if strcmpi(small_baseline_flag,'y') & use_small_baselines==0
     unwrap_ifg_index=[1:ps.n_image];
-elseif strcmp(unwrap_ifg_index,'all')
-    unwrap_ifg_index=[1:ps.n_ifg];
+else
+    unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 end
 
 if strcmpi(scla_deramp,'y')
@@ -157,19 +161,44 @@ else
     G=[ones(length(unwrap_ifg_index),1),double(bperp_mat(i,unwrap_ifg_index)'),double(day(unwrap_ifg_index))];
     m0=[0;0;0];
 end
+
+ifg_vcm=eye(size(uw.ph_uw,2));
     
-for i=1:ps.n_ps
-    d=double(uw.ph_uw(i,unwrap_ifg_index)');
-    m=G\d; % L2-norm
-    if strcmpi(scla_method,'L1')
+if strcmpi(small_baseline_flag,'y')
+    if use_small_baselines==0 
+        phuwres=load(phuwsbresname,'sm_cov');
+        if isfield(phuwres,'sm_cov')
+            ifg_vcm=phuwres.sm_cov;
+        end
+    else
+        phuwres=load(phuwsbresname,'sb_cov');
+        if isfield(phuwres,'sb_cov')
+            ifg_vcm=phuwres.sb_cov;
+        end
+    end
+else
+    ifgstd=load(ifgstdname);
+    ifg_vcm=diag((ifgstd.ifg_std*pi/180).^2);
+    clear ifgstd
+end
+
+if strcmpi(scla_method,'L1')
+    for i=1:ps.n_ps
         m=fminsearch(@(x) sum(abs(d-G*x)),m); % L1-norm, less emphasis on outliers
+        K_ps_uw(i)=m(2);
+        if use_small_baselines==0
+            C_ps_uw(i)=m(1);
+        end
+        if i/100000==round(i/100000)
+            fprintf('%d of %d pixels processed\n',i,ps.n_ps)
+        end
     end
-    K_ps_uw(i)=m(2);
+else
+    d=double(uw.ph_uw(:,unwrap_ifg_index)');
+    m=lscov(G,d,ifg_vcm(unwrap_ifg_index,unwrap_ifg_index)); % L2-norm
+    K_ps_uw=m(2,:)';
     if use_small_baselines==0
-        C_ps_uw(i)=m(1);
-    end
-    if i/100000==round(i/100000)
-        fprintf('%d of %d pixels processed\n',i,ps.n_ps)
+        C_ps_uw=m(1,:)';
     end
 end
 
@@ -185,8 +214,6 @@ if ~isempty(oldscla)
     movefile([sclaname,'.mat'],['tmp_',sclaname,datestr(olddatenum,'_yyyymmdd_HHMMSS'),'.mat']);
 end
 
-save(sclaname,'ph_scla','K_ps_uw','C_ps_uw','ph_ramp')
-
+save(sclaname,'ph_scla','K_ps_uw','C_ps_uw','ph_ramp','ifg_vcm')
     
-    
-
+logit(1);

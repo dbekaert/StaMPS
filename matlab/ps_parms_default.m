@@ -14,22 +14,31 @@ function ps_parms_default()
 %   01/2010 AH: add check for write permission before saving
 %   02/2010 AH: weed_alpha replaced by weed_time_win
 %   02/2010 AH: weed_max_noise added
+%   02/2010 AH: plot_pixel_size replaced by plot_scatterer_size (in m)
+%   02/2010 AH: plot_dem_posting added
+%   02/2010 AH: ref_centre_lonlat and ref_radius added
+%   02/2010 AH: unwrap_ifg_index replaced by drop_ifg_index
+%   02/2010 AH: weed_time_win and unwrap_time_win default changed to 730
+%   03/2010 AH: add logging
 %   ======================================================================
 
 
 parmfile='parms.mat';
+parent_flag=0;
 
 if exist('./parms.mat','file')
     parms=load(parmfile);
 elseif exist('../parms.mat','file')
     parmfile='../parms.mat';
     parms=load(parmfile);
+    parent_flag=1;
 else
     parms=struct('Created',date);
     parms.small_baseline_flag='n'; 
 end
 
-num_fields=size(fieldnames(parms),1);
+parmfields_before=fieldnames(parms);
+num_fields=size(parmfields_before,1);
 
 if ~isfield(parms,'max_topo_err')
     parms.max_topo_err=5;
@@ -91,8 +100,12 @@ if ~isfield(parms,'gamma_stdev_reject')
     parms.gamma_stdev_reject=0;
 end
 
+if isfield(parms,'weed_alpha')
+    parms=rmfield(parms,'weed_alpha');
+end
+
 if ~isfield(parms,'weed_time_win')
-    parms.weed_time_win=180;    % weeding smoothing window alpha (days)
+    parms.weed_time_win=730;    % weeding smoothing window alpha (days)
 end
 
 if ~isfield(parms,'weed_max_noise')
@@ -123,8 +136,24 @@ if ~isfield(parms,'unwrap_patch_phase')
     parms.unwrap_patch_phase='n';
 end
 
-if ~isfield(parms,'unwrap_ifg_index')
-    parms.unwrap_ifg_index='all';  
+if isfield(parms,'unwrap_ifg_index')
+    try
+       ps=load('ps2.mat');
+    catch
+       try
+          ps=load('ps1.mat');
+       catch
+       end
+    end
+    if exist('ps','var') & ~strcmpi(parms.unwrap_ifg_index,'all')
+       parms.drop_ifg_index=setdiff([1:ps.n_ifg],parms.unwrap_ifg_index);  
+    end
+    parms=rmfield(parms,'unwrap_ifg_index');
+    num_fields=0;
+end
+
+if ~isfield(parms,'drop_ifg_index')
+    parms.drop_ifg_index=[];  
 end
 
 if ~isfield(parms,'unwrap_prefilter_flag')
@@ -144,7 +173,7 @@ if ~isfield(parms,'unwrap_alpha')
 end
 
 if ~isfield(parms,'unwrap_time_win')
-    parms.unwrap_time_win=180;    % unwrapping smoothing window alpha
+    parms.unwrap_time_win=730;    % unwrapping smoothing window alpha
 end
 
 if ~isfield(parms,'unwrap_gold_alpha')
@@ -167,26 +196,43 @@ if ~isfield(parms,'scn_deramp_ifg')
     parms.scn_deramp_ifg=[];  % deramp these ifgs and add to estimate of scn
 end
 
-if ~isfield(parms,'ref_x') & ~isfield(parms,'ref_lon')
+if ~isfield(parms,'ref_lon')
     parms.ref_lon=[-inf,inf];  % low and high longitude for ref ps
 end
 
-if ~isfield(parms,'ref_y') & ~isfield(parms,'ref_lat')
-
+if ~isfield(parms,'ref_lat')
     parms.ref_lat=[-inf,inf];  % low and high latitude for ref ps
 end
 
-if ~isfield(parms,'plot_pixel_size')
-    parms.plot_pixel_size=5; 
+if ~isfield(parms,'ref_centre_lonlat')
+    parms.ref_centre_lonlat=[0,0];  % centre lon/lat for ref ps
+end
+
+if ~isfield(parms,'ref_radius')
+    parms.ref_radius=inf;  % radius from centre for ref ps
+end
+
+if ~isfield(parms,'plot_dem_posting')
+    parms.plot_dem_posting=90; 
+end
+
+if isfield(parms,'plot_pixel_size')
+    parms.plot_scatterer_size=parms.plot_pixel_size*25; 
+    num_fields=0;
+    parms=rmfield(parms,'plot_pixel_size');
+end
+
+if ~isfield(parms,'plot_scatterer_size')
+    parms.plot_scatterer_size=90; 
 end
 
 if ~isfield(parms,'plot_color_scheme')
     parms.plot_color_scheme='inflation'; 
 end
 
-%if ~isfield(parms,'pixel_aspect_ratio')
-%    parms.pixel_aspect_ratio=5; % ratio of range pixel size to azimuth
-%end
+if isfield(parms,'pixel_aspect_ratio')
+    parms=rmfield(parms,'pixel_aspect_ratio');
+end
 
 if ~isfield(parms,'shade_rel_angle')
     parms.shade_rel_angle=[90,45]; % look angle for dem shaded relief
@@ -218,14 +264,26 @@ if ~isfield(parms,'sb_recalc_index')
     end
 end
 
-
-%parms
-if size(fieldnames(parms),1)~=num_fields
-    fid=fopen(parmfile,'w');
-    if fid>0
-        fclose(fid);
+parmfields=fieldnames(parms);
+if size(parmfields,1)~=num_fields
+    try
         save(parmfile,'-struct','parms')
-    else
+        for i=1:size(parmfields,1)
+            if isempty(strmatch(parmfields{i},parmfields_before))
+               parmname=parmfields{i};
+               value=getfield(parms,parmname);
+               if isempty(value)
+                   value='[]';
+               end
+               if isnumeric(value)
+                   logit([parmname,' = ',num2str(value)],0,parent_flag);
+               else
+                   logit([parmname,' = ',value],0,parent_flag);
+               end
+            end
+        end
+
+    catch
         fprintf('Warning: missing parameters could not be updated (no write access)\n')
     end
 end

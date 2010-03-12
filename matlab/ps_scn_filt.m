@@ -7,15 +7,17 @@ function []=ps_scn_filt()
 %   11/2006 AH: Error corrected that was leaving master in temporal smoothing
 %   04/2007 AH: Added 64-bit machine compatibility
 %   05/2007 AH: Spatially correlated look angle error added  
+%   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
+%   02/2010 AH: Bug fixed that could cause a slave scn to be set to zero
 %   =======================================================================
-
+logit;
 fprintf('Estimating other spatially-correlated noise...\n')
 
 pix_size=getparm('unwrap_grid_size',1);
 time_win=getparm('scn_time_win',1);
 deramp_ifg=getparm('scn_deramp_ifg',1);
 scn_wavelength=getparm('scn_wavelength',1);
-unwrap_ifg_index=getparm('unwrap_ifg_index',1);
+drop_ifg_index=getparm('drop_ifg_index',1);
 small_baseline_flag=getparm('small_baseline_flag',1);
 
 load psver
@@ -31,12 +33,12 @@ uw=load(phuwname);
 
 if strcmpi(small_baseline_flag,'y')
     unwrap_ifg_index=[1:ps.n_image];
-elseif strcmp(unwrap_ifg_index,'all')
-    unwrap_ifg_index=[1:ps.n_ifg];
+else
+    unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 end
 
 day=ps.day(unwrap_ifg_index);
-master_ix=sum(ps.master_day>day)+1;
+master_ix=sum(ps.master_day>ps.day)+1;
 n_ifg=length(unwrap_ifg_index);
 n_ps=ps.n_ps;
 
@@ -73,6 +75,9 @@ fclose(fid);
 
 %%% deramp end ifgs (unlike aps, orbit errors not so random and end
 %%% orbit errors can pass through the low-pass filter
+if strcmpi(deramp_ifg,'all')
+    deramp_ifg=1:ps.n_ifg;
+end
 deramp_ifg=intersect(deramp_ifg,unwrap_ifg_index);
 deramp_ix=zeros(size(deramp_ifg));
 ph_ramp=zeros(n_ps,length(deramp_ifg));
@@ -187,3 +192,4 @@ ph_scn_slave(:,unwrap_ifg_index)=ph_scn;
 ph_scn_slave(:,master_ix)=0;
 
 save(scnname,'ph_scn_slave','ph_hpt','ph_ramp')    
+logit(1);

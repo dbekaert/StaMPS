@@ -5,10 +5,12 @@ function [demsavename]=ps_load_dem()
 %  
 %   ======================================================
 %   08/2006 AH: amended for patches
+%   02/2010 AH: add option to set posting
 %   ======================================================
 
 
-min_posting=0.0001388888889*3; % minimum posting of dem in degrees
+
+min_posting=getparm('plot_dem_posting',1)*9e-6; %minimum posting of dem in degrees
 
 load psver
 psname=['ps',num2str(psver)];
@@ -61,7 +63,7 @@ fid=fopen(demparmsname,'r');
   x_offset=(ll0(1)-dem_lon)/dem_posting*x_posting;
   y_offset=(ll0(2)-dem_lat)/dem_posting*y_posting;
 
-  if dem_posting<min_posting
+  if round(dem_posting)<min_posting
     scale_factor=1/(ceil(min_posting/dem_posting));
     dem=imresize(dem,scale_factor,'bicubic');
     x_posting=x_posting/scale_factor;
@@ -72,6 +74,7 @@ fid=fopen(demparmsname,'r');
     dem_posting=dem_posting/scale_factor;
   end    
 
+  setparm('plot_dem_posting',round(dem_posting/9e-6))
   save(demsavename,'dem','x_offset', 'y_offset', 'x_posting', 'y_posting', 'dem_lon', 'dem_lat', 'dem_width', 'dem_length', 'dem_posting')
 
 %end % end-if

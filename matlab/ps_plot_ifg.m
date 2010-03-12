@@ -23,16 +23,18 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg)
 %   11/2009 AH: Fix bug for BG_FLAG 6 to work
 %   11/2009 AH: Reduce memory needs for amplitude plots
 %   11/2009 AH: Fix orientation and aspect ratio for amplitude plots
+%   02/2010 AH: Add options for dem posting and scatterer size
+%   02/2010 AH: Plot reference centre if circular
 %   ======================================================================
 
-
-
-plot_pixel_size=getparm('plot_pixel_size');
-%pixel_aspect_ratio=getparm('pixel_aspect_ratio');
+plot_pixel_m=getparm('plot_scatterer_size');
+plot_dem_posting=getparm('plot_dem_posting');
 plot_color_scheme=getparm('plot_color_scheme');
 shade_rel_angle=getparm('shade_rel_angle');
 lonlat_offset=getparm('lonlat_offset');
 heading=getparm('heading');
+ref_radius=getparm('ref_radius');
+ref_centre=getparm('ref_centre_lonlat');
 
 if nargin < 1
     error('PS_PLOT_IFG(PHASE,BACKGROUND,LIMS)')
@@ -63,8 +65,6 @@ end
 marker_size=8; 
 
 
-x_posting=4/3600;
-y_posting=4/3600;
 
 load psver
 psname=['ps',num2str(psver)];
@@ -74,6 +74,11 @@ lonlat=ps.lonlat;
 if bg_amp==1
     ij=ps.ij;
 end
+
+mean_x_post=(max(ps.xy(:,2))-min(ps.xy(:,2)))/(max(ps.ij(:,3))-min(ps.ij(:,3)));
+mean_y_post=(max(ps.xy(:,3))-min(ps.xy(:,3)))/(max(ps.ij(:,2))-min(ps.ij(:,2)));
+pixel_aspect_ratio=abs(mean_x_post/mean_y_post);
+
 
 lonlat(:,1)=lonlat(:,1)+lonlat_offset(1);
 lonlat(:,2)=lonlat(:,2)+lonlat_offset(2);
@@ -159,11 +164,8 @@ if bg_flag==4 % plot on amplitude image
     [n,m]=size(amp_mean);
     c=[gray(256);c];
 
-    mean_x_post=mean((ps.xy(:,2)-mean(ps.xy(:,2)))./(ps.ij(:,3)-mean(ps.ij(:,3))));
-    mean_y_post=mean((ps.xy(:,3)-mean(ps.xy(:,3)))./(ps.ij(:,2)-mean(ps.ij(:,2))));
-    pixel_aspect_ratio=abs(mean_x_post/mean_y_post);
-
     az_ix=pixel_aspect_ratio:pixel_aspect_ratio:m*pixel_aspect_ratio;
+    plot_pixel_size=round(abs(plot_pixel_m/mean_x_post));
     
     pixel_margin1=floor((plot_pixel_size-1)/2);
     pixel_margin2=ceil((plot_pixel_size-1)/2);
@@ -224,10 +226,8 @@ elseif bg_flag==5 % plot on amplitude image, let amp show through color
     cd=ci;
     [n,m]=size(cd);
 
-    mean_x_post=mean((ps.xy(:,2)-mean(ps.xy(:,2)))./(ps.ij(:,3)-mean(ps.ij(:,3))));
-    mean_y_post=mean((ps.xy(:,3)-mean(ps.xy(:,3)))./(ps.ij(:,2)-mean(ps.ij(:,2))));
-    pixel_aspect_ratio=abs(mean_x_post/mean_y_post);
     az_ix=pixel_aspect_ratio:pixel_aspect_ratio:m*pixel_aspect_ratio;
+    plot_pixel_size=round(abs(plot_pixel_m/mean_x_post));
     
     pixel_margin1=floor((plot_pixel_size-1)/2);
     pixel_margin2=ceil((plot_pixel_size-1)/2);
@@ -246,7 +246,7 @@ elseif bg_flag==5 % plot on amplitude image, let amp show through color
     %    amp_mean=flipud(fliplr(cd));
     %end 
     if cos(heading*pi/180)<0 
-        amp_mean=flipud(fliplr(cd));
+        cd=flipud(fliplr(cd));
     end 
 
     image(az_ix,[1:size(cd,1)],cd)
@@ -266,9 +266,16 @@ elseif floor(bg_flag)==2
     end
     if ~exist(demfile,'file')
         demfile=ps_load_dem;
+        load(demfile)
+    else
+        load(demfile)
+        if round(dem_posting/9e-6/plot_dem_posting*10)~=10 % allow 5% error
+            demfile=ps_load_dem;
+            load(demfile)
+        end
     end
-    load(demfile)
 
+    plot_pixel_size=round((plot_pixel_m/(dem_posting/9e-6)-1)/2)*2+1;
     [dem_y,dem_x]=size(dem);
     c2=gray(64);
     c2=c2(35:50,:);
@@ -326,9 +333,15 @@ elseif bg_flag==3    % plot on 3D DEM
     end
     if ~exist(demfile,'file')
         demfile=ps_load_dem;
+        load(demfile)
+        if round(dem_posting/9e-6/plot_dem_posting*10)~=10 % allow 5% error
+            demfile=ps_load_dem;
+            load(demfile)
+        end
     end
     load(demfile)
     
+    plot_pixel_size=round((plot_pixel_m/(dem_posting/9e-6)-1)/2)*2+1;
     [dem_y,dem_x]=size(dem);
     c2=gray(80);
     x=[dem_lon:dem_posting:(dem_x-1)*dem_posting+dem_lon];
@@ -376,7 +389,15 @@ elseif bg_flag==3    % plot on 3D DEM
     
 elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     
-    
+    cal0=mean(lonlat)'; 
+    xy_ratio=llh2local([cal0;0],[cal0+[0.1;0.1];0]);
+    aspect_ratio=xy_ratio(1)/xy_ratio(2);
+
+    y_posting=plot_pixel_m*9e-6; %in degrees
+    x_posting=y_posting/aspect_ratio;
+    plot_pixel_size=1;
+    %plot_pixel_size=round(plot_pixel_m/plot_posting);
+
     x=[min(lonlat(:,1))-2*x_posting:x_posting:max(lonlat(:,1))+2*x_posting];
     y=[min(lonlat(:,2))-2*y_posting:y_posting:max(lonlat(:,2))+2*y_posting];
     
@@ -414,17 +435,21 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     xy_ratio=llh2local([dem_lon+lon_range;dem_lat+lat_range;0],[dem_lon;dem_lat;0]);
     aspect_ratio=[xy_ratio(1)/xy_ratio(2),1,1];
     set(gca,'plotboxaspectratio',aspect_ratio)
-    
     image(x,y,R)
     axis tight
+    if ref_radius<inf
+        p=plot(ref_centre(1),ref_centre(2),'k*');
+        set(p,'markersize',10,'linewidth',1)
+    end
     
    
     
 
 elseif bg_flag==6     % xy axes
     
-    x_posting=10;
-    y_posting=10;
+    x_posting=plot_pixel_m;
+    y_posting=plot_pixel_m;
+    plot_pixel_size=1;
     
     x=[min(ps.xy(:,2))-2*x_posting:x_posting:max(ps.xy(:,2))+2*x_posting];
     y=[min(ps.xy(:,3))-2*y_posting:y_posting:max(ps.xy(:,3))+2*y_posting];

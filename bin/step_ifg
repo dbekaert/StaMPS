@@ -8,7 +8,6 @@
 # 01/2010 MA: Use get_slc_lp for getting line and pixel coordinates.
 # ===========================================================================
 
-#set WORKDIR = `cat .workdir`
 set WORKDIR = ".." 
 
 if ( -e $WORKDIR/looks.txt) then 

@@ -18,6 +18,7 @@ function []=ps_load_initial()
 
 
 %NB IFGS assumed in ascending date order
+logit;
 fprintf('Loading data into matlab...\n')
 
 phname=['pscands.1.ph'];            % for each PS candidate, a float complex value for each ifg
@@ -252,5 +253,4 @@ save(bpsavename,'bperp_mat');
 
 end % end-if
 
-
-
+logit(1);

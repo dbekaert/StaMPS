@@ -29,6 +29,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm)
 %   01/2007 AH: calculate spatially correlated look angle error added
 %   03/2009 AH: simultaneously estimate velocity when SCLA estimated
 %   03/2009 AH: smooth SCLA for unwrapping iteration
+%   03/2010 AH: move ps_cal_ifg_std to after merge step
 %   =================================================================
 
 nfill=40;
@@ -154,7 +155,6 @@ for i=1:length(patchdir)
         msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 5 ';
         fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
         ps_correct_phase;
-        ps_calc_ifg_std;
     end
 
     
@@ -165,6 +165,7 @@ if start_step<=5 & end_step >=5
     if patches_flag=='y'
         ps_merge_patches
     end
+    ps_calc_ifg_std;
 end
 
 

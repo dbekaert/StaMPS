@@ -5,6 +5,7 @@ function []=ps_output()
 %
 %   =======================================================================
 %   09/2009 AH: Correct processing for small baselines output
+%   03/2010 AH: Add velocity standard deviation 
 %   =======================================================================
 
 fprintf('Writing output files...\n')
@@ -18,6 +19,7 @@ phuwname=['phuw',num2str(psver)];
 sclaname=['scla',num2str(psver)];
 hgtname=['hgt',num2str(psver)];
 scnname=['scn',num2str(psver)];
+mvname=['mv',num2str(psver)];
 meanvname=['mean_v'];
 
 ps=load(psname);
@@ -90,8 +92,8 @@ meanv=load(meanvname);
 lambda=getparm('lambda');
 mean_v=-meanv.m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
 v_sort=sort(mean_v);
-min_v=v_sort(ceil(length(v_sort)*0.001))
-max_v=v_sort(floor(length(v_sort)*0.999))
+min_v=v_sort(ceil(length(v_sort)*0.001));
+max_v=v_sort(floor(length(v_sort)*0.999));
 mean_v(mean_v<min_v)=min_v;
 mean_v(mean_v>max_v)=max_v;
 
@@ -99,6 +101,21 @@ mean_v(mean_v>max_v)=max_v;
 mean_v_name=['ps_mean_v.xy'];
 mean_v=[ps.lonlat,double(mean_v)];
 save(mean_v_name,'mean_v','-ASCII');
+
+
+if exist(['./',mvname,'.mat'],'file');
+  mv=load(mvname);
+  mean_v_std=mv.mean_v_std;
+  v_sort=sort(mean_v_std);
+  min_v=v_sort(ceil(length(v_sort)*0.001));
+  max_v=v_sort(floor(length(v_sort)*0.999));
+  mean_v_std(mean_v_std<min_v)=min_v;
+  mean_v_std(mean_v_std>max_v)=max_v;
+  mean_v_name=['ps_mean_v_std.xy'];
+  mean_v=[ps.lonlat,double(mean_v_std)];
+  save(mean_v_name,'mean_v','-ASCII');
+end
+
 
 %%Note mean_v is relative to a reference point
 %%and dem_error is relative to mean of zero height points (if there are any)

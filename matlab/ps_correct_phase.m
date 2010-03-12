@@ -7,7 +7,7 @@ function []=PS_correct_phase
 %   07/2006 AH: Use specific bperp for correction
 %   09/2006 AH: add small baselines 
 %   ==========================================================
-
+logit;
 fprintf('Correcting phase for look angle error...\n')
 
 
@@ -49,6 +49,7 @@ else
     save(rcname,'ph_rc','ph_reref'); 
 end
 
-    
-    
-
+%A=sparse([[1:n_edge]';[1:n_edge]'],[edges(:,2);edges(:,3)],[-ones(n_edge,1);ones(n_edge,1)]);
+%A=double(A(:,2:n_ps));
+%K_ps_weed=[0;lscov(A,K,1./double(edge_var))];
+logit(1);

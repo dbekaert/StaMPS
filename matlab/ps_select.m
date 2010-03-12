@@ -17,8 +17,9 @@ function []=ps_select(reest_flag,plot_flag)
 %   01/2010 KS: fixed badly conditioned polyfit errors by scaling and
 %               centering
 %   02/2010 AH: Only bin by D_A if enough candidate pixels
+%   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
 %   ======================================================================
-
+logit;
 fprintf('Selecting stable-phase pixels...\n')
 
 if nargin<1
@@ -45,6 +46,7 @@ else
 end
 gamma_stdev_reject=getparm('gamma_stdev_reject',1);
 small_baseline_flag=getparm('small_baseline_flag',1);
+drop_ifg_index=getparm('drop_ifg_index',1);
 
 
 if strcmpi(small_baseline_flag,'y')
@@ -64,6 +66,8 @@ bpname=['bp',num2str(psver)];
 
 ps=load(psname);
 
+ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
+
 if exist([phname,'.mat'],'file')
     phin=load(phname);
     ph=phin.ph;
@@ -72,20 +76,19 @@ else
     ph=ps.ph;
 end
 
-if strcmpi(small_baseline_flag,'y')
-    bperp=ps.bperp;
-    n_ifg=ps.n_ifg;
-    n_ps=ps.n_ps;
-    xy=ps.xy;
-else
+bperp=ps.bperp;
+n_ifg=ps.n_ifg;
+if ~strcmpi(small_baseline_flag,'y')
     master_ix=sum(ps.master_day>ps.day)+1;
-    ph=ph(:,[1:ps.master_ix-1,ps.master_ix+1:end]);
-    bperp=ps.bperp([1:ps.master_ix-1,ps.master_ix+1:end]);
-    n_ifg=ps.n_ifg-1;
-    n_ps=ps.n_ps;
-    xy=ps.xy;
+    no_master_ix=setdiff([1:ps.n_ifg],ps.master_ix);
+    ifg_index=setdiff(ifg_index,ps.master_ix);
+    ifg_index(ifg_index>master_ix)=ifg_index(ifg_index>master_ix)-1;
+    ph=ph(:,no_master_ix);
+    bperp=bperp(no_master_ix);
+    n_ifg=length(no_master_ix);
 end
-clear ps
+n_ps=ps.n_ps;
+xy=ps.xy;
 
 pm=load(pmname);
 if exist([daname,'.mat'],'file')
@@ -203,10 +206,10 @@ fprintf('%d PS selected initially\n',n_ps)
 %%%% reject part-time PS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if gamma_stdev_reject>0
-    ph_res_cpx=exp(j*pm.ph_res);
+    ph_res_cpx=exp(j*pm.ph_res(:,ifg_index));
     coh_std=zeros(length(ix),1);
     for i=1:length(ix)
-        coh_std(i)=std(bootstrp(100,@(ph) abs(sum(ph))/length(ph), ph_res_cpx(ix(i),:)));
+        coh_std(i)=std(bootstrp(100,@(ph) abs(sum(ph))/length(ph), ph_res_cpx(ix(i),ifg_index)));
     end
     clear ph_res_cpx
     ix=ix(coh_std<gamma_stdev_reject);
@@ -218,6 +221,13 @@ end
 if reest_flag~=1  
 
   if reest_flag~=2 % reestimate coh with the PS removed from filtered patch
+    for i=1:length(drop_ifg_index);
+      if strcmpi(small_baseline_flag,'y')
+        fprintf('%s-%s is dropped from noise re-estimation\n',datestr(ps.ifgday(drop_ifg_index(i),1)),datestr(ps.ifgday(drop_ifg_index(i),2)))
+      else
+        fprintf('%s is dropped from noise re-estimation\n',datestr(ps.day(drop_ifg_index(i))))
+      end
+    end
     pm=rmfield(pm,{'ph_res'});
     pm=rmfield(pm,{'ph_patch'});
     ph_patch2=zeros(n_ps,n_ifg,'single');
@@ -277,11 +287,11 @@ if reest_flag~=1
         psdph=ph(i,:).*conj(ph_patch2(i,:));
         if sum(psdph==0)==0  % insist on a non-null value in every ifg
             psdph=psdph./abs(psdph);
-            [Kopt,Copt,cohopt,ph_residual]=ps_topofit(psdph,bperp_mat(i,:)',pm.n_trial_wraps,'n');
+            [Kopt,Copt,cohopt,ph_residual]=ps_topofit(psdph(ifg_index),bperp_mat(i,ifg_index)',pm.n_trial_wraps,'n');
             K_ps2(i)=Kopt(1);
             C_ps2(i)=Copt(1);
             coh_ps2(i)=cohopt(1);
-            ph_res2(i,:)=angle(ph_residual);
+            ph_res2(i,ifg_index)=angle(ph_residual);
         else
             K_ps2(i)=nan;
             coh_ps2(i)=nan;
@@ -388,6 +398,6 @@ if  plot_flag==1
 end
 
 
-save(selectname,'ix','keep_ix','ph_patch2','ph_res2','K_ps2','C_ps2','coh_ps2','coh_thresh','coh_thresh_coeffs','clap_alpha','clap_beta','n_win','max_percent_rand','gamma_stdev_reject','small_baseline_flag');
+save(selectname,'ix','keep_ix','ph_patch2','ph_res2','K_ps2','C_ps2','coh_ps2','coh_thresh','coh_thresh_coeffs','clap_alpha','clap_beta','n_win','max_percent_rand','gamma_stdev_reject','small_baseline_flag','ifg_index');
     
-
+logit(1);

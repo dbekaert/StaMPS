@@ -8,6 +8,7 @@
 // Change History
 // ==============================================
 // 03/2009 MA Fix for gcc 4.3.x
+// 02/2010 AH Allow processing with no DEM
 // ==============================================
 
 #include <iostream>  
@@ -64,7 +65,6 @@ try {
      outfilename="pscands.1.hgt";
   else outfilename = argv[3];
 
-     
   ifstream parmfile (argv[1], ios::in);
   if (! parmfile.is_open()) 
   {	  
@@ -100,31 +100,28 @@ try {
   ifstream* ifgfile   = new ifstream[num_files];
   float* calib_factor = new float[num_files];
       
-  for (int i=0; i<num_files; ++i) 
-  {
-    parmfile >> ifgfilename;
-    ifgfile[i].open (ifgfilename, ios::in|ios::binary);
-    cout << "opening " << ifgfilename << "...\n";
+  parmfile >> ifgfilename;
+  ifgfile[0].open (ifgfilename, ios::in|ios::binary);
+  cout << "opening " << ifgfilename << "...\n";
 
-    if (! ifgfile[i].is_open())
-    {	    
-        cout << "Error opening file " << ifgfilename << endl; 
-	throw "";
-    }
-
-    char header[32];
-    long magic=0x59a66a95;
-    ifgfile[i].read(header,32);
-    if (*reinterpret_cast<long*>(header) == magic)
-        cout << "sun raster file - skipping header\n";
-    else ifgfile[i].seekg(ios::beg); 
-
+  int nodem_sw = 0;   
+  if (! ifgfile[0].is_open())
+  {	    
+      cout << "Warning: cannot open " << ifgfilename << " - assumed no DEM" << endl; 
+      nodem_sw = 1;
   }
+
+  char header[32];
+  long magic=0x59a66a95;
+  ifgfile[0].read(header,32);
+  if (*reinterpret_cast<long*>(header) == magic)
+      cout << "sun raster file - skipping header\n";
+  else ifgfile[0].seekg(ios::beg); 
   
   parmfile.close();
   
   char buffer[1000];
-  char ifg_pixel[sizeof(float)];;
+  char ifg_pixel[sizeof(float)]= {0x00000000};
   int pscid=0;
   int x=0;
   int y=0;
@@ -139,12 +136,12 @@ try {
   {
     long xyaddr = (y*width+x)*sizeof(float);
 
-    for ( int i=0; i<num_files; i++) 
+    if (nodem_sw == 0)
     {
-      ifgfile[i].seekg(xyaddr, ios::beg);	    
-      ifgfile[i].read (ifg_pixel, sizeof(float));
-      outfile.write(ifg_pixel, sizeof(float));
+      ifgfile[0].seekg(xyaddr, ios::beg);	    
+      ifgfile[0].read (ifg_pixel, sizeof(float));
     } 
+    outfile.write(ifg_pixel, sizeof(float));
 
     if (pscid/100000.0 == rint(pscid/100000.0))
       cout << pscid << " PS candidates processed\n";

@@ -50,12 +50,10 @@ else
         dph_mean=sum(dph_space.*repmat(weight_factor,ui.n_edge,1),2);
         dph_mean_adj=angle(dph_space.*repmat(conj(dph_mean),1,uw.n_ifg)); % subtract weighted mean
         G=[ones(uw.n_ifg,1),time_diff'];
-        WG=G.*[weight_factor',weight_factor'];
-        m=double(WG)\(repmat(double(weight_factor),ui.n_edge,1).*double(dph_mean_adj))'; % weighted least-sq to find best-fit line
+        m=lscov(G,double(dph_mean_adj)',weight_factor);
         dph_mean_adj=angle(exp(j*(dph_mean_adj-(G*m)'))); % subtract first estimate
-        m2=double(WG)\(repmat(double(weight_factor),ui.n_edge,1).*double(dph_mean_adj))'; % weighted least-sq to find best-fit line
+        m2=lscov(G,double(dph_mean_adj)',weight_factor);
         dph_smooth(:,i1)=dph_mean.*exp(j*(m(1,:)'+m2(1,:)')); % add back weighted mean
-        
     end
     dph_noise=angle(dph_space.*conj(dph_smooth));
     dph_smooth_uw=cumsum([angle(dph_smooth(:,1)),angle(dph_smooth(:,2:end).*conj(dph_smooth(:,1:end-1)))],2);

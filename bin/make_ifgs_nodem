@@ -1,9 +1,8 @@
 #!/bin/tcsh -f
+# 
+# Can be run in place of make_ifgs when a DEM need not be subtracted
 #
-# Run in place of make_coreg when slaves can be directly coregistered
-# to the master
-#
-# Andy Hooper, 2009
+# Andy Hooper, Feb 2010
 
 set WORKDIR = $cwd
 
@@ -13,7 +12,7 @@ endif
 
 foreach dir(`cat make_ifgs.list`)
    cd $dir
-   step_coreg_simple
+   step_ifg_nodem
 end
 
 cd $WORKDIR

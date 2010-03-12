@@ -1,0 +1,35 @@
+#!/bin/csh -f
+#
+# Andy Hooper, 2006
+# ===========================================================================
+# 09/2008 AH: Generalised for variable mutilooking in range and az
+# ===========================================================================
+
+set WORKDIR = ".."
+set first = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+if ( -e ../looks.txt ) then
+   set looks = `cat ../looks.txt`
+else
+   set looks = 4
+endif
+if ( -e ../ar.txt ) then
+   set ar = `cat ../ar.txt`
+else
+   set ar = 5
+endif
+@ azlooks = $looks * $ar
+
+sed -n '1,/COH_METHOD/p' $DORIS_SCR/coherence.dorisin > $WORKDIR/coherence.dorisin
+
+echo "COH_OUT_COH    coh_"$looks"l.raw" >> $WORKDIR/coherence.dorisin  
+echo "COH_MULTILOOK " $azlooks $looks >> $WORKDIR/coherence.dorisin
+echo "COH_WINSIZE   " $azlooks $looks >> $WORKDIR/coherence.dorisin
+echo "STOP" >> $WORKDIR/coherence.dorisin
+
+\cp -f interferogram.out coherence.out
+
+
+doris  $WORKDIR/coherence.dorisin >> step_coh.log

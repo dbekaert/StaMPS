@@ -8,6 +8,8 @@ function []=scla_reset(patches_flag)
 %   03/2009 AH: delete scla_smooth mat files
 %   ==========================================================
 
+logit;
+
 if nargin<1
     patches_flag='y';
 end
@@ -66,3 +68,5 @@ for i=1:length(patchdir)
     cd(currdir)
 
 end
+logit(1);
+

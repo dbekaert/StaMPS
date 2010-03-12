@@ -8,37 +8,46 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %
 %    valid VALUE_TYPE's are:
 %    'w' for wrapped phase
-%    'p' for spatially filtered wrapped phase 
-%    'u' for unwrapped phase
-%    'd' for spatially correlated DEM error (rad/m)
-%    'm' for AOE phase due to master
-%    'o' for orbital ramps 
-%    's' for atmosphere and orbit error (AOE) phase due to slave
 %    'w-d' for wrapped phase minus smoothed dem error
 %    'w-o' for wrapped phase minus orbital ramps
 %    'w-dm' for wrapped phase minus dem error and master AOE
 %    'w-do' for wrapped phase minus dem error and orbital ramps
 %    'w-dmo' for wrapped phase minus dem error, master AOE and orbital ramps
-%    'u-d' for unwrapped phase minus dem error
-%    'u-m' for unwrapped phase minus master AOE
-%    'u-o' for unwrapped phase minus orbital ramps
-%    'u-dm' for unwrapped phase minus dem error and master AOE
-%    'u-do' for unwrapped phase minus dem error and orbital ramps
-%    'u-dmo' for unwrapped phase minus dem error, master AOE and orbital ramps
-%    'u-dms' for unwrapped phase minus dem error and all AOE
+%    'p' for spatially filtered wrapped phase 
+%    'u' for unwrapped phase
+%    'u-d' 
+%    'u-m'
+%    'u-o' 
+%    'u-dm' 
+%    'u-do'
+%    'u-dmo'
+%    'u-dms'
+%    'd' for spatially correlated DEM error (rad/m)
+%    'm' for AOE phase due to master
+%    'o' for orbital ramps 
+%    's' for atmosphere and orbit error (AOE) phase due to slave
 %    'v' mean LOS velocity (MLV) in mm/yr
-%    'v-d' MLV calculated after removal of dem error (mm/yr)
-%    'v-o' MLV calculated after removal of orbital ramps (mm/yr)
-%    'v-do' MLV calculated after removal of dem error and orbital ramps (mm/yr)
-%    'vs-d' standard deviation of MLV after removal of dem error (mm/yr)
-%    'vs-do' standard deviation of MLV after removal of dem error and orbital ramps (mm/yr)
+%    'v-d' 
+%    'v-o' 
+%    'v-do' 
+%    'vs' standard deviation of MLV (mm/yr)
+%    'vs-d'
+%    'vs-o' 
+%    'vs-do' 
+%    'vdrop' MLV calculated from all but current ifg (mm/yr)
+%    'vdrop-d' 
+%    'vdrop-o' 
+%    'vdrop-do' 
 %    'usb' for unwrapped phase of small baseline ifgs
-%    'dsb' for spatially correlated DEM error (rad/m) 
-%    'usb-d' for unwrapped phase of sb ifgs minus dem error 
-%    'usb-o' for unwrapped phase of sb ifgs minus orbital ramps
-%    'usb-do' for unwrapped phase of sb ifgs minus dem error and orbital ramps
+%    'usb-d' 
+%    'usb-o' 
+%    'usb-do' 
 %    'rsb' residual between unwrapped phase of sb ifgs and inverted
-%    'vsb' mean LOS velocity (mm/yr) from sb ifgs
+% 
+%    When the wrapped interferograms are small baseline, 'v' and 'd' plots
+%    are calulated from the unwraped small baseline interferograms by 
+%    default. To force use of the single master interferograms, capitalise
+%    e.g. ps_plot('V-D')
 %    
 %    BACKGROUND = -1 outputs the data to a .mat file instead of plotting
 %                 0, black background, lon/lat axes 
@@ -84,6 +93,10 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %   06/2009 AH: Orbital ramps added
 %   09/2009 AH: Sign for velocity plots flipped
 %   02/2010 AH: Give warning only if unable to save velocities
+%   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
+%   03/2010 AH: Add var/cov to 'vsb' inversion and plot instead of
+%   03/2010 AH: Plot 'vsb' instead of 'v' by default for small baselines
+%   03/2010 AH: Rationalise velocity plotting
 %   ======================================================================
 
 
@@ -153,6 +166,7 @@ phuwname=['phuw',num2str(psver)];
 phuwsbname=['phuw_sb',num2str(psver)];
 phuwsbresname=['phuw_sb_res',num2str(psver)];
 scnname=['scn',num2str(psver)];
+ifgstdname=['ifgstd',num2str(psver)];
 apsname=['aps',num2str(psver)];
 apssbname=['aps_sb',num2str(psver)];
 sclaname=['scla',num2str(psver)];
@@ -173,14 +187,11 @@ master_ix=sum(day<master_day)+1;
 
 ref_ps=0;    
 
-unwrap_ifg_index=getparm('unwrap_ifg_index');
+drop_ifg_index=getparm('drop_ifg_index');
+small_baseline_flag=getparm('small_baseline_flag');
 
-if strcmpi(getparm('small_baseline_flag'),'y')
-    unwrap_ifg_index_sb=unwrap_ifg_index;
-    if strcmpi(unwrap_ifg_index,'all')
-        unwrap_ifg_index_sb=[1:ps.n_ifg];
-    end
-    
+if strcmpi(small_baseline_flag,'y')
+    unwrap_ifg_index_sb=setdiff([1:ps.n_ifg],drop_ifg_index);
     if value_type(1)~='w' & value_type(1)~='p'
       warning('off','MATLAB:load:variableNotFound');
       phuw=load(phuwname,'unwrap_ifg_index_sm');
@@ -196,18 +207,40 @@ if strcmpi(getparm('small_baseline_flag'),'y')
         ifg_list=unwrap_ifg_index_sb;
     end
 else
-    if strcmpi(unwrap_ifg_index,'all') 
-        unwrap_ifg_index=[1:ps.n_ifg];
-    end
+    unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 end
-if (value_type(1)=='u' | value_type(1)=='a') & isempty(ifg_list)
+if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='w') & isempty(ifg_list)
     ifg_list=unwrap_ifg_index;
 end
 
-    
+group_type=value_type;
+if length(group_type)>1 & strcmpi(group_type(1:2),'vs')
+    group_type='vs'; 
+    if strcmpi(small_baseline_flag,'y') & strcmp(value_type(1:2),'vs')
+        use_small_baselines=1;
+        fprintf('Velocity std devs calculated from small baseline interferograms\n')
+    else
+        use_small_baselines=0;
+    end
+elseif strcmpi(group_type(1),'v')
+    if strcmpi(small_baseline_flag,'y') & strcmp(group_type(1),'v')
+        group_type='vsb';
+        fprintf('Velocities calculated from small baseline interferograms\n')
+    else
+        group_type='v';
+    end
+elseif strcmpi(group_type(1),'d')
+    if strcmpi(small_baseline_flag,'y')
+        group_type='dsb';
+        fprintf('DEM error calculated from small baseline interferograms\n')
+    else
+        group_type='d';
+    end
+end
 
 
-switch(value_type)
+value_type=lower(value_type);
+switch(group_type)
     case {'w'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -218,7 +251,7 @@ switch(value_type)
      case {'w-d'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
-        if ~strcmpi(getparm('small_baseline_flag'),'y')
+        if ~strcmpi(small_baseline_flag,'y')
             scla=load(sclasmoothname);
         else
             scla=load(sclasbsmoothname);
@@ -231,7 +264,7 @@ switch(value_type)
      case {'w-o'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
-        if ~strcmpi(getparm('small_baseline_flag'),'y')
+        if ~strcmpi(small_baseline_flag,'y')
             scla=load(sclaname);
         else
             scla=load(sclasbname);
@@ -244,7 +277,7 @@ switch(value_type)
      case {'w-do'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
-        if ~strcmpi(getparm('small_baseline_flag'),'y')
+        if ~strcmpi(small_baseline_flag,'y')
             scla=load(sclasmoothname);
         else
             scla=load(sclasbsmoothname);
@@ -456,6 +489,47 @@ switch(value_type)
         uw=load(phuwname);
         ph_uw=uw.ph_uw;
         clear uw
+        switch(value_type)
+        case {'v'}
+        case {'v-d'}
+            scla=load(sclaname);
+            ph_uw=ph_uw - scla.ph_scla;
+            clear scla
+        case {'v-o'}
+            scla=load(sclaname);
+            ph_uw=ph_uw - scla.ph_ramp;
+            clear scla
+        case {'v-do'}
+            scla=load(sclaname);
+            ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla;
+            clear scla
+        case {'v-a'}
+            aps=load(apsname);
+            ph_uw=ph_uw - aps.ph_aps_slave;
+            clear scla aps
+        case {'v-da'}
+            scla=load(sclaname);
+            aps=load(apsname);
+            ph_uw=ph_uw - scla.ph_scla- aps.ph_aps_slave;
+            clear scla aps
+        case {'v-ds'}
+            scla=load(sclaname);
+            scn=load(scnname);
+            ph_uw=ph_uw - scla.ph_scla - scn.ph_scn_slave;
+            clear scla scn
+        case {'v-das'}
+            scla=load(sclaname);
+            aps=load(apsname);
+            scn=load(scnname);
+            ph_uw=ph_uw - scla.ph_scla - aps.ph_aps_slave - scn.ph_scn_slave;
+            clear scla scn
+        case {'vdrop-d'}
+            scla=load(sclaname);
+            ph_uw=ph_uw - scla.ph_scla;
+            clear scla
+        otherwise
+            error('unknown value type')
+        end
         ph_all=zeros(n_ps,1);
         ref_ps=ps_setref;
         unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
@@ -466,286 +540,105 @@ switch(value_type)
         ph_uw=ph_uw(:,unwrap_ifg_index);
         day=day(unwrap_ifg_index);
         
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
+        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),n_ps,1);
         % Each ifg has master APS - slave APS, including master 
         % (where slave APS = master APS) so OK to include master in inversion
-        G=[ones(size(day)),day-master_day]; 
-        
-        m=G\double(ph_uw');
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-        try
-            save mean_v m
-        catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
+        if strcmpi(small_baseline_flag,'y')
+            phuwres=load(phuwsbresname,'sm_cov');
+            if isfield(phuwres,'sm_cov');
+                sm_cov=phuwres.sm_cov(unwrap_ifg_index,unwrap_ifg_index);
+            else
+                sm_cov=eye(length(unwrap_ifg_index));
+            end
+        else
+            if ~exist([ifgstdname,'.mat',],'file')
+                ps_calc_ifg_std;
+            end
+            ifgstd=load(ifgstdname);
+            if isfield(ifgstd,'ifg_std');
+                ifgvar=(ifgstd.ifg_std*pi/181).^2;
+                sm_cov=diag(ifgvar(unwrap_ifg_index));
+            else
+                sm_cov=eye(length(unwrap_ifg_index));
+            end
         end
-        textsize=0;
-        units='mm/yr';
-     case {'v-d'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        ph_uw=uw.ph_uw - scla.ph_scla;
-        clear uw scla
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
-        end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
-        G=[ones(size(day)),day-master_day] ;
-        
-        m=G\double(ph_uw');
-        try
-            save mean_v m
-        catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
-        end
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-        %ph_all=m(3,:)'/4/pi*lambda*1000;
-        textsize=0;
-        units='mm/yr';
-     case {'v-do'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        ph_uw=uw.ph_uw - scla.ph_ramp - scla.ph_scla;
-        clear uw scla
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
-        end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
-        G=[ones(size(day)),day-master_day] ;
-        
-        m=G\double(ph_uw');
-        try
-            save mean_v m
-        catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
-        end
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-        textsize=0;
-        units='mm/yr';
-     case {'v-o'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        ph_uw=uw.ph_uw - scla.ph_ramp;
-        clear uw scla
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
-        end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
-        G=[ones(size(day)),day-master_day] ;
-        
-        m=G\double(ph_uw');
-        try
-            save mean_v m
-        catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
-        end
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-        textsize=0;
-        units='mm/yr';
-     case {'v-da'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        aps=load(apsname);
-        ph_uw=uw.ph_uw - scla.ph_scla- aps.ph_aps_slave;
-        clear uw scla aps
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
-        end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
-        G=[ones(size(day)),day-master_day]; 
-        
-        m=G\double(ph_uw');
-        try
-            save mean_v m
-        catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
-        end
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-        textsize=0;
-        units='mm/yr';
-     case {'v-a'}
-        uw=load(phuwname);
-        aps=load(apsname);
-        ph_uw=uw.ph_uw - aps.ph_aps_slave;
-        clear uw aps
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
-        end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
-        G=[ones(size(day)),day-master_day]; 
-        
-        m=G\double(ph_uw');
-        try
-            save mean_v m
-        catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
-        end
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-        %ph_all=m(3,:)'/4/pi*lambda*1000;
-        textsize=0;
-        units='mm/yr';
-     case {'v-ds'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        scn=load(scnname);
-        ph_uw=uw.ph_uw - scla.ph_scla - scn.ph_scn_slave;
-        clear uw scla scn
 
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
-        end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
         G=[ones(size(day)),day-master_day]; 
-        
-        m=G\double(ph_uw');
-        try
-            save mean_v m
-        catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
-        end
         lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-        textsize=0;
-        units='mm/yr';
-     case {'v-das'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        scn=load(scnname);
-        aps=load(apsname);
-        ph_uw=uw.ph_uw - scla.ph_scla- aps.ph_aps_slave - scn.ph_scn_slave;
-        clear uw scla aps scn
 
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
+        if length(value_type)>4 & strcmpi(value_type(1:5),'vdrop') 
+            ph_all=zeros(size(ph_uw));
+            n=size(ph_uw,2);
+            for i=1:n
+                m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n])',sm_cov));
+                ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000; 
+            end
+        else 
+            m=lscov(G,double(ph_uw'),sm_cov);
+            ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
         end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
-        G=[ones(size(day)),day-master_day]; 
-        
-        m=G\double(ph_uw');
+
         try
             save mean_v m
         catch
             fprintf('Warning: Read access only, velocities were not saved\n')
         end
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
         textsize=0;
-        units='mm/yr';
-   case {'vdrop-d'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        ph_uw=uw.ph_uw - scla.ph_scla;
-        clear uw scla
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
-        ph_all=zeros(n_ps,1);
-        ref_ps=ps_setref;
-        if ~isempty(ifg_list)
-            unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
-            ifg_list=[];
-        end
-        ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
-        
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
-        G=[ones(size(day)),day-master_day] ;
-        n=size(ph_uw,2);
-        lambda=getparm('lambda');
-        ph_all=zeros(size(ph_uw));
-        for i=1:n
-            m=G([1:i-1,i+1:end],:)\double(ph_uw(:,[1:i-1,i+1:n])');
-            ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000; 
-        end
-        textsize=0;     
         units='mm/yr';
    case {'vsb'}
         phuw=load(phuwsbname);
         ref_ps=ps_setref;
-        unwrap_ifg_index=getparm('unwrap_ifg_index')
-        if strcmp(unwrap_ifg_index,'all')
-            unwrap_ifg_index=[1:n_ifg];
-        end	
-        ph_uw=phuw.ph_uw(:,unwrap_ifg_index);
-        ifgday_ix=ps.ifgday_ix(unwrap_ifg_index,:);
+        ph_uw=phuw.ph_uw;
         clear phuw
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),n_ps,1);
+        switch(value_type)
+        case('v')
+        case('v-d')
+            scla=load(sclasbname);
+            ph_uw=ph_uw - scla.ph_scla;
+            clear scla
+        case('v-o')
+            scla=load(sclasbname);
+            ph_uw=ph_uw - scla.ph_ramp;
+            clear scla
+        case('v-do')
+            scla=load(sclasbname);
+            ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
+            clear scla
+        case {'vdrop-d'}
+            scla=load(sclasbname);
+            ph_uw=ph_uw - scla.ph_scla;
+            clear scla
+        otherwise
+            error('unknown value type')
+        end
+        ph_uw=ph_uw(:,unwrap_ifg_index_sb);
+        phuwres=load(phuwsbresname,'sb_cov');
+        if isfield(phuwres,'sb_cov');
+            sb_cov=phuwres.sb_cov(unwrap_ifg_index_sb,unwrap_ifg_index_sb);
+        else
+            sb_cov=eye(length(unwrap_ifg_index_sb));
+        end
+        ifgday_ix=ps.ifgday_ix(unwrap_ifg_index_sb,:);
+        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),n_ps,1);
         G=[ones(size(ifgday_ix(:,1))),day(ifgday_ix(:,2))-day(ifgday_ix(:,1))];
-        m=G\double(ph_uw');
         lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; 
-        textsize=0;
-        units='mm/yr';
-   case {'vsb-d'}
-        uw=load(phuwsbname);
-        scla=load(sclasbname);
-        ph_all=uw.ph_uw - scla.ph_scla;
-        clear uw scla
-        ref_ps=ps_setref;
-        unwrap_ifg_index=getparm('unwrap_ifg_index')
-        if strcmp(unwrap_ifg_index,'all')
-            unwrap_ifg_index=[1:n_ifg];
-        end	
-        ph_all=ph_all(:,unwrap_ifg_index);
-        ifgday_ix=ps.ifgday_ix(unwrap_ifg_index,:);
-        clear phuw
-        ph_all=ph_all-repmat(mean(ph_all(ref_ps,:)),n_ps,1);
-        G=[ones(size(ifgday_ix(:,1))),day(ifgday_ix(:,2))-day(ifgday_ix(:,1))];
-        m=G\double(ph_all');
-        lambda=getparm('lambda');
-        ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; 
+
+        if length(value_type)>4 & strcmpi(value_type(1:5),'vdrop') 
+            ph_all=zeros(size(ph_uw));
+            n=size(ph_uw,2);
+            for i=1:n
+                m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n])'),sb_cov);
+                ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000; 
+            end
+        else
+            m=lscov(G,double(ph_uw'),sb_cov);
+            ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; 
+        end
+        try
+            save mean_v m
+        catch
+            fprintf('Warning: Read access only, velocities were not saved\n')
+        end
         textsize=0;
         units='mm/yr';
     case {'p'}
@@ -772,22 +665,12 @@ switch(value_type)
         if ref_ifg~=0
             ph_all=ph_all.*conj(repmat(ph_all(:,ref_ifg),1,n_ifg));
         end
-    case {'vs-d'}
-        %if exist(['./',meanvname,'.mat'],'file')==0
-            ps_mean_v(ifg_list,200,0);
-        %end
+    case {'vs'}
+        ps_mean_v(ifg_list,200,value_type(4:end),use_small_baselines);
         ifg_list=[];
         mv=load(meanvname);
         ph_all=mv.mean_v_std;
         units='mm/yr';
-    case {'vs-do'}
-        ps_mean_v(ifg_list,200,1);
-        ifg_list=[];
-        mv=load(meanvname);
-        ph_all=mv.mean_v_std;
-        units='mm/yr';
-
-        
         
     otherwise
         error('unknown value type')
@@ -874,7 +757,7 @@ if isreal(ph_all)
         ref_ph=(ph_disp(ref_ps,:));
         mean_ph=zeros(1,size(ph_disp,2));
         for i=1:size(ph_disp,2)
-            mean_ph(i)=mean(ref_ph(~isnan(ref_ph(:,i)),i));
+            mean_ph(i)=mean(ref_ph(~isnan(ref_ph(:,i)),i),1);
         end
         ph_disp=ph_disp-repmat(mean_ph,n_ps,1);
     end

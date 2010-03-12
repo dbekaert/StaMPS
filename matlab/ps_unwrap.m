@@ -8,8 +8,9 @@ function []=ps_unwrap()
 %   03/2009 AH: Use smoothed scla instead of scla files
 %   06/2009 AH: Orbital ramps option added 
 %   08/2009 AH: Goldstein alpha value added to options
+%   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
 %   ======================================================================
-
+logit;
 fprintf('Phase-unwrapping...\n')
 
 small_baseline_flag=getparm('small_baseline_flag',1);
@@ -33,11 +34,8 @@ end
 
 ps=load(psname);
 
-unwrap_ifg_index=getparm('unwrap_ifg_index');
-unwrap_ifg_index=sort(unwrap_ifg_index);
-if strcmp(unwrap_ifg_index,'all')
-    unwrap_ifg_index=[1:ps.n_ifg];
-end
+drop_ifg_index=getparm('drop_ifg_index',1);
+unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 
 if strcmpi(unwrap_patch_phase,'y')
     pm=load(pmname);
@@ -186,3 +184,4 @@ end
 ph_uw(:,setdiff([1:ps.n_ifg],unwrap_ifg_index))=0;
 
 save(phuwname,'ph_uw','msd')
+logit(1);

@@ -13,7 +13,7 @@ function []=ps_merge_patches(psver)
 %   09/2009 AH: reduce memory needs further
 %   11/2009 AH: ensure mean amplitude width is always correct
 %   ======================================================================
-
+logit;
 fprintf('Merging patches...\n')
 
 if nargin < 1
@@ -570,4 +570,4 @@ end
 fid=fopen('mean_amp.flt','w');
 fwrite(fid,amp,'float');
 fclose(fid);
-
+logit(1);

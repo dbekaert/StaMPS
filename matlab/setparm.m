@@ -16,16 +16,18 @@ function []=setparm(parmname,value,newflag)
 %   10/2007 AH Parameters displayed in alphabetical order
 %   12/2007 AH Add option to reset to a parameter to the default value
 %   03/2008 AH Default processing amended
-
+%   03/2010 AH Logging added
 
 parmfile='parms';
 localparmfile='localparms.mat';
+parent_flag=0; % 0 when parms.mat in current directory
 
 if exist('./parms.mat','file')
     parms=load(parmfile);
 elseif exist('../parms.mat','file')
     parmfile='../parms';
     parms=load(parmfile);
+    parent_flag=1; % 1 when parms.mat in parent directory
 else
     parms=struct();
 end
@@ -37,10 +39,12 @@ else
 end
 
 if nargin>2 & newflag==1
-    if isnumeric(value)
-        disp([parmname,' = ',num2str(value)])
+    if isempty(value)
+        logit([parmname,' = []'],0,parent_flag);
+    elseif isnumeric(value)
+        logit([parmname,' = ',num2str(value)],0,parent_flag);
     else
-        disp([parmname,' = ',value])
+        logit([parmname,' = ',value],0,parent_flag);
     end
     parms=setfield(parms,parmname,value);
     save(parmfile,'-struct','parms')
@@ -79,21 +83,25 @@ else
             ps_parms_default
             value=getparm(parmname);
             disp([parmname,' reset to default value'])
-        end
-        if isnumeric(value)
-            disp([parmname,' = ',num2str(value)])
         else
-            disp([parmname,' = ',value])
+        if nargin<=2 | newflag>=0
+          if isempty(value)
+            logit([parmname,' = []'],0,parent_flag);
+          elseif isnumeric(value)
+            logit([parmname,' = ',num2str(value)],0,parent_flag);
+          else
+            logit([parmname,' = ',value],0,parent_flag);
+          end
         end
         if nargin>2 
             if newflag==2
                 localparms=setfield(localparms,parmname,value);
                 save(localparmfile,'-struct','localparms')
-                disp('Added to LOCAL parameter file')
+                logit('Added to LOCAL parameter file');
             elseif newflag==-1
                 parms=rmfield(parms,parmname);
                 save(parmfile,'-struct','parms')
-                disp([parmname,' removed from parameter file'])
+                logit([parmname,' removed from parameter file'],0,parent_flag);
             elseif newflag==-2
                 localparms=rmfield(localparms,parmname);
                 if size(fieldnames(localparms),1)>1
@@ -101,7 +109,7 @@ else
                 else
                     delete(localparmfile)
                 end
-                disp([parmname,' removed from LOCAL parameter file'])
+                logit([parmname,' removed from LOCAL parameter file']);
                 
             else
                 error('Invalid value for NEWFLAG')
@@ -116,6 +124,7 @@ else
                 disp('Warning: Only LOCAL parameter file updated')
             end
         end
+        end
     elseif nargin >0
         error('Format is: SETPARM(PARMNAME,VALUE,[NEWFLAG])')
     else
@@ -125,8 +134,4 @@ else
         end
     end
 end
-
-
-    
-    
 

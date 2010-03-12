@@ -3,7 +3,7 @@ function []=ps_sb_merge()
 %
 %   Andy Hooper May 2007
 %
-
+logit;
 
 ps_wd=pwd;
 i=strfind(ps_wd,'INSAR_');
@@ -169,4 +169,4 @@ la.la=[laps.la(psu_ix,:);la.la];
 la.la=la.la(sort_ix,:);
 save([merged_wd,'/la2'],'-struct','la')
 clear la laps lasb
-
+logit(1);

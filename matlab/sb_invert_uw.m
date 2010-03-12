@@ -8,8 +8,10 @@ function []=sb_invert_uw()
 %   11/2009 AH: Weight inversion using var-covar matrix
 %   01/2010 AH: Correct lscov weighting and ensure well-conditioned
 %   02/2010 AH: Reference phase to reference area before inverting
+%   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
+%   03/2010 AH: Save small baseline covariance
 %   ======================================================================
-
+logit;
 
 load psver
 psname=['ps',num2str(psver)];
@@ -21,18 +23,17 @@ phuwname=['phuw',num2str(psver)];
 
 ps=load(psname);
 
-unwrap_ifg_index=getparm('unwrap_ifg_index');
-if strcmpi(unwrap_ifg_index,'all')
-    unwrap_ifg_index=[1:ps.n_ifg];
-end
+drop_ifg_index=getparm('drop_ifg_index');
+unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 
 rc=load(rcname);
 pm=load(pmname);
 ph_noise=angle(rc.ph_rc.*conj(pm.ph_patch));
 clear pm rc
-ph_noise=ph_noise(:,unwrap_ifg_index);
-C=double(cov(ph_noise)); % Covariance between IFGs
+%ph_noise=ph_noise(:,unwrap_ifg_index);
+sb_cov=double(cov(ph_noise)); % Covariance between IFGs
 clear ph_noise
+C=sb_cov(unwrap_ifg_index,unwrap_ifg_index);
 
 phuwsb=load(phuwsbname);
 ph_uw_sb=phuwsb.ph_uw(:,unwrap_ifg_index);
@@ -68,6 +69,9 @@ while rcond(C)<0.001 % ensure not close to singular
     C=C+eye(size(C,1))*0.01;
 end
 ph_uw(:,nzc_ix)=lscov(G2,double(ph_uw_sb'),C)';
+clear ph_uw_sm
+sm_cov=zeros(ps.n_image);
+sm_cov(nzc_ix,nzc_ix)=inv(G2'*inv(C)*G2);
 
 ph_res=single(G*ph_uw')';
 
@@ -78,5 +82,5 @@ nzc_ix(ps.master_ix)=1;
 unwrap_ifg_index_sm=unwrap_ifg_index_sm(nzc_ix);
 
 save(phuwname,'ph_uw','unwrap_ifg_index_sm')
-save(phuwsbresname,'ph_res')
-
+save(phuwsbresname,'ph_res','sb_cov','sm_cov')
+logit(1);

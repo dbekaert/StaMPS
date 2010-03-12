@@ -4,7 +4,7 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %
 %   Andy Hooper, June 2006
 %
-%   =================================================================
+%   ===================================================================
 %   09/2006 AH: create all workspace files directly
 %   09/2006 AH: drop noisy pixels
 %   09/2006 AH: add small baselines 
@@ -13,8 +13,10 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   03/2009 AH: delete scla_smooth mat files
 %   02/2010 AH: change smoothing of arcs to time domain
 %   02/2010 AH: option to threshold on max arc noise in any ifg
-%   =================================================================
-
+%   02/2010 AH: Speed up of noise weeding
+%   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
+%   ===================================================================
+logit;
 fprintf('Weeding selected pixels...\n')
 
 if nargin<1
@@ -26,6 +28,7 @@ time_win=getparm('weed_time_win',1);
 weed_standard_dev=getparm('weed_standard_dev',1);
 weed_max_noise=getparm('weed_max_noise',1);
 weed_zero_elevation=getparm('weed_zero_elevation',1);
+drop_ifg_index=getparm('drop_ifg_index');
 small_baseline_flag=getparm('small_baseline_flag',1);
 
 if nargin<2
@@ -57,6 +60,8 @@ laothername=['la_other'];
 bpothername=['bp_other'];
 
 ps=load(psname);
+ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
+
 sl=load(selectname);
 
 if exist([phname,'.mat'],'file')
@@ -251,6 +256,7 @@ end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
 
 n_ps=sum(ix_weed);
+ix_weed2=true(n_ps,1);
 ps_std=zeros(n_ps,1);
 ps_max=zeros(n_ps,1);
 
@@ -280,61 +286,87 @@ if no_weed_noisy==0
     fclose(fid);
     n_edge=size(edges,1);
     ph_weed=ph2(ix_weed,:).*exp(-j*(K_ps2(ix_weed)*bperp'));  % subtract range error 
+    ph_weed=ph_weed./abs(ph_weed);
+    if ~strcmpi(small_baseline_flag,'y')
+        ph_weed(:,ps.master_ix)=exp(j*(C_ps2(ix_weed)));  % add master noise
+    end
     edge_std=zeros(n_edge,1);
     edge_max=zeros(n_edge,1);
     dph_space=(ph_weed(edges(:,3),:).*conj(ph_weed(edges(:,2),:)));
+    dph_space=dph_space(:,ifg_index);
+    n_use=length(ifg_index);
+    for i=1:length(drop_ifg_index)
+        if strcmpi(small_baseline_flag,'y')
+            fprintf('%s-%s dropped from noise estimation\n',datestr(ps.ifgday(drop_ifg_index(i),2)),datestr(ps.ifgday(drop_ifg_index(i),2)));
+        else
+            fprintf('%s dropped from noise estimation\n',datestr(day(drop_ifg_index(i))));
+        end
+    end
 
     if ~strcmpi(small_baseline_flag,'y')
 
       fprintf('Estimating noise for all arcs...\n')
 
-      dph_smooth=zeros(n_edge,ps.n_ifg,'single');
-      for i1=1:ps.n_ifg
-        time_diff=(day(i1)-day)';
+      dph_smooth=zeros(n_edge,n_use,'single');
+      dph_smooth2=zeros(n_edge,n_use,'single');
+      for i1=1:n_use
+        time_diff=(day(ifg_index(i1))-day(ifg_index))';
         weight_factor=exp(-(time_diff.^2)/2/time_win^2);
         weight_factor=weight_factor/sum(weight_factor);
 
         dph_mean=sum(dph_space.*repmat(weight_factor,n_edge,1),2);
-        dph_mean_adj=angle(dph_space.*repmat(conj(dph_mean),1,ps.n_ifg)); % subtract weighted mean
-        G=[ones(ps.n_ifg,1),time_diff'];
-        WG=G.*[weight_factor',weight_factor'];
-        m=double(WG)\(repmat(double(weight_factor),n_edge,1).*double(dph_mean_adj))'; % weighted least-sq to find best-fit line
+        dph_mean_adj=angle(dph_space.*repmat(conj(dph_mean),1,n_use)); % subtract weighted mean
+        G=[ones(n_use,1),time_diff'];
+        m=lscov(double(G),double(dph_mean_adj)',weight_factor); % weighted least-sq to find best-fit local line
         dph_mean_adj=angle(exp(j*(dph_mean_adj-(G*m)'))); % subtract first estimate
-        m2=double(WG)\(repmat(double(weight_factor),n_edge,1).*double(dph_mean_adj))'; % weighted least-sq to find best-fit line
+        m2=lscov(double(G),double(dph_mean_adj)',weight_factor); % weighted least-sq to find best-fit local line
         dph_smooth(:,i1)=dph_mean.*exp(j*(m(1,:)'+m2(1,:)')); % add back weighted mean
-
+         weight_factor(i1)=0; % leave out point itself
+         dph_smooth2(:,i1)=sum(dph_space.*repmat(weight_factor,n_edge,1),2);
        end
        dph_noise=angle(dph_space.*conj(dph_smooth));
-       clear dph_space dph_smooth
+       dph_noise2=angle(dph_space.*conj(dph_smooth2));
+       ifg_var=var(dph_noise2,0,1);
+       K=lscov(bperp(ifg_index),double(dph_noise)',1./double(ifg_var))'; % estimate arc dem error
+       dph_noise=dph_noise-K*bperp(ifg_index)';
+       clear dph_space dph_smooth dph_smooth2 dph_noise2
        edge_std=std(dph_noise,0,2);
        edge_max=max(abs(dph_noise),[],2);
        clear dph_noise
-
     else
+       ifg_var=var(dph_space,0,1);
+       K=lscov(bperp(ifg_index),double(dph_noise)',1./double(ifg_var))'; % estimate arc dem error
+       dph_space=dph_space-K*bperp(ifg_index)';
        edge_std=std(angle(dph_space),0,2);
        edge_max=max(abs(angle(dph_space)),[],2);
        clear dph_space
     end
 
 
-
-    for i=1:n_ps
-      edge_ix=[find(edges(:,2)==i);find(edges(:,3)==i)];
-      ps_std(i)=min(edge_std(edge_ix)); % least noisy 
-      ps_max(i)=min(edge_max(edge_ix)); % least noisy 
-      if i/10000==floor(i/10000)
-          fprintf('   %d PS of %d processed\n',i,n_ps)
-      end
+    fprintf('Estimating max noise for all pixels...\n')
+    ps_std=inf(n_ps,1,'single');
+    ps_max=inf(n_ps,1,'single');
+    for i=1:n_edge
+       ps_std(edges(i,2:3))=min([ps_std(edges(i,2:3)),[edge_std(i);edge_std(i)]],[],2);
+       ps_max(edges(i,2:3))=min([ps_max(edges(i,2:3)),[edge_max(i);edge_max(i)]],[],2);
     end
-    ix_weed(ix_weed)=ps_std<weed_standard_dev&ps_max<weed_max_noise;
+    %for i=1:n_ps
+    %  edge_ix=[find(edges(:,2)==i);find(edges(:,3)==i)];
+    %  ps_std(i)=min(edge_std(edge_ix)); % least noisy 
+    %  ps_max(i)=min(edge_max(edge_ix)); % least noisy 
+    %  if i/10000==floor(i/10000)
+    %      fprintf('   %d PS of %d processed\n',i,n_ps)
+    %  end
+    %end
+    ix_weed2=ps_std<weed_standard_dev&ps_max<weed_max_noise;
+    ix_weed(ix_weed)=ix_weed2;
     n_ps=sum(ix_weed);
 
     disp([num2str(n_ps),' PS kept after dropping noisy pixels']);
-
 end
 
 weedname=['weed',num2str(psver)];
-save(weedname,'ix_weed','ps_std')
+save(weedname,'ix_weed','ix_weed2','ps_std','ps_max','ifg_index')
 
 
 coh_ps=coh_ps2(ix_weed);
@@ -420,3 +452,4 @@ if exist(['scn',num2str(psver+1),'.mat'],'file')
 end
 
 setpsver(psver+1)
+logit(1);

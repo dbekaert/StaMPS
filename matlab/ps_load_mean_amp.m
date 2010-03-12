@@ -2,6 +2,10 @@ function [saveampname]=ps_load_mean_amp()
 %PS_LOAD_MEAN_AMP Load mean_amp file into a matlab workspace
 %
 %   Andy Hooper, June 2006
+%
+%   ======================================================================
+%   02/2010 AH: Reduce memory needs by reading in chunks
+%   ======================================================================
 
 if exist('patch.in','file')
     patch=load('patch.in');
@@ -25,17 +29,32 @@ if ~exist(ampname,'file')
     error('Cannot find mean_amp.flt in this directory or parent')
 end
 
+amp_high=[];
 fid=fopen(ampname,'r');
-amp_mean=fread(fid,[width,inf],'float');
-amp_mean=amp_mean';
+while ~feof(fid) % first read through
+  amp_bit=fread(fid,[width,1000],'float');
+  amp_bit(isnan(amp_bit))=1;
+  amp_bit=sort(amp_bit(:));
+  amp_high=[amp_high;amp_bit(round(length(amp_bit)*0.99):end)];
+end
 fclose(fid);
+amp_high=sort(amp_high);
+amp_max=log(amp_high(round(length(amp_high)/2)));
+clear amp_high
 
-amp_mean(amp_mean<1)=1;
-amp_mean=log(amp_mean);
-amp_mean(isnan(amp_mean))=0;
-aa=sort(amp_mean(:));
-i_max=round(length(aa)*0.995);
-amp_mean(amp_mean>aa(i_max))=aa(i_max);
-amp_mean=uint8(amp_mean*255/max(amp_mean(:)));
-save(saveampname,'amp_mean')
+fid=fopen(ampname,'r');
+amp_mean=[];
+while ~feof(fid) % second read through
+  amp_bit=fread(fid,[width,1000],'float');
+  amp_bit=amp_bit';
+  amp_bit(amp_bit<1)=1;
+  amp_bit=log(amp_bit);
+  amp_bit(isnan(amp_bit))=0;
+  amp_bit(amp_bit>amp_max)=amp_max;
+  amp_bit=uint8(amp_bit*255/amp_max);
+  amp_mean=[amp_mean;amp_bit];
+end
+
+save(saveampname,'amp_mean');
+
 

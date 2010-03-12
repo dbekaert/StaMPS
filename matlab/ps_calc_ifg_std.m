@@ -5,9 +5,10 @@ function []=PS_calc_ifg_std
 %
 %   ======================================================
 %   09/2006 AH: small baselines added 
+%   02/2010 AH: More informative info displayed
 %   ======================================================
 
-fprintf('Estimating noise standard deviation...\n')
+fprintf('\nEstimating noise standard deviation (degrees)...\n')
 
 small_baseline_flag=getparm('small_baseline_flag');
 
@@ -41,8 +42,17 @@ else
     ph_diff=angle(ph.*conj(ph_patch).*exp(-j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat+repmat(pm.C_ps,1,ps.n_ifg))));
 end
 
-ifg_std=[sqrt(sum(ph_diff.^2)/n_ps)*180/pi]'
-
+ifg_std=[sqrt(sum(ph_diff.^2)/n_ps)*180/pi]';
+if strcmpi(small_baseline_flag,'y')
+  for i=1:ps.n_ifg
+    fprintf('%3d %s_%s %3.2f\n',i,datestr(ps.ifgday(i,1)),datestr(ps.ifgday(i,2)),ifg_std(i))
+  end
+else
+  for i=1:ps.n_ifg
+    fprintf('%3d %s %3.2f\n',i,datestr(ps.day(i)),ifg_std(i))
+  end
+end
+fprintf('\n')
 
 save(ifgstdname,'ifg_std'); 
     

@@ -8,6 +8,7 @@ function []=ps_smooth_scla(use_small_baselines)
 %   06/2009 AH: orbital ramps added 
 %   ======================================================================
 %
+logit;
 fprintf('Smoothing spatially-correlated look angle error...\n')
 
 if nargin<1
@@ -101,11 +102,8 @@ if use_small_baselines==0
         G=G(:,[1:ps.master_ix-1,ps.master_ix+1:end]);
         bperp_mat=[G\double(bp.bperp_mat')]';
         bperp_mat=[bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bperp_mat(:,ps.master_ix:end)];
-        %unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
     else
-
         bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
-        %unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
     end
 else
     bperp_mat=bp.bperp_mat;
@@ -114,3 +112,4 @@ end
 ph_scla=repmat(K_ps_uw,1,size(bperp_mat,2)).*bperp_mat;
 
 save(sclasmoothname,'K_ps_uw','C_ps_uw','ph_scla','ph_ramp')    
+logit(1);

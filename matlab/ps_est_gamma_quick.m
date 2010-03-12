@@ -15,7 +15,7 @@ function []=PS_est_gamma_quick(restart_flag)
 %   04/2007 AH: number of wraps no longer rounded
 %   12/2008 AH: avoid divide by zero for zero phase values
 %   ==========================================================
-
+logit;
 fprintf('Estimating gamma for candidate pixels...\n')
 
 
@@ -296,4 +296,4 @@ while loop_end_sw==0
     
 save(pmname,'ph_patch','K_ps','C_ps','coh_ps','N_opt','ph_res','step_number','ph_grid','n_trial_wraps','grid_ij','grid_size','low_pass','i_loop','weighting','Nr','Nr_max_nz_ix','coh_bins','coh_ps_save','gamma_change_save') 
 end
-
+logit(1);
