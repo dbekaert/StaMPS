@@ -66,6 +66,8 @@ set last = `grep 'Last_pixel '  master.res | gawk 'END {print $4}'`
 
 set endras = l.ras
 set endraw = l.raw
+#cpxfiddle -w$width -fci2 -qmag -ofloat -e0.3 -s1 master.slc > image.slc.raw
+#cpxfiddle -w$width -fr4 -qnormal -M$looks/$azlooks -osunraster -cgray image.slc.raw > image.slc_$looks$endras
 cpxfiddle -w$width -fci2 -qmag -M$looks/$azlooks -osunraster -e0.5 -s1.0 master.slc > image.slc_$looks$endras
 
 cpxfiddle -w$width -fci2 -qnormal -M$looks/$azlooks -ofloat master.slc > image.slc_$looks$endraw

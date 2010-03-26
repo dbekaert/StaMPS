@@ -1,0 +1,7 @@
+#!/bin/csh -f
+
+foreach dir(`cat make_slcs.list`)
+   cd $dir 
+   step_slc_alos
+   cd .. 
+end
