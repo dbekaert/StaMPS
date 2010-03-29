@@ -8,6 +8,7 @@ c **********************************************************************
 c SCREEN          debug                           // level of output to standard out
 SCREEN          info                           // level of output to standard out
 MEMORY          1000                             // MB
+BEEP            error                          // level of beeping
 OVERWRITE                                       // overwrite existing files
 BATCH                                           // non-interactive
 c LISTINPUT OFF                                 // prevents copy of this file to log

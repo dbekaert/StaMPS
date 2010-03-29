@@ -43,17 +43,26 @@ endif
 if ($win_p > $width) then
    set win_p  = `echo $width | gawk '{printf "%4i", 2^int(log($1)/log(2))}'`
 endif
-sed -n '1,/^MTE_WINSIZE/p' $WORKDIR/timing.dorisin > tmp_timing.$$
-head -n-1 tmp_timing.$$ > $WORKDIR/timing.dorisin
+
+
+# sed -n '1,/^MTE_WINSIZE/p' $WORKDIR/timing.dorisin > tmp_timing.$$
+sed -n '1,/^MTE_WINSIZE/p' $WORKDIR/timing.dorisin |sed '$d' > tmp_timing.$$
+# head -n-1 tmp_timing.$$ > $WORKDIR/timing.dorisin
+mv tmp_timing.$$ $WORKDIR/timing.dorisin
+
 echo "MTE_WINSIZE   $win_l $win_p // rectangular window" >> $WORKDIR/timing.dorisin
 echo "STOP" >> $WORKDIR/timing.dorisin
-rm tmp_timing.$$
+# rm tmp_timing.$$
 
 set processes = `grep '^PROCESS ' $WORKDIR/timing.dorisin | gawk '{print $2}'`
 if ($processes[1] == 'M_SIMAMP') then
-    sed -n '1,/*_Start_sim_amplitude:/p' master.res | head -n-2 > tmp_master.$$
+    # sed -n '1,/*_Start_sim_amplitude:/p' master.res | head -n-2 > tmp_master.$$
+    # sed -n '1,/*_Start_sim_amplitude:/p' master.res | sed '/*_Start_sim_amplitude:/,$d' | sed '$d'  > tmp_master.$$
+    sed -n '1,/*_Start_sim_amplitude:/p' master.res | sed 'N;$!P;$!D;$d'  > tmp_master.$$
 else
-    sed -n '1,/*_Start_master_timing:/p' master.res | head -n-2 > tmp_master.$$
+    # sed -n '1,/*_Start_master_timing:/p' master.res | head -n-2 > tmp_master.$$
+    # sed -n '1,/*_Start_master_timing:/p' master.res | sed '/*_Start_master_timing:/,$d' | sed '$d'  > tmp_master.$$ 
+    sed -n '1,/*_Start_sim_amplitude:/p' master.res |  sed 'N;$!P;$!D;$d'  > tmp_master.$$
 endif
 mv tmp_master.$$ master.res
 
