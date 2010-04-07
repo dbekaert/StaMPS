@@ -35,7 +35,7 @@ endif
 \rm -f $dir.slc.rsc >& /dev/null
 
 set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
-set hv = `\ls IMG-HV*` 
+set hv = `\ls IMG-HV* | sed 1q` 
 if ($hv != "") then
     echo ""
     echo "Looks like dual polarisation"
