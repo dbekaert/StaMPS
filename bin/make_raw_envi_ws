@@ -1,0 +1,10 @@
+#!/bin/csh -f
+#
+# Andy Hooper, March 2010
+#
+
+foreach dir(`cat make_slcs.list`)
+   cd $dir 
+   step_raw_envi_ws
+   cd .. 
+end

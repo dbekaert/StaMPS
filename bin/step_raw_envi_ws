@@ -1,0 +1,44 @@
+#!/bin/csh -f
+#
+# Anneleen Oyen & Andy Hooper, March 2010
+# ===========================================================================
+# 03/2010 AO&AH:  Decode wide swath images into 5 swaths
+# ===========================================================================
+
+set WORKDIR = '..'
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+
+if (! -e $WORKDIR/roi.proc) then
+    cp $MY_SCR/roi.proc $WORKDIR
+endif
+
+if (! -e $WORKDIR/make_slcs_ws.list) then
+    echo 1 > $WORKDIR/make_slcs_ws.list
+    echo 2 >> $WORKDIR/make_slcs_ws.list
+    echo 3 >> $WORKDIR/make_slcs_ws.list
+    echo 4 >> $WORKDIR/make_slcs_ws.list
+    echo 5 >> $WORKDIR/make_slcs_ws.list
+endif
+
+if (! -e $WORKDIR/looks.txt) then
+    set looks = 4
+    echo $looks > $WORKDIR/looks.txt
+else
+    set looks = `cat $WORKDIR/looks.txt`
+endif
+if (! -e $WORKDIR/ar.txt) then
+    set ar = 5
+    echo $ar > $WORKDIR/ar.txt
+else
+    set ar = `cat $WORKDIR/ar.txt`
+endif
+@ azlooks = $looks * $ar
+
+
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+\rm -f SS*/$dir.raw >& /dev/null
+\rm -f SS*/$dir.raw.rsc >& /dev/null
+
+echo $dir
+make_raw_asa_ws.pl ASA_ DOR $dir > step_raw.log
+

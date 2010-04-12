@@ -1,31 +1,43 @@
-#!/bin/tcsh -f
-
+#!/bin/csh -f
+#
 # Andy Hooper, January 2007
 #
+# ===========================================================================
 # 05/2008 AH: Corrected to select CEOS SLCs also
-
-set nonomatch   # MA for pattern matching on ls line
+# 04/2010 AH: Processing for wideswath added
+# ===========================================================================
 
 set WORKDIR=$cwd
+#echo $cwd
 
 set insardir = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
+#echo $insardir
+
 set masterdate = `echo $insardir | gawk 'BEGIN {FS="_"} {print $NF}'`
+set swath = `echo $insardir | gawk 'BEGIN {FS="_"} {print $(NF-1)}'`
+set swath_start = `echo $swath | gawk '{print substr($0,1,2)}'`
+
+if ($swath_start != "SS") then
+    set swath = ""
+endif 
+
 if (! -e slcs.list) then
-    \ls -d ../SLC/*/[1,2,s]*.slc | sed "/$masterdate/ d" | gawk 'BEGIN {FS="/"} {print $(NF-1)}' > slcs.list
+    \ls -d ../SLC/*/$swath/[1,2,s]*.slc | sed "/$masterdate/ d" | gawk 'BEGIN {FS="/"} {print $(NF-2)}' > slcs.list
     echo "Processing all SLCs as slaves except $masterdate"
 endif
 
 #rm -f make_ifgs.list
 foreach dir(`cat slcs.list`)
 
+
    set dirdate = `echo $dir | gawk 'BEGIN {FS="/"} {print $NF}'`
    if ($dirdate == "") then
        set dirdate = `echo $dir | gawk 'BEGIN {FS="/"} {print $(NF-1)}'`
    endif
-   
+ 
    set dir1 = `echo $dir | gawk '{print substr($0,1,1)}'`
    if ( "$dir1" != "/") then
-       set dir = "../../SLC/$dirdate"
+       set dir = "../../SLC/$dirdate/$swath"
    endif
    
    #echo $WORKDIR/$dirdate >> make_ifgs.list
@@ -33,15 +45,14 @@ foreach dir(`cat slcs.list`)
      mkdir $dirdate
    endif
 
-   echo "\n\nEntering : $dirdate \n" # MA tracking
    cd $dirdate
 
    if ( -e SLC ) then
       rm -f SLC
    endif
 
-   ln -s $dir SLC 
-   step_orbit
+  ln -s $dir SLC 
+  step_orbit
 
-   cd ..
+  cd ..
 end
