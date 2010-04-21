@@ -183,7 +183,7 @@ try {
   pbuf->pubseekpos (0,ios::in);
   numlines=size/width/sizeof(float)/2;
 
-  cout << "nunber of lines per file = " << numlines << "\n";	  
+  cout << "number of lines per file = " << numlines << "\n";	  
   
   ifstream maskfile (maskfilename, ios::in);
   char mask_exists = 0;
