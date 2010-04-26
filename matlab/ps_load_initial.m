@@ -251,6 +251,6 @@ end
 bpsavename=['bp',num2str(psver)];
 save(bpsavename,'bperp_mat');
 
-end % end-if
+%end % end-if
 
 logit(1);
