@@ -62,7 +62,7 @@ if ($processes[1] == 'M_SIMAMP') then
 else
     # sed -n '1,/*_Start_master_timing:/p' master.res | head -n-2 > tmp_master.$$
     # sed -n '1,/*_Start_master_timing:/p' master.res | sed '/*_Start_master_timing:/,$d' | sed '$d'  > tmp_master.$$ 
-    sed -n '1,/*_Start_sim_amplitude:/p' master.res |  sed 'N;$!P;$!D;$d'  > tmp_master.$$
+    sed -n '1,/*_Start_master_timing:/p' master.res |  sed 'N;$!P;$!D;$d'  > tmp_master.$$
 endif
 mv tmp_master.$$ master.res
 
