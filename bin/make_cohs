@@ -1,0 +1,14 @@
+#!/bin/tcsh -f
+
+set WORKDIR = $cwd
+
+if (! -e make_ifgs.list) then
+    \ls -d $WORKDIR/[1,2]*/interferogram.out | gawk 'BEGIN {FS="interferogram.out"} {print $1}'  > make_ifgs.list
+endif
+
+foreach dir(`cat make_ifgs.list`)
+   cd $dir
+   step_coh
+end
+
+cd $WORKDIR

@@ -6,6 +6,7 @@
 # 06/2009 AH: Increased window size 
 # 11/2009 AH: Use values from timing.dorisin unless too big
 # 02/2010 AH: Create a multilooked image of simulated amplitude at the end
+# 05/2010 AH: Changes to sed commands for compatibility with linux
 #==========================================================================
 set WORKDIR = "."
 
@@ -58,11 +59,11 @@ set processes = `grep '^PROCESS ' $WORKDIR/timing.dorisin | gawk '{print $2}'`
 if ($processes[1] == 'M_SIMAMP') then
     # sed -n '1,/*_Start_sim_amplitude:/p' master.res | head -n-2 > tmp_master.$$
     # sed -n '1,/*_Start_sim_amplitude:/p' master.res | sed '/*_Start_sim_amplitude:/,$d' | sed '$d'  > tmp_master.$$
-    sed -n '1,/*_Start_sim_amplitude:/p' master.res | sed 'N;$!P;$!D;$d'  > tmp_master.$$
+    sed -n '1,/*_Start_sim_amplitude:/p' master.res | sed 'N;$\!P;$\!D;$d'  > tmp_master.$$
 else
     # sed -n '1,/*_Start_master_timing:/p' master.res | head -n-2 > tmp_master.$$
     # sed -n '1,/*_Start_master_timing:/p' master.res | sed '/*_Start_master_timing:/,$d' | sed '$d'  > tmp_master.$$ 
-    sed -n '1,/*_Start_master_timing:/p' master.res |  sed 'N;$!P;$!D;$d'  > tmp_master.$$
+    sed -n '1,/*_Start_master_timing:/p' master.res |  sed 'N;$\!P;$\!D;$d'  > tmp_master.$$
 endif
 mv tmp_master.$$ master.res
 

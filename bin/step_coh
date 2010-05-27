@@ -22,7 +22,12 @@ else
 endif
 @ azlooks = $looks * $ar
 
-sed -n '1,/COH_METHOD/p' $DORIS_SCR/coherence.dorisin > $WORKDIR/coherence.dorisin
+if (! -e $WORKDIR/coherence.dorisin) then
+    cp $DORIS_SCR/coherence.dorisin $WORKDIR
+endif
+
+sed -n '1,/COH_METHOD/p' $WORKDIR/coherence.dorisin > tmp_coh.$$
+mv tmp_coh.$$ $WORKDIR/coherence.dorisin
 
 echo "COH_OUT_COH    coh_"$looks"l.raw" >> $WORKDIR/coherence.dorisin  
 echo "COH_MULTILOOK " $azlooks $looks >> $WORKDIR/coherence.dorisin
