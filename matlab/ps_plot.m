@@ -532,7 +532,10 @@ switch(group_type)
         end
         ph_all=zeros(n_ps,1);
         ref_ps=ps_setref;
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
+        
+        if unwrap_ifg_index(1)~=ps.master_ix & unwrap_ifg_index(end)~=ps.master_ix
+            unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix); % need to include it if not ifgs either side of master
+        end
         if ~isempty(ifg_list)
             unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
             ifg_list=[];

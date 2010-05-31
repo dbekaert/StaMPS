@@ -5,13 +5,16 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %
 %   Andy Hooper, Nov 2006
 %
-%   ===========================================================
+%   ================================================================
 %   01/2008 AH: Date processing changed for non-english locales
 %   06/2009 AH: Orbital ramps option added 
 %   06/2009 AH: Ramps option for small baselines corrected 
 %   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
 %   03/2010 AH: Include var/cov in inversion
-%   ===========================================================
+%   05/2010 AH: add ./ before .mat files 
+%   05/2010 AH: check for ifgstd and don't solve for vel if < 4 ifgs 
+%   05/2010 AH: correct ramp processing fro dropped ifgs
+%   ================================================================
 logit;
 fprintf('Estimating spatially-correlated look angle error...\n')
 
@@ -42,21 +45,21 @@ else
 end
 
 load psver
-psname=['ps',num2str(psver)];
-rcname=['rc',num2str(psver)];
-pmname=['pm',num2str(psver)];
-bpname=['bp',num2str(psver)];
-meanvname=['mv',num2str(psver)];
-ifgstdname=['ifgstd',num2str(psver)];
-phuwsbresname=['phuw_sb_res',num2str(psver)];
+psname=['./ps',num2str(psver)];
+rcname=['./rc',num2str(psver)];
+pmname=['./pm',num2str(psver)];
+bpname=['./bp',num2str(psver)];
+meanvname=['./mv',num2str(psver)];
+ifgstdname=['./ifgstd',num2str(psver)];
+phuwsbresname=['./phuw_sb_res',num2str(psver)];
 if use_small_baselines==0
-    phuwname=['phuw',num2str(psver)];
-    sclaname=['scla',num2str(psver)];
-    apsname=['aps',num2str(psver)];
+    phuwname=['./phuw',num2str(psver)];
+    sclaname=['./scla',num2str(psver)];
+    apsname=['./aps',num2str(psver)];
 else
-    phuwname=['phuw_sb',num2str(psver)];
-    sclaname=['scla_sb',num2str(psver)];
-    apsname=['aps_sb',num2str(psver)];
+    phuwname=['./phuw_sb',num2str(psver)];
+    sclaname=['./scla_sb',num2str(psver)];
+    apsname=['./aps_sb',num2str(psver)];
 end
 
 
@@ -66,7 +69,7 @@ if use_small_baselines==0
 end
 
 ps=load(psname);
-if exist(['./',bpname,'.mat'],'file')
+if exist([bpname,'.mat'],'file')
     bp=load(bpname);
 else
     bperp=ps.bperp;
@@ -85,7 +88,7 @@ end
 
 if strcmpi(scla_deramp,'y')
     fprintf('\n   deramping ifgs...\n')
-    ph_ramp=zeros(ps.n_ps,length(unwrap_ifg_index),'single');
+    ph_ramp=zeros(ps.n_ps,ps.n_ifg,'single');
     G=double([ones(ps.n_ps,1),ps.xy(:,2),ps.xy(:,3)]);
     for i=1:length(unwrap_ifg_index)
         d=uw.ph_uw(:,unwrap_ifg_index(i));
@@ -103,7 +106,7 @@ if ~strcmpi(recalc_index,'all')
     unwrap_ifg_index=intersect(unwrap_ifg_index,recalc_index);
 end
 
-if exist(['./',apsname,'.mat'],'file')
+if exist([apsname,'.mat'],'file')
     aps=load(apsname);
     uw.ph_uw=uw.ph_uw-aps.ph_aps_slave;
 end
@@ -154,7 +157,7 @@ fprintf('\n')
 K_ps_uw=zeros(ps.n_ps,1);
 C_ps_uw=zeros(ps.n_ps,1);
 
-if coest_mean_vel==0
+if coest_mean_vel==0 | length(unwrap_ifg_index)<4
     G=[ones(length(unwrap_ifg_index),1),double(bperp_mat(i,unwrap_ifg_index)')];
     m0=[0;0];
 else
@@ -177,9 +180,11 @@ if strcmpi(small_baseline_flag,'y')
         end
     end
 else
-    ifgstd=load(ifgstdname);
-    ifg_vcm=diag((ifgstd.ifg_std*pi/180).^2);
-    clear ifgstd
+    if exist([ifgstdname,'.mat'])
+        ifgstd=load(ifgstdname);
+        ifg_vcm=diag((ifgstd.ifg_std*pi/180).^2);
+        clear ifgstd
+    end
 end
 
 if strcmpi(scla_method,'L1')
@@ -211,7 +216,7 @@ if ~isempty(oldscla)
     else
         olddatenum=datenum(oldscla.date);
     end
-    movefile([sclaname,'.mat'],['tmp_',sclaname,datestr(olddatenum,'_yyyymmdd_HHMMSS'),'.mat']);
+    movefile([sclaname,'.mat'],['tmp_',sclaname(3:end),datestr(olddatenum,'_yyyymmdd_HHMMSS'),'.mat']);
 end
 
 save(sclaname,'ph_scla','K_ps_uw','C_ps_uw','ph_ramp','ifg_vcm')
