@@ -14,6 +14,7 @@ function []=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_baselines)
 %   03/2010 AH: 3rd input changed to 'subtract_switches'
 %   03/2010 AH: Use small baselines option added
 %   03/2010 AH: var/cov added to inversion
+%   05/2010 AH: Include master if there are not ifgs before and after
 %   ======================================================================
 
 
@@ -36,11 +37,11 @@ if nargin<4
 end
 
 load psver
-psname=['ps',num2str(psver)];
-phuwname=['phuw',num2str(psver)];
-phuwsbresname=['phuw_sb_res',num2str(psver)];
-ifgstdname=['ifgstd',num2str(psver)];
-sclaname=['scla',num2str(psver)];
+psname=['./ps',num2str(psver)];
+phuwname=['./phuw',num2str(psver)];
+phuwsbresname=['./phuw_sb_res',num2str(psver)];
+ifgstdname=['./ifgstd',num2str(psver)];
+sclaname=['./scla',num2str(psver)];
 mvname=['mv',num2str(psver)];
 
 ps=load(psname);
@@ -63,8 +64,8 @@ if strcmpi(getparm('small_baseline_flag'),'y')
         end
     else
         unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
-        phuwname=['phuw_sb',num2str(psver)];
-        sclaname=['scla_sb',num2str(psver)];
+        phuwname=['./phuw_sb',num2str(psver)];
+        sclaname=['./scla_sb',num2str(psver)];
         phuwres=load(phuwsbresname,'sb_cov');
         if isfield(phuwres,'sb_cov');
             ifg_cov=phuwres.sb_cov;
@@ -76,14 +77,16 @@ else
     use_small_baselines=0;
     unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
     if ~exist([ifgstdname,'.mat'],'file')
-        ps_calc_ifg_std;
-    end
-    ifgstd=load(ifgstdname);
-    if isfield(ifgstd,'ifg_std');
+        ifg_cov=eye(ps.n_ifg);
+        %ps_calc_ifg_std;
+    %end
+    else ifgstd=load(ifgstdname);
+      if isfield(ifgstd,'ifg_std');
         ifgvar=(ifgstd.ifg_std*pi/181).^2;
         ifg_cov=diag(ifgvar);
-    else
+      else
         ifg_cov=eye(ps.n_ifg);
+      end
     end
 end
 
@@ -118,7 +121,7 @@ case('do')
         error('unknown subtract flags')
 end
 
-if use_small_baselines==0
+if use_small_baselines==0 & unwrap_ifg_index(1)~=ps.master_ix & unwrap_ifg_index(end)~=ps.master_ix
     unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
 end
 
