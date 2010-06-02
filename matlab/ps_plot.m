@@ -160,22 +160,21 @@ n_y=0;
 units='rad';
 
 load psver
-psname=['ps',num2str(psver)];
-pmname=['pm',num2str(psver)];
-rcname=['rc',num2str(psver)];
-rcuwname=['rcuw',num2str(psver)];
-phuwname=['phuw',num2str(psver)];
-phuwsbname=['phuw_sb',num2str(psver)];
-phuwsbresname=['phuw_sb_res',num2str(psver)];
-scnname=['scn',num2str(psver)];
-ifgstdname=['ifgstd',num2str(psver)];
-apsname=['aps',num2str(psver)];
-apssbname=['aps_sb',num2str(psver)];
-sclaname=['scla',num2str(psver)];
-sclasbname=['scla_sb',num2str(psver)];
-sclasmoothname=['scla_smooth',num2str(psver)];
-sclasbsmoothname=['scla_smooth_sb',num2str(psver)];
-meanvname=['mv',num2str(psver)];
+psname=['./ps',num2str(psver)];
+pmname=['./pm',num2str(psver)];
+rcname=['./rc',num2str(psver)];
+phuwname=['./phuw',num2str(psver)];
+phuwsbname=['./phuw_sb',num2str(psver)];
+phuwsbresname=['./phuw_sb_res',num2str(psver)];
+scnname=['./scn',num2str(psver)];
+ifgstdname=['./ifgstd',num2str(psver)];
+apsname=['./aps',num2str(psver)];
+apssbname=['./aps_sb',num2str(psver)];
+sclaname=['./scla',num2str(psver)];
+sclasbname=['./scla_sb',num2str(psver)];
+sclasmoothname=['./scla_smooth',num2str(psver)];
+sclasbsmoothname=['./scla_smooth_sb',num2str(psver)];
+meanvname=['./mv',num2str(psver)];
 
 ps=load(psname);
 day=ps.day;
@@ -559,14 +558,16 @@ switch(group_type)
             end
         else
             if ~exist([ifgstdname,'.mat',],'file')
-                ps_calc_ifg_std;
-            end
-            ifgstd=load(ifgstdname);
-            if isfield(ifgstd,'ifg_std');
+%                ps_calc_ifg_std;
+                sm_cov=eye(length(unwrap_ifg_index));
+            else
+                ifgstd=load(ifgstdname);
+              if isfield(ifgstd,'ifg_std');
                 ifgvar=(ifgstd.ifg_std*pi/181).^2;
                 sm_cov=diag(ifgvar(unwrap_ifg_index));
-            else
+              else
                 sm_cov=eye(length(unwrap_ifg_index));
+              end
             end
         end
 
@@ -655,7 +656,6 @@ switch(group_type)
         units='mm/yr';
     case {'p'}
         pm=load(pmname);
-        %pm=load(rcuwname);
         ph_all=pm.ph_patch./abs(pm.ph_patch);
         if n_ifg~=size(ph_all,2)
             ph_all=[ph_all(:,1:ps.master_ix-1),zeros(ps.n_ps,1),ph_all(:,ps.master_ix:end)];
