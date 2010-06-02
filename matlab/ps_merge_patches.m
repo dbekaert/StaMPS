@@ -12,6 +12,7 @@ function []=ps_merge_patches(psver)
 %   09/2009 AH: add option to resample to coarser sampling 
 %   09/2009 AH: reduce memory needs further
 %   11/2009 AH: ensure mean amplitude width is always correct
+%   06/2010 AH: estimate weights directly from residuals
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
@@ -22,6 +23,12 @@ end
 
 small_baseline_flag=getparm('small_baseline_flag');
 grid_size=getparm('merge_resample_size',1);
+merge_stdev=getparm('merge_standard_dev',1);
+phase_accuracy=10*pi/180; % gives minimum possible accuracy for a pixel 
+
+min_weight=1/merge_stdev^2;
+randn('state',1001);
+max_coh=abs(sum(exp(j*randn(1000,1)*phase_accuracy)))/1000;
 
 psname=['ps',num2str(psver)];
 phname=['ph',num2str(psver)];
@@ -110,11 +117,26 @@ for i=1:n_patch
       f_ix=[1;l_ix(1:end-1)+1];
       n_ps_g=size(f_ix,1); 
       n_ps=length(ix);
-      cohpow=2*0.4+0.35*log(n_ifg)+0.06*n_ifg;
-      pm=load(pmname,'coh_ps');
-      sigsq_noise=2/12*(1-pm.coh_ps).^cohpow+0.05;
+      %cohpow=2*0.4+0.35*log(n_ifg)+0.06*n_ifg;
+      %pm=load(pmname,'coh_ps');
+      %sigsq_noise=2/12*(1-pm.coh_ps).^cohpow+0.05;
+      pm=load(pmname,'ph_res','coh_ps','C_ps');
+      pm.ph_res=angle(exp(j*(pm.ph_res-repmat(pm.C_ps,1,n_ifg-1)))); % centralise about zero
+      sigsq_noise=var([pm.ph_res,pm.C_ps],0,2); % include master noise too
+      coh_ps=abs(sum(exp(j*[pm.ph_res,pm.C_ps]),2))/n_ifg; % include master noise too
+      coh_ps(coh_ps>max_coh)=max_coh; % % prevent unrealistic weights
+      sigsq_noise(sigsq_noise<phase_accuracy^2)=phase_accuracy^2; % prevent unrealistic weights
       ps_weight=1./sigsq_noise(ix);
-      ps_snr=1./(1./pm.coh_ps(ix).^2-1);
+      ps_snr=1./(1./coh_ps(ix).^2-1);
+      clear pm
+    end
+%    weightsave=zeros(n_i,n_j);
+    weightsave=zeros(n_ps_g,1);
+    for i=1:n_ps_g
+        weights=ps_weight(f_ix(i):l_ix(i));
+        weightsum=sum(weights);
+%        weightsave(g_ij(i,1),g_ij(i,2))=weightsum;
+        weightsave(i)=weightsum;
     end
     
     if grid_size==0
@@ -414,6 +436,9 @@ br=mean(sort_y(1:n_pc,:)); % bottom right  corner
 tl=mean(sort_y(end-n_pc:end,:)); % top left corner
 
 heading=getparm('heading');
+if isempty(heading);
+    heading=0;
+end
 theta=(180-heading)*pi/180;
 if theta>pi
     theta=theta-2*pi;
@@ -430,7 +455,12 @@ end
 clear xynew
 
 xy=single(xy');
-[dummy,sort_ix]=sortrows(xy,[2,1]); % sort in ascending y order
+xy(weightsave<min_weight,:)=1e9;
+[xy_sort,sort_ix]=sortrows(xy,[2,1]); % sort in ascending y order
+sort_ix=sort_ix(xy_sort(:,1)<1e9);
+
+
+
 xy=xy(sort_ix,:);
 xy=[[1:size(xy,1)]',xy];
 xy(:,2:3)=round(xy(:,2:3)*1000)/1000; % round to mm

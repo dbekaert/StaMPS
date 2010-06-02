@@ -250,6 +250,10 @@ if ~isfield(parms,'merge_resample_size')
     end
 end
 
+if ~isfield(parms,'merge_standard_dev')
+    parms.merge_standard_dev=inf;
+end
+
 if ~isfield(parms,'scla_method')
     parms.scla_method='L2'; % method for estmating SCLA, L1- or L2-norm
 end

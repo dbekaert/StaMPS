@@ -97,6 +97,8 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %   03/2010 AH: Add var/cov to 'vsb' inversion and plot instead of
 %   03/2010 AH: Plot 'vsb' instead of 'v' by default for small baselines
 %   03/2010 AH: Rationalise velocity plotting
+%   06/2010 AH: Correct bug for 'w' option for all ifgs 
+%   06/2010 AH: Correct bug for 'v' option for subset small baseline ifgs
 %   ======================================================================
 
 
@@ -201,6 +203,8 @@ if strcmpi(small_baseline_flag,'y')
       else
         unwrap_ifg_index=[1:ps.n_image];
       end
+    else
+        unwrap_ifg_index=unwrap_ifg_index_sb;
     end
 
     if length(value_type)>2 & (value_type(1:3)=='usb'|value_type(1:3)=='rsb') & isempty(ifg_list)
@@ -613,6 +617,11 @@ switch(group_type)
             clear scla
         otherwise
             error('unknown value type')
+        end
+        
+        if ~isempty(ifg_list)
+            unwrap_ifg_index_sb=intersect(unwrap_ifg_index_sb,ifg_list);
+            ifg_list=[];
         end
         ph_uw=ph_uw(:,unwrap_ifg_index_sb);
         phuwres=load(phuwsbresname,'sb_cov');
