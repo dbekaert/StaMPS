@@ -117,25 +117,24 @@ for i=1:n_patch
       f_ix=[1;l_ix(1:end-1)+1];
       n_ps_g=size(f_ix,1); 
       n_ps=length(ix);
-      %cohpow=2*0.4+0.35*log(n_ifg)+0.06*n_ifg;
-      %pm=load(pmname,'coh_ps');
-      %sigsq_noise=2/12*(1-pm.coh_ps).^cohpow+0.05;
-      pm=load(pmname,'ph_res','coh_ps','C_ps');
-      pm.ph_res=angle(exp(j*(pm.ph_res-repmat(pm.C_ps,1,n_ifg-1)))); % centralise about zero
-      sigsq_noise=var([pm.ph_res,pm.C_ps],0,2); % include master noise too
-      coh_ps=abs(sum(exp(j*[pm.ph_res,pm.C_ps]),2))/n_ifg; % include master noise too
+       pm=load(pmname,'ph_res','coh_ps','C_ps');
+      pm.ph_res=angle(exp(j*(pm.ph_res-repmat(pm.C_ps,1,size(pm.ph_res,2))))); % centralise about zero
+      if small_baseline_flag~='y'
+          pm.ph_res=[pm.ph_res,pm.C_ps]; %  include master noise too
+      end
+      sigsq_noise=var([pm.ph_res],0,2); 
+      coh_ps=abs(sum(exp(j*[pm.ph_res]),2))/n_ifg;
       coh_ps(coh_ps>max_coh)=max_coh; % % prevent unrealistic weights
       sigsq_noise(sigsq_noise<phase_accuracy^2)=phase_accuracy^2; % prevent unrealistic weights
       ps_weight=1./sigsq_noise(ix);
       ps_snr=1./(1./coh_ps(ix).^2-1);
       clear pm
     end
-%    weightsave=zeros(n_i,n_j);
+    
     weightsave=zeros(n_ps_g,1);
     for i=1:n_ps_g
         weights=ps_weight(f_ix(i):l_ix(i));
         weightsum=sum(weights);
-%        weightsave(g_ij(i,1),g_ij(i,2))=weightsum;
         weightsave(i)=weightsum;
     end
     
