@@ -123,11 +123,11 @@ for i=1:n_patch
           pm.ph_res=[pm.ph_res,pm.C_ps]; %  include master noise too
       end
       sigsq_noise=var([pm.ph_res],0,2); 
-      coh_ps=abs(sum(exp(j*[pm.ph_res]),2))/n_ifg;
-      coh_ps(coh_ps>max_coh)=max_coh; % % prevent unrealistic weights
+      coh_ps_all=abs(sum(exp(j*[pm.ph_res]),2))/n_ifg;
+      coh_ps_all(coh_ps_all>max_coh)=max_coh; % % prevent unrealistic weights
       sigsq_noise(sigsq_noise<phase_accuracy^2)=phase_accuracy^2; % prevent unrealistic weights
       ps_weight=1./sigsq_noise(ix);
-      ps_snr=1./(1./coh_ps(ix).^2-1);
+      ps_snr=1./(1./coh_ps_all(ix).^2-1);
       clear pm
     end
     
