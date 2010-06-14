@@ -113,11 +113,7 @@ for i=1:n_patch
       [g_ix,sort_ix]=sort(g_ix);
       ix=find(ix);
       ix=ix(sort_ix);
-      l_ix=[find(diff(g_ix));size(g_ix,1)];
-      f_ix=[1;l_ix(1:end-1)+1];
-      n_ps_g=size(f_ix,1); 
-      n_ps=length(ix);
-       pm=load(pmname,'ph_res','coh_ps','C_ps');
+      pm=load(pmname,'ph_res','coh_ps','C_ps');
       pm.ph_res=angle(exp(j*(pm.ph_res-repmat(pm.C_ps,1,size(pm.ph_res,2))))); % centralise about zero
       if small_baseline_flag~='y'
           pm.ph_res=[pm.ph_res,pm.C_ps]; %  include master noise too
@@ -129,15 +125,32 @@ for i=1:n_patch
       ps_weight=1./sigsq_noise(ix);
       ps_snr=1./(1./coh_ps_all(ix).^2-1);
       clear pm
+
+      l_ix=[find(diff(g_ix));size(g_ix,1)];
+      f_ix=[1;l_ix(1:end-1)+1];
+      n_ps_g=size(f_ix,1); 
+
+      weightsave=zeros(n_ps_g,1);
+      for i=1:n_ps_g
+          weights=ps_weight(f_ix(i):l_ix(i));
+          weightsum=sum(weights);
+          weightsave(i)=weightsum;
+          if weightsave(i)<min_weight
+              ix(f_ix(i):l_ix(i))=0;
+          end
+      end
+      g_ix=g_ix(ix>0);
+      l_ix=[find(diff(g_ix));size(g_ix,1)];
+      f_ix=[1;l_ix(1:end-1)+1];
+      ps_weight=ps_weight(ix>0);
+      ps_snr=ps_snr(ix>0);
+      ix=ix(ix>0);
+      n_ps_g=size(f_ix,1); 
+      n_ps=length(ix);
     end
     
-    weightsave=zeros(n_ps_g,1);
-    for i=1:n_ps_g
-        weights=ps_weight(f_ix(i):l_ix(i));
-        weightsum=sum(weights);
-        weightsave(i)=weightsum;
-    end
     
+
     if grid_size==0
       ij=[ij;ps.ij(ix,2:3)];
       lonlat=[lonlat;ps.lonlat(ix,:)];
@@ -454,9 +467,9 @@ end
 clear xynew
 
 xy=single(xy');
-xy(weightsave<min_weight,:)=1e9;
+%xy(weightsave<min_weight,:)=1e9;
 [xy_sort,sort_ix]=sortrows(xy,[2,1]); % sort in ascending y order
-sort_ix=sort_ix(xy_sort(:,1)<1e9);
+%sort_ix=sort_ix(xy_sort(:,1)<1e9);
 
 
 

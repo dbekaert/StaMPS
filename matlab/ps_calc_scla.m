@@ -82,13 +82,15 @@ uw=load(phuwname);
 
 if strcmpi(small_baseline_flag,'y') & use_small_baselines==0
     unwrap_ifg_index=[1:ps.n_image];
+    n_ifg=ps.n_image;
 else
     unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
+    n_ifg=ps.n_ifg;
 end
 
 if strcmpi(scla_deramp,'y')
     fprintf('\n   deramping ifgs...\n')
-    ph_ramp=zeros(ps.n_ps,ps.n_ifg,'single');
+    ph_ramp=zeros(ps.n_ps,n_ifg,'single');
     G=double([ones(ps.n_ps,1),ps.xy(:,2),ps.xy(:,3)]);
     for i=1:length(unwrap_ifg_index)
         d=uw.ph_uw(:,unwrap_ifg_index(i));

@@ -293,7 +293,11 @@ switch(group_type)
      case {'w-dm'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
-        scla=load(sclasmoothname);
+        if ~strcmpi(small_baseline_flag,'y')
+            scla=load(sclasmoothname);
+        else
+            scla=load(sclasbsmoothname);
+        end
         ph_all=ph_all.*exp(-j*scla.ph_scla);
         ph_all=ph_all.*repmat(exp(-j*scla.C_ps_uw),1,size(ph_all,2));
         ph_all(:,ps.master_ix)=1;
