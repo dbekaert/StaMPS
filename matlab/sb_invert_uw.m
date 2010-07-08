@@ -10,29 +10,33 @@ function []=sb_invert_uw()
 %   02/2010 AH: Reference phase to reference area before inverting
 %   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
 %   03/2010 AH: Save small baseline covariance
+%   07/2010 AH: Default small baseline covariance for multilooked case
 %   ======================================================================
 logit;
 
 load psver
-psname=['ps',num2str(psver)];
-rcname=['rc',num2str(psver)];
-pmname=['pm',num2str(psver)];
-phuwsbname=['phuw_sb',num2str(psver)];
-phuwsbresname=['phuw_sb_res',num2str(psver)];
-phuwname=['phuw',num2str(psver)];
+psname=['./ps',num2str(psver)];
+rcname=['./rc',num2str(psver)];
+pmname=['./pm',num2str(psver)];
+phuwsbname=['./phuw_sb',num2str(psver)];
+phuwsbresname=['./phuw_sb_res',num2str(psver)];
+phuwname=['./phuw',num2str(psver)];
 
 ps=load(psname);
 
 drop_ifg_index=getparm('drop_ifg_index');
 unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 
-rc=load(rcname);
-pm=load(pmname);
-ph_noise=angle(rc.ph_rc.*conj(pm.ph_patch));
-clear pm rc
-%ph_noise=ph_noise(:,unwrap_ifg_index);
-sb_cov=double(cov(ph_noise)); % Covariance between IFGs
-clear ph_noise
+if exist([pmname,'.mat'],'file')
+    rc=load(rcname);
+    pm=load(pmname);
+    ph_noise=angle(rc.ph_rc.*conj(pm.ph_patch));
+    clear pm rc
+    sb_cov=double(cov(ph_noise)); % Covariance between IFGs
+    clear ph_noise
+else
+    sb_cov=eye(ps.n_ifg);
+end
 C=sb_cov(unwrap_ifg_index,unwrap_ifg_index);
 
 phuwsb=load(phuwsbname);
