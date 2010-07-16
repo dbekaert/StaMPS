@@ -1,0 +1,11 @@
+#!/bin/csh -f
+#
+# Extracts heading to be used with StaMPS for TSX data from leader file.
+# 
+# Usage: Run in INSAR[masterdate] directory
+#
+# Karsten Spaans, July 2010
+
+set masterdate = `\ls ./*crop.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}'`
+
+tsx_dump_heading.py ../SLC/$masterdate/*.xml > dummy.slc.rsc
