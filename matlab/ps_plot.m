@@ -99,6 +99,8 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %   03/2010 AH: Rationalise velocity plotting
 %   06/2010 AH: Correct bug for 'w' option for all ifgs 
 %   06/2010 AH: Correct bug for 'v' option for subset small baseline ifgs
+%   07/2010 DB: Correct bug for N_X plotting option
+%   08/2010 DB: Option to plot phase data and edit frontsize colorbar
 %   ======================================================================
 
 
@@ -216,6 +218,9 @@ if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='w') & isempty(ifg_
     ifg_list=unwrap_ifg_index;
 end
 
+
+
+if ischar(value_type)==1
 group_type=value_type;
 if length(group_type)>1 & strcmpi(group_type(1:2),'vs')
     group_type='vs'; 
@@ -690,7 +695,11 @@ switch(group_type)
         
     otherwise
         error('unknown value type')
+    end
+else
+	ph_all = value_type;
 end
+
 
 if isempty(ifg_list)
     ifg_list=1:size(ph_all,2);
@@ -698,9 +707,9 @@ end
 n_ifg_plot=length(ifg_list);
 
 
-[Y,X]=meshgrid([0.7:-0.2:0.1],[0.1:0.1:0.8]);
 xgap=0.1;
 ygap=0.2;
+[Y,X]=meshgrid([0.7:-1*ygap:0.1],[0.1:xgap:0.8]);
 
 if ~isempty(lon_rg)
     ix=lonlat(:,1)>=lon_rg(1)&lonlat(:,1)<=lon_rg(2);
@@ -728,13 +737,28 @@ end
 
 d_x=useratio/n_x;
 d_y=d_x/ar*fig_ar;
-if d_y>useratio/n_y
+if d_y>useratio/n_y & n_x==0	% TS figure exceeds fig size
     d_y=useratio/n_y; 
     d_x=d_y*ar/fig_ar;
-end
+    h_y=0.95*d_y;
+    h_x=h_y*ar/fig_ar;
 
-h_y=0.95*d_y;
-h_x=h_y*ar/fig_ar;
+    fig_size=0;
+elseif d_y>useratio/n_y & n_x~=0 
+    fprintf('matlab figure size is adapted to fit aspect ratio of TS plot')
+    h_y=0.95*d_y;
+    h_x=h_y*ar/fig_ar;
+
+    y_scale = d_y*n_y;
+    d_y=d_y/y_scale;   
+    fig_size=1;		% check to indicate fig needs to be adapted
+    h_y=0.95*d_y;
+
+else
+    h_y=0.95*d_y;
+    h_x=h_y*ar/fig_ar;
+    fig_size=0;
+end
 y=1-d_y:-d_y:0;
 x=1-useratio:d_x:1-d_x;
 
@@ -809,15 +833,21 @@ if plot_flag==-1
 else
   figure
   set(gcf,'renderer','zbuffer')
+
+  if fig_size==1
+      Position = get(gcf,'Position');
+      Position(1,2)=50;
+      Position(1,4)=Position(1,2)+Position(1,4)*y_scale;
+      set(gcf,'Position',Position)
+  end
+
+
   i_im=0;
   for i=ifg_list
-    %subplot(5,7,i);
     i_im=i_im+1;
     if n_ifg_plot>1
         axes('position',[imX(i_im),imY(i_im),h_x,h_y])
     end
-
-    %axes('position',[X(i),Y(i),xgap,ygap])
     ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg);
     %plot_phase(ph_tc(:,i)*conj(ph_tc(ref_ix,i)));
     box on
@@ -853,11 +883,11 @@ else
             limorder=ceil(-log10(diff(lims)))+2;
             plotlims=round(lims*10^limorder)/10^limorder;
         end
-        set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor)
+        set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
         h=xlabel(h,units);
         pos=get(h,'position');
         pos(2)=pos(2)/2.2;
-        set(h,'position',pos);
+        set(h,'position',pos,'FontSize',abs(textsize));
     end
 
   end
