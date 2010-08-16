@@ -1,0 +1,91 @@
+#!/bin/bash
+
+## To get the code working
+# make file executable
+# Include the dir of the file on your PATH
+
+## For the user to do:
+# Go to you new location were you want to process the data cd ~/processings/ALOS 
+# and execute and do: setup_alos_frame ~/data/ALOS/A###/
+# Use as input argument the dir for the specific track. (e.g. ~/data/ALOS/A###/)
+# To get the correct data structure it is advised to run prep_alos after downloading ALOS data.
+
+## The program does:
+# Constructs the structure used as input for stamps using symbolic links.
+# With structure like: frame dir/ SLC / date dir/ symbolic link data
+# Links are constructed for the LED, IMG-HH, VOL and TRL files.
+# Stamps requires HV to be linked as well to identify HH Single from HH Double polarization.
+
+## By David Bekaert March 2010
+## Jet Propulsion Laboratory - Delft University of Technology
+## May be used freely for educational and research purposes.
+## Not to be used for commercial purposes without consent of the author
+## DB   07/2010           Adding explanation
+## DB   07/2010           Tidying the code
+## Latest versions at davidbekaert.com
+
+echo ----------------------------------------------------------
+echo By David Bekaert March 2010
+echo Delft University of Technology - Jet Propulsion Laboratory
+echo ----------------------------------------------------------
+
+
+data_dir=`echo $1`
+# constructing the track folder
+echo Constructing track folder ...
+track_name=`echo $data_dir | awk '{print substr($0,length-4)}'`
+mkdir $track_name
+cd $track_name
+
+# linking all the files
+echo Setting up structure and symbolic links ...
+for frame in `ls -d $data_dir/[0-9]*`
+do
+	dir_frame=`echo "$frame" | awk '{print substr($0,length-3)}'`
+	mkdir $dir_frame
+	cd $dir_frame
+	mkdir SLC
+	cd SLC
+
+	for date in `ls -d $frame/[0-9]*`
+	do
+		dir_date=`echo "$date" | awk '{print substr($0,length-7)}'`
+		# constructing the symbolic links
+		mkdir $dir_date
+		cd  $dir_date
+
+		LED_file=`ls $date/LED*`
+		LED_file_name=LED${LED_file#*LED}
+		ln -s $date/$LED_file_name ./$LED_file_name
+
+
+		IMG_file=`ls $date/IMG-HH*` 
+		IMG_file_name=IMG-HH${IMG_file#*IMG-HH}
+		ln -s $date/$IMG_file_name ./$IMG_file_name 
+
+
+		# if HV file exist then also make the symbolic link
+		# Stamps requires this to identify HH single from HH double polarization
+                for HV in `ls $date/IMG-HV* 2>/dev/null`
+		do
+			IMG_file=`ls $date/IMG-HV*`
+        	        IMG_file_name=IMG-HV${IMG_file#*IMG-HV}
+                	ln -s $date/$IMG_file_name ./$IMG_file_name
+		done
+
+
+		VOL_file=`ls $date/VOL*`
+		VOL_file_name=VOL${VOL_file#*VOL}
+		ln -s $date/$VOL_file_name ./$VOL_file_name 
+
+		TRL_file=`ls $date/TRL*`
+		TRL_file_name=TRL${TRL_file#*TRL}
+		ln -s $date/$TRL_file_name ./$TRL_file_name
+		cd ..
+
+
+	done
+	cd ..
+	cd ..
+done
+cd ..

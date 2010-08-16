@@ -1,0 +1,103 @@
+#!/bin/bash
+
+## To get the code working
+# make file executable 
+# Include the dir of the file on your PATH
+
+## For the user to do:
+# Go to the folder containing alos data for that track: cd  ~/data/alos/A### and type prep_alos
+# For user wellbeing (not a perquisite) its advised to name the track folder in the format A###, D### or T###. 
+# With A, D and T for Ascending, Descending or Track. ### stands for a 3 digit number [0-9]. 
+# The ALOS .tar and/or .tgz of this folder should be for that specific track.
+
+## The program does:
+# Unzip all the files in the structure: frame folder/date folder/ unzipped Alos data
+# The .tar ALOS files which have been structured are moved to the data_archive folder
+
+## By David Bekaert March 2010
+## Jet Propulsion Laboratory - Delft University of Technology
+## May be used freely for educational and research purposes.
+## Not to be used for commercial purposes without consent of the author
+## DB   07/2010 	  Adding explanation
+## DB   07/2010           Tidying the code
+## Latest versions at davidbekaert.com 
+
+echo ----------------------------------------------------------
+echo By David Bekaert March 2010
+echo Delft University of Technology - Jet Propulsion Laboratory
+echo ----------------------------------------------------------
+
+workdir=`$pwd`
+
+# extracting into temporal folders. Putting everything in same structure for later.
+# In case of a gzip file
+echo Uncompressing files ...
+for Alos_file in `ls A*.tgz 2>/dev/null`
+do
+  	gunzip $Alos_file
+done
+
+# In case of a .tar file
+echo Unzipping files ...
+for Alos_file in `ls A*.tar`
+do
+	name=`basename $Alos_file .tar`
+	mkdir $name
+	tar -C $name -xf $Alos_file
+
+	# moving the untarred data to the archive folder
+        if [ ! -d "data_archive" ]
+        then
+            mkdir data_archive
+        fi
+	mv $Alos_file data_archive/
+
+done
+
+# start with arranging the dates 
+# do it in case you have workreport in the directory
+echo Setting up dir structure ...
+for Alos_dir_report in `ls A*H1.0/workreport 2>/dev/null` 
+do
+        line=`grep Img_SceneCenterDateTime $Alos_dir_report`
+        date=${line#*\"}
+        date=${date% *}
+        Alos_dir=${Alos_dir_report%/*}
+
+	line=`grep Scs_SceneID $Alos_dir_report`
+	line=${line#*\"}
+	line=${line%\"*}
+	frame=`echo "$line" | awk '{print substr($0,length-3)}'`
+    
+	# checking if the frame dir already exist, if not make it
+	if [ ! -d "$frame" ] 
+	then
+	    mkdir $frame
+	fi
+	# move the date dir in the frame dir
+	mv $Alos_dir $frame/$date	
+done
+
+
+# do it incase workreport is a txt file
+echo Setting up dir structure ...
+for Alos_dir_report in `ls A*H1.0/*.txt 2>/dev/null` 
+do
+        line=`grep Img_SceneCenterDateTime $Alos_dir_report`
+        date=${line#*\"}
+        date=${date% *}
+        Alos_dir=${Alos_dir_report%/*}
+
+        line=`grep Scs_SceneID $Alos_dir_report`
+        line=${line#*\"}
+        line=${line%\"*}
+        frame=`echo "$line" | awk '{print substr($0,length-3)}'`
+
+        # checking if the frame dir already exist, if not make it
+        if [ ! -d "$frame" ]
+        then
+            mkdir $frame
+        fi
+	# move the date dir in the frame dir
+        mv $Alos_dir $frame/$date 
+done

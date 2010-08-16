@@ -1,0 +1,72 @@
+#!/bin/bash
+
+## To get the code working
+# make file executable
+# Include the dir of the file on your PATH
+
+## For the user to do:
+# Use prep_alos to get the correct structure first. Valid track folders are A###, D### or T###
+# Call this program from within the folder where you want the symbolic links to be created. 
+# Use as input argument the dir above the track dir. (e.g. ~/data/ALOS/) and run link_alos_merged ~/data/ALOS/ 
+
+## The program does:
+# Constructs the structure used as input for Stamps and roipac (such frames are being merged) using symbolic links. 
+# With structure like: track dir/ SLC / date/ symbolic link data 
+# Links are constructed for all files:  LED, IMG-*, VOL and TRL files.
+# Program does not check for missing frames
+
+## By David Bekaert March 2010
+## Jet Propulsion Laboratory - Delft University of Technology
+## May be used freely for educational and research purposes.
+## Not to be used for commercial purposes without consent of the author
+## DB   07/2010           Adding explanation
+## DB   07/2010           Tidying the code
+## Latest versions at davidbekaert.com
+
+echo ----------------------------------------------------------
+echo By David Bekaert March 2010
+echo Delft University of Technology - Jet Propulsion Laboratory
+echo ----------------------------------------------------------
+
+
+track_dir=`echo $1`
+echo Setting up structure and symbolic links  ...
+echo Processing folder ...
+
+# do linking for each track
+for track in `ls -d $track_dir/[ADT][0-9]*`
+do
+	track_dir=`basename $track`
+	echo $track_dir
+	mkdir $track_dir
+       	cd $track_dir
+	mkdir SLC
+	cd SLC
+
+	# for each track you do each frame 
+	for frame in `ls -d $track/[0-9]*`
+	do
+  		frame_dir=`basename $frame`
+
+		# for each data in the frame dir
+		for date in `ls -d $track/$frame_dir/[0-9]*`
+		do
+			date_dir=`basename $date`
+
+			# check if dir exist and if not construct a new date folder
+			if [ ! -d $date_dir ]
+			then
+				mkdir $date_dir
+			fi
+
+			# link all the files to the date folder
+			cd $date_dir
+			for files in $(ls  $track/$frame_dir/$date_dir/ | grep __*)
+			do
+				ln -s $track/$frame_dir/$date_dir/$files
+			done			
+			cd ..
+		done	
+	done
+	cd ../..
+done

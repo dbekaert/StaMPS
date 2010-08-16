@@ -101,6 +101,7 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %   06/2010 AH: Correct bug for 'v' option for subset small baseline ifgs
 %   07/2010 DB: Correct bug for N_X plotting option
 %   08/2010 DB: Option to plot phase data and edit frontsize colorbar
+%   08/2010 DB: Adding figure names to plotted results
 %   ======================================================================
 
 
@@ -256,6 +257,7 @@ switch(group_type)
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end
         clear rc
+	fig_name = 'w';
      case {'w-d'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -269,6 +271,7 @@ switch(group_type)
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end
         clear rc scla
+        fig_name = 'w-d';
      case {'w-o'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -282,6 +285,7 @@ switch(group_type)
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end
         clear rc scla
+        fig_name = 'w-o';
      case {'w-do'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -295,6 +299,7 @@ switch(group_type)
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end
         clear rc scla
+        fig_name = 'w-do';
      case {'w-dm'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -310,6 +315,7 @@ switch(group_type)
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end
         clear rc scla
+        fig_name = 'w-dm';
      case {'w-dmo'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -321,23 +327,27 @@ switch(group_type)
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end
         clear rc scla
+        fig_name = 'w-dmo';
     case {'u'}
         phuw=load(phuwname);
         ph_all=phuw.ph_uw;
         clear phuw
         ref_ps=ps_setref;
+        fig_name = 'u';
     case {'usb'}
         uw=load(phuwsbname);
         ph_all=uw.ph_uw;
         clear uw
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'usb';
     case {'dsb'}
         scla=load(sclasbname);
         ph_all=scla.K_ps_uw;
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
+        fig_name = 'dsb';
     case {'usb-d'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
@@ -345,6 +355,7 @@ switch(group_type)
         clear uw scla
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'usb-d';
     case {'usb-o'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
@@ -352,6 +363,7 @@ switch(group_type)
         clear uw scla
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'usb-o';
     case {'usb-do'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
@@ -359,6 +371,7 @@ switch(group_type)
         clear uw scla
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'usb-do';
     case {'usb-a'}
         uw=load(phuwsbname);
         aps=load(apssbname);
@@ -366,6 +379,7 @@ switch(group_type)
         clear uw aps
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'usb-a';
     case {'usb-da'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
@@ -374,6 +388,7 @@ switch(group_type)
         clear uw scla aps
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'usb-da';
     case {'rsb'}
         uw=load(phuwsbname);
         res=load(phuwsbresname);
@@ -382,12 +397,14 @@ switch(group_type)
         clear uw
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'rsb';
     case {'asb'}
         aps=load(apssbname);
         ph_all=aps.ph_aps_slave;
         clear aps
         ref_ps=ps_setref;
         textsize=0;
+        fig_name = 'asb';
     case {'u-dms'}
         uw=load(phuwname);
         scn=load(scnname);
@@ -396,6 +413,7 @@ switch(group_type)
         clear uw scn scla
         ph_all(:,ps.master_ix)=0;
         ref_ps=ps_setref;
+        fig_name = 'u-dms';
     case {'u-dmas'}
         uw=load(phuwname);
         scn=load(scnname);
@@ -404,6 +422,7 @@ switch(group_type)
         ph_all=uw.ph_uw - scn.ph_scn_slave - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - aps.ph_aps_slave;
         clear uw scn scla
         ref_ps=ps_setref;
+        fig_name = 'u-dmas';
     case {'u-dm'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -414,6 +433,7 @@ switch(group_type)
         ph_all(:,master_ix)=0;
         clear uw scla
         ref_ps=ps_setref;
+        fig_name = 'u-dm';
     case {'u-dmo'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -422,6 +442,7 @@ switch(group_type)
         ph_all(:,master_ix)=0;
         clear uw scla
         ref_ps=ps_setref;
+        fig_name = 'u-dmo';
     case {'u-dma'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -431,6 +452,7 @@ switch(group_type)
         ph_all(:,master_ix)=0;
         clear uw scla aps
         ref_ps=ps_setref;
+        fig_name = 'u-dma';
     case {'u-a'}
         uw=load(phuwname);
         aps=load(apsname);
@@ -439,24 +461,28 @@ switch(group_type)
         ph_all(:,master_ix)=0;
         clear uw aps
         ref_ps=ps_setref;
+        fig_name = 'u-a';
     case {'u-d'}
         uw=load(phuwname);
         scla=load(sclaname);
         ph_all=uw.ph_uw - scla.ph_scla;
         clear uw scla
         ref_ps=ps_setref;
+        fig_name = 'u-d';
     case {'u-o'}
         uw=load(phuwname);
         scla=load(sclaname);
         ph_all=uw.ph_uw - scla.ph_ramp;
         clear uw scla
         ref_ps=ps_setref;
+        fig_name = 'u-o';
     case {'u-do'}
         uw=load(phuwname);
         scla=load(sclaname);
         ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp;
         clear uw scla
         ref_ps=ps_setref;
+        fig_name = 'u-do';
     case {'u-m'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -465,18 +491,21 @@ switch(group_type)
         ph_all(:,master_ix)=0;
         clear uw scla
         ref_ps=ps_setref;
+        fig_name = 'u-m';
     case {'a'}
         aps=load(apsname);
         %ph_all=exp(j*ph_scn);
         ph_all=aps.ph_aps_slave;
         clear aps
         ref_ps=ps_setref;
+        fig_name = 'a';
     case {'s'}
         scn=load(scnname);
         %ph_all=exp(j*ph_scn);
         ph_all=scn.ph_scn_slave;
         clear scn
         ref_ps=ps_setref;
+        fig_name = 's';
     case {'m'}
         %scn=load(scnname);
         %ph_all=scn.ph_scn_master;
@@ -485,60 +514,72 @@ switch(group_type)
         ph_all=scla.C_ps_uw;
         clear scla
         ref_ps=ps_setref;
+        fig_name = 'm';
     case {'d'}
         scla=load(sclaname);
         ph_all=scla.K_ps_uw;
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
+        fig_name = 'd';
     case {'o'}
         scla=load(sclaname);
         ph_all=scla.ph_ramp;
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
+        fig_name = 'o';
     case {'v'}
         uw=load(phuwname);
         ph_uw=uw.ph_uw;
         clear uw
         switch(value_type)
         case {'v'}
+            fig_name = 'v';
         case {'v-d'}
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_scla;
             clear scla
+            fig_name = 'v-d';
         case {'v-o'}
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_ramp;
             clear scla
+            fig_name = 'v-o';
         case {'v-do'}
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla;
             clear scla
+            fig_name = 'v-do';
         case {'v-a'}
             aps=load(apsname);
             ph_uw=ph_uw - aps.ph_aps_slave;
             clear scla aps
+            fig_name = 'v-a';
         case {'v-da'}
             scla=load(sclaname);
             aps=load(apsname);
             ph_uw=ph_uw - scla.ph_scla- aps.ph_aps_slave;
             clear scla aps
+            fig_name = 'v-da';
         case {'v-ds'}
             scla=load(sclaname);
             scn=load(scnname);
             ph_uw=ph_uw - scla.ph_scla - scn.ph_scn_slave;
             clear scla scn
+            fig_name = 'v-ds';
         case {'v-das'}
             scla=load(sclaname);
             aps=load(apsname);
             scn=load(scnname);
             ph_uw=ph_uw - scla.ph_scla - aps.ph_aps_slave - scn.ph_scn_slave;
             clear scla scn
+            fig_name = 'v-das';
         case {'vdrop-d'}
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_scla;
             clear scla
+            fig_name = 'vdrop-d';
         otherwise
             error('unknown value type')
         end
@@ -609,22 +650,27 @@ switch(group_type)
         clear phuw
         switch(value_type)
         case('v')
+            fig_name = 'v';
         case('v-d')
             scla=load(sclasbname);
             ph_uw=ph_uw - scla.ph_scla;
             clear scla
+            fig_name = 'v-d';
         case('v-o')
             scla=load(sclasbname);
             ph_uw=ph_uw - scla.ph_ramp;
             clear scla
+            fig_name = 'v-o';
         case('v-do')
             scla=load(sclasbname);
             ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
             clear scla
+            fig_name = 'v-do';
         case {'vdrop-d'}
             scla=load(sclasbname);
             ph_uw=ph_uw - scla.ph_scla;
             clear scla
+            fig_name = 'vdrop-d';
         otherwise
             error('unknown value type')
         end
@@ -674,6 +720,7 @@ switch(group_type)
             ph_all=ph_all.*repmat(conj(ph_all(:,ref_ifg)),1,n_ifg);
             ph_all(:,ref_ifg)=1; % may not be so because of rounding errors
         end
+        fig_name = 'p';
     case {'wf'}
         uw=load('uw_grid');
         gridix=zeros(size(uw.nzix));
@@ -686,13 +733,14 @@ switch(group_type)
         if ref_ifg~=0
             ph_all=ph_all.*conj(repmat(ph_all(:,ref_ifg),1,n_ifg));
         end
+        fig_name = 'wf';
     case {'vs'}
         ps_mean_v(ifg_list,200,value_type(4:end),use_small_baselines);
         ifg_list=[];
         mv=load(meanvname);
         ph_all=mv.mean_v_std;
         units='mm/yr';
-        
+        fig_name = 'vs';
     otherwise
         error('unknown value type')
     end
@@ -730,22 +778,24 @@ ar=max_xy(1)/max_xy(2); % aspect ratio (x/y)
 if n_x==0
     n_y=ceil(sqrt((n_ifg_plot)*ar/fig_ar)); % number of plots in y direction
     n_x=ceil((n_ifg_plot)/n_y);
+    fixed_fig = 1; 			% figure with fixed aspect ratio
 else
     n_y=ceil((n_ifg_plot)/n_x);
+    fixed_fig = 0;
 end
 
 
 d_x=useratio/n_x;
 d_y=d_x/ar*fig_ar;
-if d_y>useratio/n_y & n_x==0	% TS figure exceeds fig size
+if d_y>useratio/n_y & fixed_fig==1	% TS figure exceeds fig size
     d_y=useratio/n_y; 
     d_x=d_y*ar/fig_ar;
     h_y=0.95*d_y;
     h_x=h_y*ar/fig_ar;
 
     fig_size=0;
-elseif d_y>useratio/n_y & n_x~=0 
-    fprintf('matlab figure size is adapted to fit aspect ratio of TS plot')
+elseif d_y>useratio/n_y & fixed_fig==1 
+    fprintf('matlab figure size is adapted to fit aspect ratio of TS plot \n')
     h_y=0.95*d_y;
     h_x=h_y*ar/fig_ar;
 
@@ -832,7 +882,7 @@ if plot_flag==-1
     save(savename,'ph_disp','ifg_list')
 else
   figure
-  set(gcf,'renderer','zbuffer')
+  set(gcf,'renderer','zbuffer','name',fig_name)
 
   if fig_size==1
       Position = get(gcf,'Position');
