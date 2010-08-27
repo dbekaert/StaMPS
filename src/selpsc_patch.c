@@ -9,6 +9,8 @@
 // Change History
 // ==============================================
 // 03/2009 MA Fix for gcc 4.3.x
+// 07/2010 A0 Update Need for Speed on patches
+// 08/2010 MA Code optimization
 // ==============================================
 
 #include <iostream>  
@@ -129,9 +131,9 @@ try {
   parmfile.seekg(savepos);
   char ampfilename[256];
   ifstream* ampfile   = new ifstream[num_files];
-  float* calib_factor = new float[num_files];
+  register float* calib_factor = new float[num_files];
       
-  for (int i=0; i<num_files; ++i) 
+  for (register int i=0; i<num_files; ++i) 
   {
     parmfile >> ampfilename >> calib_factor[i];
     ampfile[i].open (ampfilename, ios::in|ios::binary);
@@ -171,6 +173,11 @@ try {
   patchfile >> az_end;
   patchfile.close();
 
+  // [A0] determine size of a patch
+  int patch_lines = az_end-az_start+1;
+  int patch_width = rg_end-rg_start+1;
+  const int sizeofelement = sizeof(float); // [MA] size of a pixel
+
   filebuf *pbuf;
   long size;
   long numlines;
@@ -181,10 +188,13 @@ try {
   // get file size using buffer's members
   size=pbuf->pubseekoff (0,ios::end,ios::in);
   pbuf->pubseekpos (0,ios::in);
-  numlines=size/width/sizeof(float)/2;
+  numlines=size/width/sizeofelement/2;
 
   cout << "number of lines per file = " << numlines << "\n";	  
   
+  cout << "patch lines = " << patch_lines  << endl;
+  cout << "patch width = " << patch_width  <<  endl;
+
   ifstream maskfile (maskfilename, ios::in);
   char mask_exists = 0;
   if (maskfile.is_open()) 
@@ -196,72 +206,89 @@ try {
   ofstream daoutfile(daoutname,ios::out);
   ofstream meanoutfile(meanoutname,ios::out);
  
-  complex<float>* buffer = new complex<float>[num_files*width]; // used to store 1 line of all amp files
+  //complex<float>* buffer = new complex<float>[num_files*width]; // used to store 1 line of all amp files
+  register complex<float>* buffer = new complex<float>[num_files*patch_width]; // used to store 1 line of all amp files
 
-  char* maskline = new char[width];
-  for (int x=0; x<width; x++) // for each pixel in range
+  char* maskline = new char[patch_width];
+  for (register int x=0; x<patch_width; x++) // for each pixel in range
   {
       maskline[x] = 0;
   }
 
-  int linebytes = width*8;                      // bytes per line in amplitude files`
-  int y=0;                                      // amplitude files line number
-  int pscid=0;                                  // PS candidate ID number
+  //int linebytes = width*8;                      // bytes per line in amplitude files
+  const int linebytes = width*sizeofelement*2;  // bytes per line in amplitude files (SLCs)
+  register int y=0;                                      // amplitude files line number
+  register int pscid=0;                                  // PS candidate ID number
+
+  const int patch_linebytes =  patch_width*sizeofelement*2;
+  register long long pos_start;
+  pos_start= (long long)(az_start-1+y)*linebytes+(rg_start-1)*sizeofelement*2; // define position of start of 1st line of patch
+                                                                               // on SLC file.
+  // Turn on following 3 lines for debuing pos_star [MA]
+  //cout << "[debug ] " << pos_start << endl;
+  //cout << "[debug ] " << (long long )(az_start-1+y)*linebytes << endl;
+  //cout << "[debug ] " << (long long )(rg_start-1)*sizeofelement*2 << endl;
   
-  for ( int i=0; i<num_files; i++)              // read in first line from each amp file
+  for (register int i=0; i<num_files; i++)              // read in first line from each amp file
   {
-    ampfile[i].read (reinterpret_cast<char*>(&buffer[i*width]), linebytes);
+    //ampfile[i].read (reinterpret_cast<char*>(&buffer[i*width]), linebytes);
+    ampfile[i].seekg (pos_start, ios::beg);
+    ampfile[i].read (reinterpret_cast<char*>(&buffer[i*patch_width]), patch_linebytes);
   } 
      
-  while (! ampfile[1].eof() && y < az_end) 
+  while (! ampfile[1].eof() && y < patch_lines) 
   {
      if (mask_exists==1) 
      {
-         maskfile.read (maskline, width);
+         //maskfile.read (maskline, width);
+         maskfile.seekg (pos_start, ios::beg);      // [AO] set pointer to start of j-th line of mask file
+         maskfile.read (maskline, patch_linebytes); // read from pointer nr_pixels*8 bytes
      }    
-     if (y >= az_start-1)
+     if (y >=0) // was (y >= az_start-1)
        {
-       for (int x=rg_start-1; x<rg_end; x++) // for each pixel in range
+       for (register int x=0; x<patch_width; x++) // for each pixel in range (width of the patch)
        {
      
-        float sumamp = 0;
-        float sumampsq = 0;
-        int n,i;
+        register float sumamp = 0;
+        register float sumampsq = 0;
 
-        for (i=0, n=0; i<num_files; i++)        // for each amp file
+        for (register int i=0; i<num_files; i++)        // for each amp file
 	{
-           float amp=abs(buffer[i*width+x])/calib_factor[i]; // get amp value
+           //float amp=abs(buffer[i*width+x])/calib_factor[i]; // get amp value
+           register float amp=abs(buffer[i*patch_width+x])/calib_factor[i]; // get amp value
            sumamp+=amp;
            sumampsq+=amp*amp;
-           n++;
         }
 	
-        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeof(float));	
+        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeofelement);	
 
         if (maskline[x]==0 && sumamp > 0)
         { 
-	    float D_sq=n*sumampsq/(sumamp*sumamp) - 1; // var/mean^2
+	    register float D_sq=num_files*sumampsq/(sumamp*sumamp) - 1; // var/mean^2
             if (pick_higher==0 && D_sq<D_thresh_sq ||                 \
                 pick_higher==1 && D_sq>=D_thresh_sq) 
 	    {
                ++pscid;
 
-               ijfile << pscid << " " << y << " " << x << "\n"; 
+               ijfile << pscid << " " << (az_start-1)+y << " " << (rg_start-1)+x << "\n"; 
 
-	       float D_a = sqrt(D_sq);
+	       register float D_a = sqrt(D_sq);
                daoutfile << D_a << "\n";
 
             } // endif
          } // endif
        } // x++           
-     } // endif
+     } // endif y
 
-     for ( int i=0; i<num_files; i++)           // read in next line from each amp file
-     {
-        ampfile[i].read (reinterpret_cast<char*>(&buffer[i*width]), linebytes);
-     } 
-     
      y++;
+
+     for (register int i=0; i<num_files; i++)           // read in next line from each amp file
+     {
+        //pos_start=(long long)(az_start-1+y)*linebytes+(rg_start-1)*sizeofelement*2; // get pos of the next line of patch
+        //ampfile[i].seekg (pos_start, ios::beg);
+        ampfile[i].seekg (linebytes-patch_linebytes, ios::cur);  // [MA]
+        ampfile[i].read (reinterpret_cast<char*>(&buffer[i*patch_width]), patch_linebytes);
+     } 
      
      if (y/100.0 == rint(y/100.0))
         cout << y << " lines processed\n";
