@@ -27,7 +27,7 @@ I_RESFILE       dem.out                         // parameter file
  c                                              //
 c
 c ___ step comprefdem ___
-CRD_METHOD      trilinear
+# CRD_METHOD      trilinear             // obsolete after Doris 4.01
 CRD_INCLUDE_FE  OFF                     // phase w.r.t. ellipsoid
 CRD_OUT_FILE    refdem_1l.raw           //
 CRD_OUT_DEM_LP  dem_radar.raw
