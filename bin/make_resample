@@ -7,6 +7,7 @@ if (! -e make_ifgs.list) then
 endif
 
 foreach dir(`cat make_ifgs.list`)
+   echo "\n\n[Entering] : ${dir}\n"
    cd $dir
    step_resample
 end
