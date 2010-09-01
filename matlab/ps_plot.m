@@ -239,7 +239,7 @@ elseif strcmpi(group_type(1),'v')
         group_type='v';
     end
 elseif strcmpi(group_type(1),'d')
-    if strcmpi(small_baseline_flag,'y')
+    if strcmpi(small_baseline_flag,'y') & strcmp(group_type(1),'d')
         group_type='dsb';
         fprintf('DEM error calculated from small baseline interferograms\n')
     else

@@ -14,6 +14,8 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   05/2010 AH: add ./ before .mat files 
 %   05/2010 AH: check for ifgstd and don't solve for vel if < 4 ifgs 
 %   05/2010 AH: correct ramp processing fro dropped ifgs
+%   08/2010 AH: use recalc_index correctly in small baseline case
+%   08/2010 AH: use mean bperp value
 %   ================================================================
 logit;
 fprintf('Estimating spatially-correlated look angle error...\n')
@@ -126,6 +128,9 @@ if use_small_baselines==0
         end
         if isfield(uw,'unwrap_ifg_index_sm')
             unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,ps.master_ix)
+            if ~strcmpi(recalc_index,'all')
+                unwrap_ifg_index=intersect(unwrap_ifg_index,recalc_index);
+            end
         else
             unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix)
         end
@@ -160,11 +165,9 @@ K_ps_uw=zeros(ps.n_ps,1);
 C_ps_uw=zeros(ps.n_ps,1);
 
 if coest_mean_vel==0 | length(unwrap_ifg_index)<4
-    G=[ones(length(unwrap_ifg_index),1),double(bperp_mat(i,unwrap_ifg_index)')];
-    m0=[0;0];
+    G=[ones(length(unwrap_ifg_index),1),double(mean(bperp_mat(:,unwrap_ifg_index))')];
 else
-    G=[ones(length(unwrap_ifg_index),1),double(bperp_mat(i,unwrap_ifg_index)'),double(day(unwrap_ifg_index))];
-    m0=[0;0;0];
+    G=[ones(length(unwrap_ifg_index),1),double(mean(bperp_mat(:,unwrap_ifg_index))'),double(day(unwrap_ifg_index))];
 end
 
 ifg_vcm=eye(size(uw.ph_uw,2));
