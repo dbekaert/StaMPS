@@ -51,7 +51,7 @@ rm -f fake_int.out
 
 if (! -e $WORKDIR/dem.dorisin) then
     sed -n '1,/step comprefdem/p' $DORIS_SCR/dem.dorisin > $WORKDIR/dem.dorisin
-    echo "CRD_METHOD      trilinear" >> $WORKDIR/dem.dorisin
+    echo "# CRD_METHOD      trilinear" >> $WORKDIR/dem.dorisin
     echo "CRD_INCLUDE_FE  OFF" >> $WORKDIR/dem.dorisin
     echo "CRD_OUT_FILE    refdem_1l.raw" >> $WORKDIR/dem.dorisin
     echo "CRD_OUT_DEM_LP  dem_radar.raw" >> $WORKDIR/dem.dorisin
