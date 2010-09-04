@@ -35,15 +35,15 @@ endif
 
 set  num_l_orig = `grep 'Number_of_lines_original:' master.res | gawk '{print $2}'`
 set  num_p_orig = `grep 'Number_of_pixels_original:' master.res | gawk '{print $2}'`
-set N_win = `grep 'FC_WINSIZE' $WORKDIR/coreg.dorisin | gawk '{print $2}'` 
-set osf = `grep 'FC_OSFACTOR' $WORKDIR/coreg.dorisin | gawk '{print $2}'` 
+set N_win = `grep '^[[:space:]]*FC_WINSIZE' $WORKDIR/coreg.dorisin | gawk '{print $2}'`  # MA: fixed so that we don't grep commented out statements
+set fc_osf = `grep '^[[:space:]]*FC_OSFACTOR' $WORKDIR/coreg.dorisin | gawk '{print $2}'`   # ^[ ]* also works
 
 cd coreg
 
 echo $num_l_orig > coreg_parms
 echo $num_p_orig >> coreg_parms
 echo $N_win >> coreg_parms
-echo $osf >> coreg_parms
+echo $fc_osf >> coreg_parms
 
 
 set ifg_num = 0
