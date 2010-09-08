@@ -795,7 +795,7 @@ if d_y>useratio/n_y & fixed_fig==1	% TS figure exceeds fig size
     h_x=h_y*ar/fig_ar;
 
     fig_size=0;
-elseif d_y>useratio/n_y & fixed_fig==1 
+elseif d_y>useratio/n_y & fixed_fig==0 
     fprintf('matlab figure size is adapted to fit aspect ratio of TS plot \n')
     h_y=0.95*d_y;
     h_x=h_y*ar/fig_ar;
