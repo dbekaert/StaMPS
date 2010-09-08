@@ -746,6 +746,7 @@ switch(group_type)
     end
 else
 	ph_all = value_type;
+	fig_name = 'data';
 end
 
 
