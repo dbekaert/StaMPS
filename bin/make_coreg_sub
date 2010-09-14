@@ -20,6 +20,7 @@ echo "coreg_pos $first_l $last_l $first $last 0 0" >matbgparms.txt
 matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log
 
 set count = 0
+set last_count = 1
 foreach dir(`cat $argv[2] | gawk '{print $2}'`)  
    set bperp = `grep $dir $argv[2] | gawk '{print $1}'`
    set ifg_num = `grep $dir $argv[2] | gawk '{print $3}'`
