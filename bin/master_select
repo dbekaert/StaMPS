@@ -43,15 +43,19 @@ echo " "
 
 set masterdate = `pwd | gawk 'n=split($1,master,"_") {print master[n]}'`
 
+mv coreg/slave.res coreg/slaveBU.res 2>& /dev/null#Preventing slave.res in INSAR_masterdate to get into doppler baselines
+
 grep Bperp */coreg.out | gawk 'split($1,date,"/") {print date[1]}' > Date.temp
 grep Bperp */coreg.out | gawk '{print $4}' > Bperp.temp
-grep f_DC_con */slave.res | gawk '{print $5}' > Dopp.txt
+grep f_DC_con */slave.res | gawk '{print $5}' > Dopp.temp
 
 
 sed '$a '$masterdate'' Date.temp > Date.txt
 rm -f Date.temp
 sed '$a '0'' Bperp.temp > Bperp.txt
 rm -f Bperp.temp
+sed '$a '0'' Dopp.temp > Dopp.txt
+rm -f Dopp.temp
 
 echo "masterchoice $Tcrit $Bcrit $Dcrit" >matbgparms.txt
 matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m > masterchoice.log
