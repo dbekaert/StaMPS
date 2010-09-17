@@ -13,12 +13,6 @@ data(:,1:2) = data(sortix,1:2);
 
 data(:,1) = datenum(num2str(data(:,1)),'yyyymmdd');
 
-data(:,1)
-data(:,2)
-data(:,3)
-sortix
-date
-
 for i=1:length(data(:,1))
     data2(:,1) = data(:,1) - data(i,1);
     data2(:,2) = data(:,2) - data(i,2);
