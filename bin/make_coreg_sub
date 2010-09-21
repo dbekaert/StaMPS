@@ -4,42 +4,59 @@
 #
 # Andy Hooper, Jul 2006
 #
+# JJSousa + MA oversampling
 
 set WORKDIR = $argv[1]
 set bperp_max = $argv[3]
 set count_max = $argv[4]
+set SLC_OSF = `check_slc_sampling master.res`
 
 cp $WORKDIR/master.res  .
 
-set first = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
-set last = `grep 'Last_pixel ' master.res | gawk 'END {print $4}'`
-set first_l = `grep 'First_line ' master.res | gawk 'END {print $4}'`
-set last_l = `grep 'Last_line ' master.res | gawk 'END {print $4}'`
+# JJS oversampling support 
+set first = `get_slc_lp master.res | awk '{print $3}'` # [MA] works both OVS and noOVS SLC
+set last = `get_slc_lp master.res  | awk '{print $4}'`
+set first_l = `get_slc_lp master.res | awk '{print $1}'`
+set last_l = `get_slc_lp master.res  | awk '{print $2}'`
 
-echo "coreg_pos $first_l $last_l $first $last 0 0" >matbgparms.txt
-matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log
+echo "[Debug ] master cn: $first $last $first_l $last_l  # debug
+
+#echo "coreg_pos $first_l $last_l $first $last 0 0" >matbgparms.txt
+#matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log
 
 set count = 0
-set last_count = 1
 foreach dir(`cat $argv[2] | gawk '{print $2}'`)  
    set bperp = `grep $dir $argv[2] | gawk '{print $1}'`
    set ifg_num = `grep $dir $argv[2] | gawk '{print $3}'`
    @ count = $count + 1
    if ($count <= $count_max || $bperp <= $bperp_max) then
-      sed -n '1,/* End_coarse_correl:/p' $dir/coreg.out > coreg.out
-      cp $dir/slave.res .
       echo "MASTER: $WORKDIR"
       echo "SLAVE: $dir\n"
-      set dirnum = `echo $dir | gawk 'BEGIN {FS="/"} {print $NF}'`
+      set date = `echo $dir | gawk 'BEGIN {FS="/"} {print $(NF-1)}'` # MA not used
       set last_count = $count
-      if (! -f CPM_Data.0.$ifg_num) then
-          doris $WORKDIR/coreg.dorisin >> make_coreg.log
+      #if (! -f CPM_Data.0.$ifg_num) then
+      if (! ( -f CPM_Data.0.$ifg_num || -d coreg.0.${ifg_num} ) ) then
+        set coreg_dir="coreg.0.${ifg_num}"
+        echo "coreg_dir: ${coreg_dir}\n"
+        mkdir $coreg_dir 
+        cd ${coreg_dir}
+        echo "coreg_pos $first_l $last_l $first $last 0 0 ${SLC_OSF}" >matbgparms.txt
+        matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log
+
+        sed -n '1,/* End_coarse_correl:/p' $dir/coreg.out > coreg.out
+        cp $dir/master.res .
+        cp $dir/slave.res .
+        cp $WORKDIR/coreg.dorisin  .
+        doris coreg.dorisin >> make_coreg.log
+        cat make_coreg.log >> ../make_coreg.log
           if (-f CPM_Data) then
             tail -n+11 CPM_Data > CPM_Data.0.$ifg_num
-#            tail --lines=+11 CPM_Data > CPM_Data.0.$ifg_num
-            rm -f CPM_Data
-            mv coreg.out coreg.out.0.$ifg_num
+            cp  CPM_Data.0.$ifg_num ../
+            #rm -f CPM_Data
+            cp coreg.out ../coreg.out.0.$ifg_num
           endif
+        cd ..  # cd to parent coreg
+        rm -rf ${coreg_dir}
       endif
    endif
 end
@@ -50,36 +67,40 @@ end
 tail -n+$last_count $argv[2] > tmp_todo.$$
 #tail --lines=+$last_count $argv[2] > tmp_todo.$$
 
-foreach dir(`cat tmp_todo.$$ | gawk '{print $2}'`)  
-   tail -n+2 tmp_todo.$$ > tmp_tmp
-#   tail --lines=+2 tmp_todo.$$ > tmp_tmp
-   mv tmp_tmp tmp_todo.$$
-   set Tline1 = `grep 'correlation_translation_lines' $dir/coreg.out | gawk '{print $2}'`
-   set Tpix1 = `grep 'correlation_translation_pixels' $dir/coreg.out | gawk '{print $2}'`
-   #sed -n '1,/*_Start_crop:/p' master.res > tmp_master.$$
-   #echo  "Data_output_file:  $dir" >> tmp_master.$$ 
-   #sed -e '1,/Data_output_file:/d' $dir/slave.res >> tmp_master.$$
-   #mv tmp_master.$$ master.res
-   cp $dir/slave.res master.res
-   echo "coreg_pos $first_l $last_l $first $last $Tline1 $Tpix1" >matbgparms.txt      
-   echo "coreg_pos $first_l $last_l $first $last $Tline1 $Tpix1" >> make_coreg.log      
-   matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log
+
+#slave to slave
+foreach mdir(`cat tmp_todo.$$ | gawk '{print $2}'`)  
+   tail -n+2 tmp_todo.$$ > tmp_tmp.$$
+   mv tmp_tmp.$$ tmp_todo.$$
+   set Tline1 = `grep 'correlation_translation_lines' $mdir/coreg.out | gawk '{print $2}'`
+   set Tpix1 = `grep 'correlation_translation_pixels' $mdir/coreg.out | gawk '{print $2}'`
+   #echo "coreg_pos $first_l $last_l $first $last $Tline1 $Tpix1" >matbgparms.txt      
+   #echo "coreg_pos $first_l $last_l $first $last $Tline1 $Tpix1" >> make_coreg.log      
+   #matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log
 
    head -n$count_max tmp_todo.$$ > tmp_todo2.$$
-#   head --lines=$count_max tmp_todo.$$ > tmp_todo2.$$
-   set ifg_num = `grep $dir $argv[2] | gawk '{print $3}'`
-   #set dirnum = `echo $dir | gawk 'BEGIN {FS="/"} {print $NF}'`
-   foreach dir2(`cat tmp_todo2.$$ | gawk '{print $2}'`)  
-       echo "MASTER: $dir"
-       echo "SLAVE: $dir2\n"
-       set ifg2_num = `grep $dir2 $argv[2] | gawk '{print $3}'`
-       #set dir2num = `echo $dir2 | gawk 'BEGIN {FS="/"} {print $NF}'`
-       if ( ! (-f CPM_Data.$ifg_num.$ifg2_num ||  -f CPM_data.0.$ifg2_num) ) then
-         set Tline2 = `grep 'correlation_translation_lines' $dir2/coreg.out | gawk '{print $2}'`
-         set Tpix2 = `grep 'correlation_translation_pixels' $dir2/coreg.out | gawk '{print $2}'`
+   set ifg_num = `grep $mdir $argv[2] | gawk '{print $3}'`
+   #set dirnum = `echo $mdir | gawk 'BEGIN {FS="/"} {print $NF}'`
+   foreach sdir(`cat tmp_todo2.$$ | gawk '{print $2}'`)  
+       echo "MASTER: $mdir"
+       echo "SLAVE: $sdir\n"
+       set ifg2_num = `grep $sdir $argv[2] | gawk '{print $3}'`
+       #set sdirnum = `echo $sdir | gawk 'BEGIN {FS="/"} {print $NF}'`
+       #if ( ! (-f CPM_Data.$ifg_num.$ifg2_num ||  -f CPM_data.0.$ifg2_num) ) then
+      if ( ! ( -f CPM_Data.$ifg_num.$ifg2_num || -d coreg.$ifg_num.$ifg2_num ) ) then # fixed above
+         set Tline2 = `grep 'correlation_translation_lines' $sdir/coreg.out | gawk '{print $2}'`
+         set Tpix2 = `grep 'correlation_translation_pixels' $sdir/coreg.out | gawk '{print $2}'`
          @ Tline = $Tline2 - $Tline1
          @ Tpix  = $Tpix2 - $Tpix1
-         sed -n '1,/*_Start_coarse_correl:/p' $dir2/coreg.out > coreg.out
+        set coreg_dir="coreg.$ifg_num.$ifg2_num"
+        echo "coreg_dir: ${coreg_dir}\n"
+        mkdir $coreg_dir
+        cd ${coreg_dir}
+        echo "coreg_pos $first_l $last_l $first $last $Tline1 $Tpix1 ${SLC_OSF}" >matbgparms.txt      
+        echo "coreg_pos $first_l $last_l $first $last $Tline1 $Tpix1 ${SLC_OSF}" >> make_coreg.log      
+        matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log  # fine_coreg pos for each slave master pair
+
+         sed -n '1,/*_Start_coarse_correl:/p' $sdir/coreg.out > coreg.out
          echo "*******************************************************************" >> coreg.out
          echo "Estimated translation slave w.r.t. master:" >> coreg.out
 
@@ -88,14 +109,19 @@ foreach dir(`cat tmp_todo.$$ | gawk '{print $2}'`)
          echo "*******************************************************************" >> coreg.out
          echo "* End_coarse_correl:_NORMAL" >> coreg.out
          echo "*******************************************************************" >> coreg.out
-         cp $dir2/slave.res .
-         doris $WORKDIR/coreg.dorisin >> make_coreg.log
+         cp $mdir/slave.res  master.res  # master
+         cp $sdir/slave.res .
+         cp $WORKDIR/coreg.dorisin .
+         doris coreg.dorisin >> make_coreg.log
+         cat make_coreg.log >> ../make_coreg.log
          if (-f CPM_Data) then
            tail -n+11 CPM_Data > CPM_Data.$ifg_num.$ifg2_num
-#           tail --lines=+11 CPM_Data > CPM_Data.$ifg_num.$ifg2_num
-           rm -f CPM_Data
-           mv coreg.out coreg.out.$ifg_num.$ifg2_num
+           cp CPM_Data.$ifg_num.$ifg2_num ../          # to coreg
+           #rm -f CPM_Data
+           cp coreg.out ../coreg.out.$ifg_num.$ifg2_num
          endif
+         cd .. # to coreg
+         rm -rf ${coreg_dir}
       endif
    end
 end
