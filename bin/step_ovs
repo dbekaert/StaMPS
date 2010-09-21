@@ -1,0 +1,57 @@
+#!/bin/tcsh -f
+#
+# ===========================================================================
+# Andy Hooper, 2010
+# ===========================================================================
+# 10/2009 MA: Oversample using Doris oversample.dorisin from WORKDIR
+# ===========================================================================
+
+set WORKDIR = ".." 
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 8
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+if ( ! -e slave_fullres.res ) then
+    cp  slave.res slave_fullres.res
+else
+    rm -f slave.res
+    cp slave_fullres.res slave.res
+endif
+
+set slave_slc = $cwd"_crop_ovs.slc"
+
+if ( -e $slave_slc ) then
+    rm -f $slave_slc
+endif
+
+# Oversample
+doris $WORKDIR/ovsfiles.dorisin
+
+# qlook
+#set first = `grep 'First_pixel .* ovs_image' slave.res | gawk 'END {print $4}'`
+#set last = `grep 'Last_pixel .* ovs_image'  slave.res | gawk 'END {print $4}'`
+set first = `get_slc_lp slave.res | awk '{print $3}'`  # Pixel
+set last  = `get_slc_lp slave.res | awk '{print $4}'`
+@ width = ($last - $first) + 1
+
+set endras = l.ras
+
+set cpxf="cpxfiddle -w$width -fcr4 -qmixed  -M$looks/$azlooks -osunraster -e0.2 -s1.8 $slave_slc > image_ovs.slc_$looks$endras"
+echo $cpxf > image_ovs_qlook.sh
+
+
+#echo 's#slave_crop.slc#'$cwd'/slave_crop.slc#' > tmp_sed.in
+#sed -f tmp_sed.in slave.res > tmp_slave.res
+#mv tmp_slave.res slave.res
+#rm -f tmp_sed.in

@@ -1,0 +1,119 @@
+#!/bin/tcsh -f
+
+### 04/2008 AH: Add RS_DBOW card to resample.dorisin
+### 10/2009 MA: OVS with matlab
+
+set masterdate = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
+set CURRDIR = `echo $cwd`
+set WORKDIR = ".."
+set INSARDIR = "../../INSAR_$masterdate"
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 8
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+
+if (! -e $WORKDIR/master_ovs.dorisin) then
+    cp $DORIS_SCR/master_ovs.dorisin $WORKDIR
+endif
+
+# for slave                                                                                           
+if (! -e $WORKDIR/ovsfiles.dorisin) then
+    cp $DORIS_SCR/ovsfiles.dorisin $WORKDIR
+endif
+
+if ( ! -e master_fullres.res ) then
+    cp  master.res master_fullres.res
+else
+    rm -f master.res
+    cp master_fullres.res master.res
+endif
+
+set master_slc = $masterdate"_crop_ovs.slc"
+
+
+# master dorisin part
+sed -n '1,/M_OVS_OUT_FORMAT/p' $WORKDIR/master_ovs.dorisin > tmp_master_ovs.$$
+echo "M_OVS_OUT  $master_slc"  >> tmp_master_ovs.$$
+echo "STOP" >> tmp_master_ovs.$$
+mv tmp_master_ovs.$$ $WORKDIR/master_ovs.dorisin
+
+#slave dorisin part
+sed -n '1,/S_OVS_OUT_FORMAT/p' $WORKDIR/ovsfiles.dorisin > tmp_ovsfiles.$$
+echo "S_OVS_OUT  slave_crop_ovs.slc"  >> tmp_ovsfiles.$$
+echo "STOP" >> tmp_ovsfiles.$$
+mv tmp_ovsfiles.$$ $WORKDIR/ovsfiles.dorisin
+
+if ( -e $master_slc ) then
+    rm -f $master_slc
+endif
+
+# Oversample
+doris $WORKDIR/master_ovs.dorisin > step_master_ovs.log
+
+#set first = `grep 'First_pixel .* ovs_image' master.res | gawk 'END {print $4}'`
+#set last = `grep 'Last_pixel .* ovs_image'  master.res | gawk 'END {print $4}'`
+set first = `get_slc_lp master.res | awk '{print $3}'`  # Pixel
+set last  = `get_slc_lp master.res | awk '{print $4}'`
+@ width = ($last - $first) + 1
+
+set endras = l.ras
+set endraw = l.raw
+
+set cpxf="cpxfiddle -w$width -fcr4 -qmixed  -M$looks/$azlooks -osunraster -e0.2 -s1.8 $master_slc > image_ovs.slc_$looks$endras"
+echo $cpxf > image_ovs_qlook.sh
+eval $cpxf
+
+cpxfiddle -w$width -fcr4 -qnormal -M$looks/$azlooks -ofloat $master_slc > image_ovs.slc_$looks$endraw
+
+
+# skipped following since done by step_master_read
+#cd $WORKDIR
+#\ls -d [1,2]* | sed "/$masterdate/ d" > make_slcs.list
+#cd $CURRDIR
+
+cp master.res tmp_master.res
+echo 's#SLC.*/'$masterdate'/#INSAR_'$masterdate'/#'  > tmp_sed.in
+sed -f tmp_sed.in tmp_master.res > master.res
+rm -f tmp_sed.in
+
+
+if (! -e $INSARDIR) then
+    mkdir $INSARDIR
+endif
+
+cp -f master.res $INSARDIR
+mv $master_slc $INSARDIR
+ln -s $INSARDIR/$master_slc # MA
+
+if (! -e $INSARDIR/timing.dorisin) then
+    cp $DORIS_SCR/timing.dorisin $INSARDIR
+endif
+
+if (! -e $INSARDIR/dem.dorisin) then
+    cp $DORIS_SCR/dem.dorisin $INSARDIR
+endif
+
+if (! -e $INSARDIR/geocode.dorisin) then
+    cp $DORIS_SCR/geocode.dorisin $INSARDIR
+endif
+
+if (! -e $INSARDIR/looks.txt) then
+    cp $WORKDIR/looks.txt $INSARDIR
+endif
+
+if (! -e $INSARDIR/ar.txt) then
+    cp $WORKDIR/ar.txt $INSARDIR
+endif
+
+
