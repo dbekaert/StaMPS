@@ -13,6 +13,8 @@ echo " "
 set WORKDIR = $cwd
 set dirname = `echo $WORKDIR | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
 
+set SLC_OSF = `check_slc_sampling master.res` 
+
 if ($dirname == "SMALL_BASELINES") then
     set INSARDIR = `echo $WORKDIR | gawk 'BEGIN {FS = "/SMALL_BASELINES"}{print $1}'`
     echo "Small Baseline Processing"
@@ -21,19 +23,27 @@ else
     set INSARDIR = $WORKDIR
 endif
 
-set first = `grep 'First_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
-set last = `grep 'Last_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+#set first = `grep 'First_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+#set last = `grep 'Last_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+set first = `get_slc_lp $WORKDIR/master.res | awk '{print $3}'`  # Pixel
+set last  = `get_slc_lp $WORKDIR/master.res | awk '{print $4}'`
 @ width = ($last - $first) + 1
 echo $width > $WORKDIR/width.txt
-set firstl = `grep 'First_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
-set lastl = `grep 'Last_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+#set firstl = `grep 'First_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+#set lastl = `grep 'Last_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
+set firstl = `get_slc_lp $WORKDIR/master.res | awk '{print $1}'` # Line
+set lastl  = `get_slc_lp $WORKDIR/master.res | awk '{print $2}'`
 @ length = ($lastl - $firstl) + 1
 echo $length > $WORKDIR/len.txt
 
 # Create other input files for PS candidates
 grep 'Bperp' $INSARDIR/*/interferogram.out | gawk '{print $4}' > bperp.1.in
 \ls $INSARDIR/*/cint.minrefdem.raw | gawk 'BEGIN {FS = "/"}{print $(NF-1)}' > day.1.in
-\ls $INSARDIR/[1,2]*_crop.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}' > master_day.1.in
+ if ( SLC_OSF > 1 )
+   \ls $INSARDIR/[1,2]*_crop_ovs.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}' > master_day.1.in
+ else
+   \ls $INSARDIR/[1,2]*_crop.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}' > master_day.1.in
+ endif
 if ($dirname == "SMALL_BASELINES") then
     \ls $WORKDIR/*/cint.minrefdem.raw | gawk 'BEGIN {FS = "/"}{print substr($(NF-1),1,8) " " substr($(NF-1),10,8)}' > ifgday.1.in
 endif
