@@ -39,7 +39,7 @@ else
     cp master_fullres.res master.res
 endif
 
-set master_slc = $masterdate"_crop_ovs.slc"
+set master_slc = $cwd/$masterdate"_crop_ovs.slc"
 
 
 # master dorisin part
@@ -47,12 +47,6 @@ sed -n '1,/M_OVS_OUT_FORMAT/p' $WORKDIR/master_ovs.dorisin > tmp_master_ovs.$$
 echo "M_OVS_OUT  $master_slc"  >> tmp_master_ovs.$$
 echo "STOP" >> tmp_master_ovs.$$
 mv tmp_master_ovs.$$ $WORKDIR/master_ovs.dorisin
-
-#slave dorisin part
-sed -n '1,/S_OVS_OUT_FORMAT/p' $WORKDIR/ovsfiles.dorisin > tmp_ovsfiles.$$
-echo "S_OVS_OUT  slave_crop_ovs.slc"  >> tmp_ovsfiles.$$
-echo "STOP" >> tmp_ovsfiles.$$
-mv tmp_ovsfiles.$$ $WORKDIR/ovsfiles.dorisin
 
 if ( -e $master_slc ) then
     rm -f $master_slc

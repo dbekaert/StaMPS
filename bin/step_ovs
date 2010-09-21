@@ -29,14 +29,23 @@ else
     cp slave_fullres.res slave.res
 endif
 
-set slave_slc = $cwd"_crop_ovs.slc"
+set slave_slc = $cwd/"slave_crop_ovs.slc"
+
+#slave dorisin part
+sed -n '1,/S_OVS_OUT_FORMAT/p' $WORKDIR/ovsfiles.dorisin > tmp_ovsfiles.$$
+echo "S_OVS_OUT  $slave_slc"  >> tmp_ovsfiles.$$
+echo "STOP" >> tmp_ovsfiles.$$
+#mv tmp_ovsfiles.$$ $WORKDIR/ovsfiles.dorisin
+mv tmp_ovsfiles.$$ ovsfiles.dorisin
 
 if ( -e $slave_slc ) then
     rm -f $slave_slc
 endif
 
+
 # Oversample
-doris $WORKDIR/ovsfiles.dorisin
+#doris $WORKDIR/ovsfiles.dorisin
+doris ovsfiles.dorisin
 
 # qlook
 #set first = `grep 'First_pixel .* ovs_image' slave.res | gawk 'END {print $4}'`
