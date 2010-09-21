@@ -9,17 +9,23 @@
 # for negative baselines
 #
 # Andy Hooper, Jul 2006
-#
+# J. Jachem Sousa & Mahmut Arikan, Oct 2009 Oversampling update
 
 ######## Adjustable parameters #############
 set bperp_max = 100 # maximum bperp for master-slave coregistration 
 set count_max = 3 # number of near slave images to coregister to each slave image
 ############################################
 
+set SLC_OSF = `check_slc_sampling master.res`
+
 set WORKDIR=$cwd
 
 if (! -e coreg.dorisin) then
-    cp $DORIS_SCR/coreg.dorisin .
+    if ( $SLC_OSF > 1 )
+      cp $DORIS_SCR/coreg_ovs.dorisin coreg.dorisin
+    else
+      cp $DORIS_SCR/coreg.dorisin .
+    endif
 endif
 
 set insardir = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
@@ -33,8 +39,8 @@ if (! -e coreg) then
    cp make_ifgs.list coreg/make_coreg.list
 endif
 
-set  num_l_orig = `grep 'Number_of_lines_original:' master.res | gawk '{print $2}'`
-set  num_p_orig = `grep 'Number_of_pixels_original:' master.res | gawk '{print $2}'`
+set  num_l_orig = `grep 'Number_of_lines_original:' master.res | gawk -v OSF="$SLC_OSF"  '{print $2*OSF}'`
+set  num_p_orig = `grep 'Number_of_pixels_original:' master.res | gawk -v OSF="$SLC_OSF" '{print $2*OSF}'`
 set N_win = `grep '^[[:space:]]*FC_WINSIZE' $WORKDIR/coreg.dorisin | gawk '{print $2}'`  # MA: fixed so that we don't grep commented out statements
 set fc_osf = `grep '^[[:space:]]*FC_OSFACTOR' $WORKDIR/coreg.dorisin | gawk '{print $2}'`   # ^[ ]* also works
 
