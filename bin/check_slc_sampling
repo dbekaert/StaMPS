@@ -1,0 +1,49 @@
+#!/bin/bash
+##
+## MA - 20091104 rev. 2
+##
+## get lines and pixels from Doris SLC result file
+##
+## TUDelft - 2010
+
+# Variables
+iFile=$1
+AWK=`which gawk` 
+
+# Functions 
+goodfunc(){
+ 
+  if [ ${OVS_flag} == "1" ]; then 
+    OSF=$(grep Multilookfactor_range_direction $iFile | $AWK 'END{print 1/$2}')
+    #echo OSF: $OSF  # debug
+  else 
+    OSF=1
+    #echo OSF: $OSF  # debug
+  fi
+  echo $OSF  # debug
+ 
+}
+
+checkkeyword(){
+  if [ $(grep -c 'Start_oversample' $iFile) -eq 1 ]; then
+    #echo 'oversample'                          
+    echo 1                          
+  else
+    echo 0
+  fi 
+}
+
+case $# in
+         1) 
+            OVS_flag=`checkkeyword`
+            goodfunc 
+            ;;
+         *) 
+            echo -e "Usage  : ${0##*/} <doris result file>\n"
+            echo -e "Example: ${0##*/} master.res \n"
+	    ;;
+esac
+
+
+
+#EOF
