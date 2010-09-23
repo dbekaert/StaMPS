@@ -12,9 +12,8 @@ AWK=`which gawk`
 
 # Functions 
 goodfunc(){
- 
   if [ ${OVS_flag} == "1" ]; then 
-    OSF=$(grep Multilookfactor_range_direction $iFile | $AWK 'END{print 1/$2}')
+    OSF=$(sed -n '/Start_oversample/,/End_oversample:_NORMAL/ p' $iFile | grep Multilookfactor_range_direction | $AWK 'END{print 1/$2}')
     #echo OSF: $OSF  # debug
   else 
     OSF=1
@@ -25,7 +24,7 @@ goodfunc(){
 }
 
 checkkeyword(){
-  if [ $(grep -c 'Start_oversample' $iFile) -eq 1 ]; then
+  if [ "$(grep -c 'Start_oversample' $iFile)" -eq "1" ]; then
     #echo 'oversample'                          
     echo 1                          
   else

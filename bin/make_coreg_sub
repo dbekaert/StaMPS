@@ -9,9 +9,10 @@
 set WORKDIR = $argv[1]
 set bperp_max = $argv[3]
 set count_max = $argv[4]
-set SLC_OSF = `check_slc_sampling master.res`
 
 cp $WORKDIR/master.res  .
+
+set SLC_OSF = `check_slc_sampling master.res`
 
 # JJS oversampling support 
 set first = `get_slc_lp master.res | awk '{print $3}'` # [MA] works both OVS and noOVS SLC
@@ -19,7 +20,7 @@ set last = `get_slc_lp master.res  | awk '{print $4}'`
 set first_l = `get_slc_lp master.res | awk '{print $1}'`
 set last_l = `get_slc_lp master.res  | awk '{print $2}'`
 
-echo "[Debug ] master cn: $first $last $first_l $last_l  # debug
+echo "[Debug ] master cn: $first $last $first_l $last_l"  # debug
 
 #echo "coreg_pos $first_l $last_l $first $last 0 0" >matbgparms.txt
 #matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m >> make_coreg.log
