@@ -36,6 +36,7 @@ if psver>1
    setpsver(1)
 end
 
+slc_osf=getparm('slc_osf',1);  % [MA]
 clap_alpha=getparm('clap_alpha',1);
 clap_beta=getparm('clap_beta',1);
 n_win=getparm('clap_win',1);
