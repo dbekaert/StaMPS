@@ -18,6 +18,7 @@ if nargin<7
 end
 slc_osf
 winSize=64*slc_osf ;      % correlation window size default: 64 should match with coreg.dorisin
+                          %                                : 128 for oversampled data
 
 nWinx=30    % # of windows in range
 nWiny=120   % # of windows in azimuth

@@ -18,6 +18,7 @@ function []=ps_select(reest_flag,plot_flag)
 %               centering
 %   02/2010 AH: Only bin by D_A if enough candidate pixels
 %   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
+%   09/2010 JJS+MA: To make use oversampling dataset
 %   ======================================================================
 logit;
 fprintf('Selecting stable-phase pixels...\n')
@@ -266,6 +267,13 @@ if reest_flag~=1
         ph_bit=pm.ph_grid(i_min:i_max,j_min:j_max,:);
 
         ph_bit(ps_bit_i,ps_bit_j,:)=0;
+
+        % JJS oversample update for PS removal + [MA] general usage update
+        ix_i=ps_bit_i-(slc_osf-1):ps_bit_i+(slc_osf-1);
+        ix_i=ix_i(ix_i>0&ix_i<=size(ph_bit,1));
+        ix_j=ps_bit_j-(slc_osf-1):ps_bit_j+(slc_osf-1);
+        ix_j=ix_j(ix_j>0&ix_j<=size(ph_bit,2));
+        ph_bit(ix_i,ix_j)=0;
 
         for i_ifg=1:n_ifg
             ph_filt(:,:,i_ifg)=clap_filt_patch(ph_bit(:,:,i_ifg),clap_alpha,clap_beta,pm.low_pass);

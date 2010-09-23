@@ -20,6 +20,7 @@ function ps_parms_default()
 %   02/2010 AH: unwrap_ifg_index replaced by drop_ifg_index
 %   02/2010 AH: weed_time_win and unwrap_time_win default changed to 730
 %   03/2010 AH: add logging
+%   09/2010 MA: oversampling factor
 %   09/2010 AH: plot_pixels_scatterer added
 %   ======================================================================
 
@@ -59,6 +60,10 @@ end
 
 if ~isfield(parms,'gamma_change_convergence')
     parms.gamma_change_convergence=0.005; % change in change in gamma that signals convergence
+end
+
+if ~isfield(parms,'slc_osf')
+    parms.slc_osf=1;  % [MA] SLC oversampling factor
 end
 
 if ~isfield(parms,'clap_win')
