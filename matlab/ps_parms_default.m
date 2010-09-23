@@ -20,6 +20,7 @@ function ps_parms_default()
 %   02/2010 AH: unwrap_ifg_index replaced by drop_ifg_index
 %   02/2010 AH: weed_time_win and unwrap_time_win default changed to 730
 %   03/2010 AH: add logging
+%   09/2010 AH: plot_pixels_scatterer added
 %   ======================================================================
 
 
@@ -223,7 +224,11 @@ if isfield(parms,'plot_pixel_size')
 end
 
 if ~isfield(parms,'plot_scatterer_size')
-    parms.plot_scatterer_size=90; 
+    parms.plot_scatterer_size=120; 
+end
+
+if ~isfield(parms,'plot_pixels_scatterer')
+    parms.plot_pixels_scatterer=3; 
 end
 
 if ~isfield(parms,'plot_color_scheme')

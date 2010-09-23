@@ -25,9 +25,11 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg)
 %   11/2009 AH: Fix orientation and aspect ratio for amplitude plots
 %   02/2010 AH: Add options for dem posting and scatterer size
 %   02/2010 AH: Plot reference centre if circular
+%   09/2010 AH: Add back option to plot scatterer as multiple pixels
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
+plot_pixel_size=getparm('plot_pixels_scatterer');
 plot_dem_posting=getparm('plot_dem_posting');
 plot_color_scheme=getparm('plot_color_scheme');
 shade_rel_angle=getparm('shade_rel_angle');
@@ -393,9 +395,9 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     xy_ratio=llh2local([cal0;0],[cal0+[0.1;0.1];0]);
     aspect_ratio=xy_ratio(1)/xy_ratio(2);
 
-    y_posting=plot_pixel_m*9e-6; %in degrees
+    y_posting=plot_pixel_m/plot_pixel_size*9e-6; %in degrees
     x_posting=y_posting/aspect_ratio;
-    plot_pixel_size=1;
+    %plot_pixel_size=1;
     %plot_pixel_size=round(plot_pixel_m/plot_posting);
 
     x=[min(lonlat(:,1))-2*x_posting:x_posting:max(lonlat(:,1))+2*x_posting];
