@@ -39,7 +39,7 @@ echo $length > $WORKDIR/len.txt
 # Create other input files for PS candidates
 grep 'Bperp' $INSARDIR/*/interferogram.out | gawk '{print $4}' > bperp.1.in
 \ls $INSARDIR/*/cint.minrefdem.raw | gawk 'BEGIN {FS = "/"}{print $(NF-1)}' > day.1.in
- if ( SLC_OSF > 1 )
+ if ( $SLC_OSF > 1 ) then
    \ls $INSARDIR/[1,2]*_crop_ovs.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}' > master_day.1.in
  else
    \ls $INSARDIR/[1,2]*_crop.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}' > master_day.1.in

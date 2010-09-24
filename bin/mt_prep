@@ -95,14 +95,14 @@ if ($dirname == "SMALL_BASELINES") then
     \ls $WORKDIR/*/*filtrg.slc > $WORKDIR/calamp.in
     set selfile = $WORKDIR/selsbc.in
 else
-    if ($SLC_OSF > 1 )
+    if ($SLC_OSF > 1 ) then
       set master_slc = `\ls $INSARDIR/[1,2]*_crop_ovs.slc`  # MA
-      echo "Using oversampled $master_slc"
+      echo "[INFO  ]  Using oversampled $master_slc"
     else
       set master_slc = `\ls $INSARDIR/[1,2]*_crop.slc`
     endif
     if (`grep complex_short $INSARDIR/master.res | gawk '{print $1}'` != "") then
-       if ($SLC_OSF > 1 )
+       if ($SLC_OSF > 1 ) then
          ln -s $master_slc $master_slc.cr4  # MA assuming oversampled data is cr4
        else
          cpxfiddle -w $width -fci2 -ofloat -qnormal $master_slc  > $master_slc.cr4 
