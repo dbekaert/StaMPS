@@ -271,20 +271,20 @@ elseif floor(bg_flag)==2
         load(demfile)
     else
         load(demfile)
-        if round(dem_posting/9e-6/plot_dem_posting*10)~=10 % allow 5% error
+        if round(x_posting/plot_dem_posting*10)~=10 % allow 5% error
             demfile=ps_load_dem;
             load(demfile)
         end
     end
 
-    plot_pixel_size=round((plot_pixel_m/(dem_posting/9e-6)-1)/2)*2+1;
+    plot_pixel_size=round((plot_pixel_m/(x_posting)-1)/2)*2+1;
     [dem_y,dem_x]=size(dem);
     c2=gray(64);
     c2=c2(35:50,:);
-    x=[dem_lon:dem_posting:(dem_x-1)*dem_posting+dem_lon];
-    y=[(dem_y-1)*dem_posting+dem_lat:-dem_posting:dem_lat];
-    demx=round((lonlat(:,1)-dem_lon)/dem_posting)+1;
-    demy=round((y(1)-lonlat(:,2))/dem_posting)+1;
+    x=[dem_lon:dem_posting_lon:(dem_x-1)*dem_posting_lon+dem_lon];
+    y=[(dem_y-1)*dem_posting_lat+dem_lat:-dem_posting_lat:dem_lat];
+    demx=round((lonlat(:,1)-dem_lon)/dem_posting_lon)+1;
+    demy=round((y(1)-lonlat(:,2))/dem_posting_lat)+1;
     [X,Y]=meshgrid(x,y);
     [cindx,cimap,clim] = shaderel(X,Y,dem,[0.7 0.7 0.7],shade_rel_angle);
     if bg_flag==2
@@ -316,8 +316,8 @@ elseif floor(bg_flag)==2
     axis tight
     dem_length=dem_y;
     dem_width=dem_x;
-    lat_range=dem_posting*dem_length;
-    lon_range=dem_posting*dem_width;
+    lat_range=dem_posting_lat*dem_length;
+    lon_range=dem_posting_lon*dem_width;
     xy_ratio=llh2local([dem_lon+lon_range;dem_lat+lat_range;0],[dem_lon;dem_lat;0]);
     aspect_ratio=[xy_ratio(1)/xy_ratio(2),1,1];
     set(gca,'plotboxaspectratio',aspect_ratio)
@@ -336,30 +336,30 @@ elseif bg_flag==3    % plot on 3D DEM
     if ~exist(demfile,'file')
         demfile=ps_load_dem;
         load(demfile)
-        if round(dem_posting/9e-6/plot_dem_posting*10)~=10 % allow 5% error
+        if round(x_posting/plot_dem_posting*10)~=10 % allow 5% error
             demfile=ps_load_dem;
             load(demfile)
         end
     end
     load(demfile)
     
-    plot_pixel_size=round((plot_pixel_m/(dem_posting/9e-6)-1)/2)*2+1;
+    plot_pixel_size=round((plot_pixel_m/(x_posting)-1)/2)*2+1;
     [dem_y,dem_x]=size(dem);
     c2=gray(80);
-    x=[dem_lon:dem_posting:(dem_x-1)*dem_posting+dem_lon];
-    y=[(dem_y-1)*dem_posting+dem_lat:-dem_posting:dem_lat];
+    x=[dem_lon:dem_posting_lon:(dem_x-1)*dem_posting_lon+dem_lon];
+    y=[(dem_y-1)*dem_posting_lat+dem_lat:-dem_posting_lat:dem_lat];
 
     [X,Y]=meshgrid(x,y);
     c=[c2(8:71,:);c];
     
-    demx=round((lonlat(:,1)-dem_lon)/dem_posting)+1;
-    demy=round((y(1)-lonlat(:,2))/dem_posting)+1;
+    demx=round((lonlat(:,1)-dem_lon)/dem_posting_lon)+1;
+    demy=round((y(1)-lonlat(:,2))/dem_posting_lat)+1;
  
     h=surfl(X,Y,dem,shade_rel_angle);
     dem_length=dem_y;
     dem_width=dem_x;
-    lat_range=dem_posting*dem_length;
-    lon_range=dem_posting*dem_width;
+    lat_range=dem_posting_lat*dem_length;
+    lon_range=dem_posting_lon*dem_width;
     xy_ratio=llh2local([dem_lon+lon_range;dem_lat+lat_range;0],[dem_lon;dem_lat;0]);
     aspect_ratio=[xy_ratio(1)/xy_ratio(2),1,0.1];
     set(gca,'plotboxaspectratio',aspect_ratio)
