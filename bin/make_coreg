@@ -21,7 +21,7 @@ set SLC_OSF = `check_slc_sampling master.res`
 set WORKDIR=$cwd
 
 if (! -e coreg.dorisin) then
-    if ( $SLC_OSF > 1 )
+    if ( $SLC_OSF > 1 ) then
       cp $DORIS_SCR/coreg_ovs.dorisin coreg.dorisin
     else
       cp $DORIS_SCR/coreg.dorisin .
