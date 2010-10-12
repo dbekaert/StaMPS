@@ -10,6 +10,7 @@ function []=coreg_pos(firstL,lastL,firstP,lastP,transL,transP,slc_osf)
 % 11/2009 AH: code to use translations put back in 
 % 03/2010 AH: revert to just 3600 windows
 % 09/2009 MA - minor update for oversampled data + translation_lp
+% 10/2010 JCM - drop negative values at the edges of the scene JCM
 % ======================================================================
 %
 
@@ -23,8 +24,16 @@ winSize=64*slc_osf ;      % correlation window size default: 64 should match wit
 nWinx=30    % # of windows in range
 nWiny=120   % # of windows in azimuth
 
+
 x=round(linspace(firstP+winSize+transP,lastP-winSize+transP,nWinx));
 y=round(linspace(firstL+winSize+transL,lastL-winSize+transL,nWiny));
+
+% drop negative values at the edges of the scene JCM
+keep_ix=x>0;
+keep_iy=y>0;
+x=x(keep_ix);
+y=y(keep_iy);
+
 
 [Y,X]=meshgrid(y,x);
 
