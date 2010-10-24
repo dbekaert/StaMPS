@@ -13,7 +13,8 @@ function []=ps_merge_patches(psver)
 %   09/2009 AH: reduce memory needs further
 %   11/2009 AH: ensure mean amplitude width is always correct
 %   06/2010 AH: estimate weights directly from residuals
-%   10/2010 DB: Accout for case when patch_noover does not have PS (resampling)
+%   10/2010 DB: Account for case when patch_noover does not have PS (resampling)
+%   10/2010 DB: Account for case when PS are all rejected due to sum of weight<min_weight (resampling)
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
@@ -26,7 +27,6 @@ small_baseline_flag=getparm('small_baseline_flag');
 grid_size=getparm('merge_resample_size',1);
 merge_stdev=getparm('merge_standard_dev',1);
 phase_accuracy=10*pi/180; % gives minimum possible accuracy for a pixel 
-
 min_weight=1/merge_stdev^2;
 randn('state',1001);
 max_coh=abs(sum(exp(j*randn(1000,1)*phase_accuracy)))/1000;
@@ -53,7 +53,6 @@ if exist('./patch.list','file')
     end
     fclose(fid);
 else
-keyboard
     dirname=dir('PATCH_*');
 end
 
@@ -148,6 +147,11 @@ for i=1:n_patch
           end
       end
       g_ix=g_ix(ix>0);
+      
+      if isempty(g_ix)==1
+	  ix_no_ps=1;				% Remaining PS are rejected because to sum of weights is smaller than threshold min_weight		
+      end
+
       l_ix=[find(diff(g_ix));size(g_ix,1)];
       f_ix=[1;l_ix(1:end-1)+1];
       ps_weight=ps_weight(ix>0);
@@ -157,8 +161,6 @@ for i=1:n_patch
       n_ps=length(ix);
     end
     
-    
-
     if grid_size==0
       ij=[ij;ps.ij(ix,2:3)];
       lonlat=[lonlat;ps.lonlat(ix,:)];
@@ -280,6 +282,11 @@ for i=1:n_patch
         if isfield(pm,'C_ps')
           C_ps_g(i)=sum(pm.C_ps(f_ix(i):l_ix(i),:).*weights,1)./sum(weights,1);
         end
+
+	if sum(sum(isnan(C_ps_g)))>0 || sum(sum(isnan(weights)))>0 || sum(sum(isnan(ph_g)))>0 ||  sum(sum(isnan(K_ps_g)))>0 ||  sum(sum(isnan(coh_ps_g)))>0 ||  sum(sum(isnan(snr)))>0
+keyboard
+end 
+
       end
       ph_patch=[ph_patch;ph_g];
       clear ph_g
