@@ -13,6 +13,7 @@ function []=ps_merge_patches(psver)
 %   09/2009 AH: reduce memory needs further
 %   11/2009 AH: ensure mean amplitude width is always correct
 %   06/2010 AH: estimate weights directly from residuals
+%   10/2010 DB: Accout for case when patch_noover does not have PS (resampling)
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
@@ -52,6 +53,7 @@ if exist('./patch.list','file')
     end
     fclose(fid);
 else
+keyboard
     dirname=dir('PATCH_*');
 end
 
@@ -95,6 +97,12 @@ for i=1:n_patch
     
     patch.ij=load('patch_noover.in');
     ix=ps.ij(:,2)>=patch.ij(3)-1 & ps.ij(:,2)<=patch.ij(4)-1 & ps.ij(:,3)>=patch.ij(1)-1 & ps.ij(:,3)<=patch.ij(2)-1;
+    if sum(ix)==0
+   	ix_no_ps =1;	% no PS left afer removing overlapping patches
+    else
+	ix_no_ps=0;
+    end 
+
     if grid_size==0
       [C,IA,IB]=intersect(ps.ij(ix,2:3),ij,'rows'); 
       remove_ix=[remove_ix;IB]; % now more reliable values for these pixels
@@ -102,7 +110,7 @@ for i=1:n_patch
       ix_ex=true(ps.n_ps,1);
       ix_ex(IA)=0; % exclusive index (non-intersecting)
       ix(ix_ex)=1; % keep those in patch proper + those outside not already kept
-    else
+    elseif grid_size ~=0 && ix_no_ps~=1
       clear g_ij
       xy_min=min(ps.xy(ix,:));
       g_ij(:,1)=ceil((ps.xy(ix,3)-xy_min(3)+1e-9)/grid_size);
@@ -154,7 +162,7 @@ for i=1:n_patch
     if grid_size==0
       ij=[ij;ps.ij(ix,2:3)];
       lonlat=[lonlat;ps.lonlat(ix,:)];
-    else
+    elseif grid_size ~=0 && ix_no_ps~=1
       ij_g=zeros(n_ps_g,2);
       lonlat_g=zeros(n_ps_g,2);
       ps.ij=ps.ij(ix,:);
@@ -179,7 +187,7 @@ for i=1:n_patch
     if exist('ph_w','var')
       if grid_size==0
         ph=[ph;ph_w(ix,:)];
-      else
+      elseif grid_size ~=0 && ix_no_ps~=1
         ph_w=ph_w(ix,:);
         ph_g=zeros(n_ps_g,n_ifg);
         for i=1:n_ps_g
@@ -198,7 +206,7 @@ for i=1:n_patch
       if ~strcmpi(small_baseline_flag,'y')
         ph_reref=[ph_reref;rc.ph_reref(ix,:)];
       end
-    else
+    elseif grid_size ~=0 && ix_no_ps~=1
       rc.ph_rc=rc.ph_rc(ix,:);
       ph_g=zeros(n_ps_g,n_ifg);
       if ~strcmpi(small_baseline_flag,'y')
@@ -236,7 +244,7 @@ for i=1:n_patch
       if isfield(pm,'coh_ps')
         coh_ps=[coh_ps;pm.coh_ps(ix,:)];
       end
-    else
+    elseif grid_size ~=0 && ix_no_ps~=1
       pm.ph_patch=pm.ph_patch(ix,:);
       ph_g=zeros(n_ps_g,size(pm.ph_patch,2));
       if isfield(pm,'ph_res')
@@ -297,11 +305,12 @@ for i=1:n_patch
     bp=load(bpname);
     if grid_size==0
       bperp_mat=[bperp_mat;bp.bperp_mat(ix,:)];
-    else
+    elseif grid_size ~=0 && ix_no_ps~=1
       bperp_g=zeros(n_ps_g,size(bp.bperp_mat,2));
       bp.bperp_mat=bp.bperp_mat(ix,:);
       for i=1:n_ps_g
         weights=repmat(ps_weight(f_ix(i):l_ix(i)),1,size(bperp_g,2));
+        weights(weights==0)=1e-9; % pixels with zero phase cause this problem
         bperp_g(i,:)=sum(bp.bperp_mat(f_ix(i):l_ix(i),:).*weights,1)/sum(weights(:,1));
       end
       bperp_mat=[bperp_mat;bperp_g];
@@ -313,7 +322,7 @@ for i=1:n_patch
       lain=load(laname);
       if grid_size==0
         la=[la;lain.la(ix,:)];
-      else
+      elseif grid_size ~=0 && ix_no_ps~=1
         la_g=zeros(n_ps_g,1);
         lain.la=lain.la(ix,:);
         for i=1:n_ps_g
@@ -330,7 +339,7 @@ for i=1:n_patch
       hgtin=load(hgtname);
       if grid_size==0
         hgt=[hgt;hgtin.hgt(ix,:)];
-      else
+      elseif grid_size ~=0 && ix_no_ps~=1
         hgt_g=zeros(n_ps_g,1);
         hgtin.hgt=hgtin.hgt(ix,:);
         for i=1:n_ps_g
@@ -591,25 +600,25 @@ vars=who;
 vars=setxor(vars,{'n_patch';'dirname'});
 clear(vars{:})
 
-fprintf('   Merging mean amplitude files\n')
-widthname='width.txt';
-if ~exist(widthname,'file')
-    widthname= ['../',widthname];
-end
-width=load(widthname);
-amp=zeros(width,1,'single');
-for i=1:n_patch
-    cd(dirname(i).name);
-    if exist('./mean_amp.flt','file')    
-        pxy=load('patch.in');
-        fid=fopen('mean_amp.flt');
-        amp(pxy(1):pxy(2),pxy(3):pxy(4))=fread(fid,[pxy(2)-pxy(1)+1,inf],'float=>single');
-        fclose(fid);
-    end 
-    cd ..
-end
-
-fid=fopen('mean_amp.flt','w');
-fwrite(fid,amp,'float');
-fclose(fid);
-logit(1);
+%fprintf('   Merging mean amplitude files\n')
+%widthname='width.txt';
+%if ~exist(widthname,'file')
+%    widthname= ['../',widthname];
+%end
+%width=load(widthname);
+%amp=zeros(width,1,'single');
+%for i=1:n_patch
+%    cd(dirname(i).name);
+%    if exist('./mean_amp.flt','file')    
+%        pxy=load('patch.in');
+%        fid=fopen('mean_amp.flt');
+%        amp(pxy(1):pxy(2),pxy(3):pxy(4))=fread(fid,[pxy(2)-pxy(1)+1,inf],'float=>single');
+%        fclose(fid);
+%    end 
+%    cd ..
+%end
+%
+%fid=fopen('mean_amp.flt','w');
+%fwrite(fid,amp,'float');
+%fclose(fid);
+%logit(1);
