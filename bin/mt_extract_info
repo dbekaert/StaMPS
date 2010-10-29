@@ -3,6 +3,9 @@
 # Extract info from various files for use by StaMPS
 #
 # Andy Hooper, November 2007
+# ===========================================================================
+# 09/2010   MA:   update for oversampling
+# ===========================================================================
 
 ### Initial welcome
 set PRG = `basename "$0"`

@@ -5,6 +5,8 @@
 # Adapted from tsx_dump_header2doris.py
 #
 # Karsten Spaans, July 2010
+# ===========================================================================
+# ===========================================================================
 
 from lxml import etree
 import string, time, sys

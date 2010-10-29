@@ -4,7 +4,10 @@
 #
 # Andy Hooper, Jul 2006
 #
-# JJSousa + MA oversampling
+# ===========================================================================
+# 10/2009  JJS+MA: oversampling
+# 09/2010  MA: update for oversampling
+# ===========================================================================
 
 set WORKDIR = $argv[1]
 set bperp_max = $argv[3]

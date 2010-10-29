@@ -9,7 +9,9 @@
 # for negative baselines
 #
 # Andy Hooper, Jul 2006
-# J. Jachem Sousa & Mahmut Arikan, Oct 2009 Oversampling update
+# ===========================================================================
+# 10/2009 JJS+MA:  Oversampling update
+# ===========================================================================
 
 ######## Adjustable parameters #############
 set bperp_max = 100 # maximum bperp for master-slave coregistration 

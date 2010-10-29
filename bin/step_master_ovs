@@ -1,7 +1,9 @@
 #!/bin/tcsh -f
 
-### 04/2008 AH: Add RS_DBOW card to resample.dorisin
-### 10/2009 MA: OVS with matlab
+# ===========================================================================
+# 04/2008 AH: Add RS_DBOW card to resample.dorisin
+# 10/2009 MA: OVS with matlab
+# ===========================================================================
 
 set masterdate = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
 set CURRDIR = `echo $cwd`

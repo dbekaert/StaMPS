@@ -1,10 +1,14 @@
 #!/bin/bash
-##
-## MA - 20091104 rev. 2
-##
-## get lines and pixels from Doris SLC result file
-##
-## TUDelft - 2010
+#
+# MA - 2009 November
+#
+# get lines and pixels from Doris SLC result file
+#
+# ===========================================================================
+# 09/2010  MA:   update for oversampling
+# ===========================================================================
+
+# TUDelft - 2010
 
 # Variables
 iFile=$1

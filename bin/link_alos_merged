@@ -15,19 +15,12 @@
 # Links are constructed for all files:  LED, IMG-*, VOL and TRL files.
 # Program does not check for missing frames
 
-## By David Bekaert March 2010
-## Jet Propulsion Laboratory - Delft University of Technology
-## May be used freely for educational and research purposes.
-## Not to be used for commercial purposes without consent of the author
-## DB   07/2010           Adding explanation
-## DB   07/2010           Tidying the code
-## Latest versions at davidbekaert.com
-
-echo ----------------------------------------------------------
-echo By David Bekaert March 2010
-echo Delft University of Technology - Jet Propulsion Laboratory
-echo ----------------------------------------------------------
-
+# David Bekaert March 2010
+# Delft University of Technology
+# ===========================================================================
+# 07/2010  DB:         Adding explanation
+# 07/2010  DB:         Tidying the code
+# ===========================================================================
 
 track_dir=`echo $1`
 echo Setting up structure and symbolic links  ...

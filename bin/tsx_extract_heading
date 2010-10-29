@@ -5,6 +5,8 @@
 # Usage: Run in INSAR[masterdate] directory
 #
 # Karsten Spaans, July 2010
+# ===========================================================================
+# ===========================================================================
 
 set masterdate = `\ls ./*crop.slc | gawk 'BEGIN {FS = "/"}{print substr($(NF),1,8)}'`
 

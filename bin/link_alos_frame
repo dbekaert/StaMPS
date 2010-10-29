@@ -16,19 +16,12 @@
 # Links are constructed for the LED, IMG-HH, VOL and TRL files.
 # Stamps requires HV to be linked as well to identify HH Single from HH Double polarization.
 
-## By David Bekaert March 2010
-## Jet Propulsion Laboratory - Delft University of Technology
-## May be used freely for educational and research purposes.
-## Not to be used for commercial purposes without consent of the author
-## DB   07/2010           Adding explanation
-## DB   07/2010           Tidying the code
-## Latest versions at davidbekaert.com
-
-echo ----------------------------------------------------------
-echo By David Bekaert March 2010
-echo Delft University of Technology - Jet Propulsion Laboratory
-echo ----------------------------------------------------------
-
+# David Bekaert March 2010
+# Delft University of Technology
+# ===========================================================================
+# 07/2010  DB:         Adding explanation
+# 07/2010  DB:         Tidying the code
+# ===========================================================================
 
 data_dir=`echo $1`
 # constructing the track folder

@@ -1,7 +1,9 @@
 #!/bin/tcsh -f
 #
+# ===========================================================================
 # 11/2008 AH: Deltaline/pixel added for Doris 3.96 compatibility
 # 10/2009 MA: get_slc_lp to enable use of oversampled slc
+# ===========================================================================
 
 \rm -f slave_corners.txt
 foreach dir(`cat make_coreg.list`)

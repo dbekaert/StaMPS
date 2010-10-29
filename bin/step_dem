@@ -5,6 +5,7 @@
 # 03/2009 AH: Calculate in full resolution directly
 # 03/2009 AH: Import DEM details from timing.dorisin
 # 11/2009 JJS + MA: get line and pixel for different grid size (full or oversampled)
+# 09/2010 MA: comment # CRD_METHOD trilinear // obselete after Doris_v4.01
 # ===========================================================================
 
 #set WORKDIR = `cat .workdir`
