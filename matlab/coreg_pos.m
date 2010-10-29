@@ -5,12 +5,12 @@ function []=coreg_pos(firstL,lastL,firstP,lastP,transL,transP,slc_osf)
 %   Andy Hooper, Aug 2005
 %
 % ======================================================================
-% 07/2006 AH: changed spacing of windows to give same number (3600) 
+% 07/2006 AH:  changed spacing of windows to give same number (3600) 
 %              independent of image size
-% 11/2009 AH: code to use translations put back in 
-% 03/2010 AH: revert to just 3600 windows
-% 09/2009 MA - minor update for oversampled data + translation_lp
-% 10/2010 JCM - drop negative values at the edges of the scene JCM
+% 11/2009 AH:  code to use translations put back in 
+% 03/2010 AH:  revert to just 3600 windows
+% 09/2009 MA:  minor update for oversampled data + translation_lp
+% 10/2010 JCM: drop negative values at the edges of the scene
 % ======================================================================
 %
 

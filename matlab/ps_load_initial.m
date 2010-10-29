@@ -14,6 +14,7 @@ function []=ps_load_initial()
 %   01/2008 AH: Selection of bperp files made more rigourous
 %   03/2009 AH: Change bperp back to be the bperp at local height
 %   10/2009 AH: Add n_image to mat file
+%   04/2010 KS: Fixed small issue with new logit function
 %   ======================================================================
 
 

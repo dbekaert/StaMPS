@@ -15,6 +15,7 @@ function []=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_baselines)
 %   03/2010 AH: Use small baselines option added
 %   03/2010 AH: var/cov added to inversion
 %   05/2010 AH: Include master if there are not ifgs before and after
+%   06/2010 AH: small change to ps_mean_v.m
 %   ======================================================================
 
 

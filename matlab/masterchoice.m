@@ -1,7 +1,13 @@
 function [] = masterchoice(Tcrit,Bcrit,Dcrit)
-% Script to calculate expected rho based on baseline information
-% K.H. Spaans, September 2010
+%   Script to calculate expected rho based on baseline information
 %
+%   K.H. Spaans, September 2010
+%
+%   ======================================================================
+%   09/2010 K.H.: initial coding
+%   ======================================================================
+
+
 % Used by master_select
 data = dlmread('Date.txt');
 data(:,2) = dlmread('Bperp.txt');
