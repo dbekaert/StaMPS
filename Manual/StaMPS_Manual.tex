@@ -874,7 +874,7 @@ This is an iterative step that estimates the phase noise value for each candidat
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
 
-{\tt max\_topo\_err} &	 {\tt 10} &		Maximum uncorrelated DEM error (in m). Pixels with uncorrelated DEM error greater than this will not be picked (this includes error due to the phase center of the resolution element being offset from the middle of the pixel in range).
+{\tt max\_topo\_err} &	 {\tt 5} &		Maximum uncorrelated DEM error (in m). Pixels with uncorrelated DEM error greater than this will not be picked (this includes error due to the phase center of the resolution element being offset from the middle of the pixel in range).
 Setting this higher, however,  increases the mean $\gamma$ value (coherence-like measure, see \citet{HooperA2007a}) of pixels that have random phase.\\
 {\tt filter\_grid\_size} &		 {\tt 50} &		Pixel size of grid (in m). Candidate pixels are resampled to a grid with this spacing before filtering to determine the spatially-correlated phase.\\
 {\tt filter\_weighting} &		{\tt  `P-square'} &		Weighting scheme (PS probability squared), the other possibility being {\tt `SNR'}. Candidate pixels are weighted during resampling according to this scheme.\\
@@ -900,7 +900,11 @@ Pixels are selected on the basis of their noise characteristics. Processing is c
 {\tt density\_rand} &
 	 {\tt 20} &	Maximum acceptable spatial density (per km$^2$) of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `DENSITY'}. At this stage we can usually accept a high density, as most random-phase pixels will be dropped in the next step.\\
 {\tt percent\_rand} &
-	 {\tt 20} &	Maximum acceptable percentage of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `PERCENT'} \\
+	 {\tt 20} &	Maximum acceptable percentage of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `PERCENT'} \\ 
+{\tt slc\_osf} &
+	 {\tt 1} &	 \\	
+{\tt drop\_ifg\_index} &
+	 {\tt []} &	 \\		 
 \
 \end{tabular}
 \normalsize
@@ -911,7 +915,7 @@ Pixels selected in the previous step are weeded, dropping those that are due to 
 \footnotesize
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
-{\tt weed\_alpha} &	 {\tt 8} &	Smoothing parameter for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian window with standard deviation 1/{\tt weed\_alpha}. The original phase minus the smoothed phase is assumed to be noise.\\
+%{\tt weed\_alpha} &	 {\tt 8} &	Smoothing parameter for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian window with standard deviation 1/{\tt weed\_alpha}. The original phase minus the smoothed phase is assumed to be noise.\\
  {\tt weed\_standard\_dev} &	 {\tt 1.0} &	Threshold standard deviation. For each pixel, the phase noise standard deviation for all pixel pairs including the pixel is calculated, If the minimum standard deviation is greater than the threshold, the pixel is dropped. If set to {\tt 10}, no noise-based weeding is performed\\
 \
 \end{tabular}
@@ -926,6 +930,7 @@ The wrapped phase of the selected pixels is corrected for spatially-uncorrelated
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
 {\tt merge\_resample\_size} &	 {\tt 0} & Coarser posting (in m) to resample to. If set to {\tt 0}, no resampling is applied.\\
+{\tt merge\_standard\_dev} &	 {\tt inf} & Threshold standard deviation. For each resampled pixel, the phase noise standard deviation is computed. If the standard deviation is greater than the threshold, the resampled pixel is dropped. Only applied in case of resampling.\\
  \end{tabular}
 \normalsize
 
@@ -961,9 +966,9 @@ Processing is controlled by the following parameters:
 {\tt unwrap\_ifg\_index} &	 {\tt `all'}	& Index to interferograms to be unwrapped.\\
 {\tt unwrap\_prefilter\_flag} &  {\tt `y'} & Prefilter phase before unwrapping to reduce noise. Other option (not generally recommended) {\tt `n'}.\\
 {\tt unwrap\_patch\_phase} &  {\tt `n'} & Use the patch phase from Step 3 as prefiltered phase. If set to {\tt `n'} (recommended), PS phase is filtered using a Goldstein adaptive phase filter.\\
-{\tt unwrap\_grid\_size} & 100 & Resampling grid spacing. If {\tt unwrap\_prefilter\_flag} is set to {\tt `y'}, phase is resampled to a grid with this spacing.\\
+{\tt unwrap\_grid\_size} & 200 & Resampling grid spacing. If {\tt unwrap\_prefilter\_flag} is set to {\tt `y'}, phase is resampled to a grid with this spacing.\\
 {\tt unwrap\_gold\_n\_win}	 & 32	& Window size for Goldstein filter.\\
-{\tt unwrap\_time\_win}	& 180 & Smoothing window (in days) for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian window with standard deviation of this size. Original phase minus smoothed phase is assumed to be noise, which is used for determining probability of a phase jump between the pair in each interferogram.\\
+{\tt unwrap\_time\_win}	& 720 & Smoothing window (in days) for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian window with standard deviation of this size. Original phase minus smoothed phase is assumed to be noise, which is used for determining probability of a phase jump between the pair in each interferogram.\\
 {\tt unwrap\_gold\_alpha}	 & 0.8	& Value of $\alpha$ for Goldstein filter.\\
 \end{tabular}
 \normalsize
@@ -1302,6 +1307,7 @@ to display the image in matlab instead of using {\tt disrg}
 \item Bug fixed that deletes timing info from master during resample.
 \item Bug fixed that drops master from calibration.
 \item Bug fixed that outputs warnings for missing process control flags.
+\item Plotted value type is displayed in figure name.
 \end{itemize}
 
 

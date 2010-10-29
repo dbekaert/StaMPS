@@ -1,29 +1,35 @@
 \begin{thebibliography}{5}
-\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\natexlab}[1]{#1}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup
+  \urlstyle{rm}\Url}\fi
 
-\bibitem[{{\it Hooper\/}(2008)}]{HooperA2008}
+\bibitem[{\textit{Hooper}(2008)}]{HooperA2008}
 Hooper, A., A multi-temporal {InSAR} method incorporating both persistent
-  scatterer and small baseline approaches, {\it Geophys. Res. Lett.\/}, {\it
-  35\/}, L16,302, 2008.
+  scatterer and small baseline approaches, \textit{Geophys. Res. Lett.},
+  \textit{35}, L16,302, \doi{10.1029/2008GL03465}, 2008.
 
-\bibitem[{{\it Hooper and Zebker\/}(2007)}]{HooperA2007b}
+\bibitem[{\textit{Hooper and Zebker}(2007)}]{HooperA2007b}
 Hooper, A., and H.~Zebker, Phase unwrapping in three dimensions with
-  application to {InSAR} time series, {\it J. Opt. Soc. Amer. A\/}, {\it 24\/},
-  2737--2747, 2007.
+  application to {InSAR} time series, \textit{J. Opt. Soc. Amer. A},
+  \textit{24}, 2737--2747, 2007.
 
-\bibitem[{{\it Hooper et~al.\/}(2004){\it Hooper, Zebker, Segall, and
-  Kampes\/}}]{HooperA2004}
+\bibitem[{\textit{Hooper et~al.}(2004)\textit{Hooper, Zebker, Segall, and
+  Kampes}}]{HooperA2004}
 Hooper, A., H.~Zebker, P.~Segall, and B.~Kampes, A new method for measuring
   deformation on volcanoes and other natural terrains using {InSAR} persistent
-  scatterers, {\it Geophys. Res. Lett.\/}, {\it 31\/}, 2004.
+  scatterers, \textit{Geophys. Res. Lett.}, \textit{31}(23),
+  \doi{10.1029/2004GL021737}, 2004.
 
-\bibitem[{{\it Hooper et~al.\/}(2007){\it Hooper, Segall, and
-  Zebker\/}}]{HooperA2007a}
+\bibitem[{\textit{Hooper et~al.}(2007)\textit{Hooper, Segall, and
+  Zebker}}]{HooperA2007a}
 Hooper, A., P.~Segall, and H.~Zebker, Persistent scatterer {InSAR} for crustal
   deformation analysis, with application to {V}olc\'{a}n {A}lcedo,
-  {G}al\'{a}pagos, {\it J. Geophys. Res.\/}, {\it 112\/}, 2007.
+  {G}al\'{a}pagos, \textit{J. Geophys. Res.}, \textit{112}(B07407),
+  \doi{10.1029/2006JB004763}, 2007.
 
-\bibitem[{{\it Hooper\/}(2006)}]{HooperA2006}
+\bibitem[{\textit{Hooper}(2006)}]{HooperA2006}
 Hooper, A.~J., Persistent scatterer radar interferometry for crustal
   deformation studies and modeling of volcanic deformation, Ph.D. thesis,
   Stanford University, 2006.
