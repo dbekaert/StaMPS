@@ -16,6 +16,7 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   05/2010 AH: correct ramp processing fro dropped ifgs
 %   08/2010 AH: use recalc_index correctly in small baseline case
 %   08/2010 AH: use mean bperp value
+%   11/2010 AH: replace recalc_index with scla_drop_index
 %   ================================================================
 logit;
 fprintf('Estimating spatially-correlated look angle error...\n')
@@ -40,9 +41,9 @@ if use_small_baselines~=0
 end
 
 if use_small_baselines==0
-    recalc_index=getparm('recalc_index',1);
+    scla_drop_index=getparm('scla_drop_index',1);
 else
-    recalc_index=getparm('sb_recalc_index',1);
+    scla_drop_index=getparm('sb_scla_drop_index',1);
     fprintf('   Using small baseline interferograms\n')
 end
 
@@ -105,10 +106,7 @@ else
     ph_ramp=[];
 end
 
-
-if ~strcmpi(recalc_index,'all')
-    unwrap_ifg_index=intersect(unwrap_ifg_index,recalc_index);
-end
+unwrap_ifg_index=setdiff(unwrap_ifg_index,scla_drop_index);
 
 if exist([apsname,'.mat'],'file')
     aps=load(apsname);
@@ -128,9 +126,7 @@ if use_small_baselines==0
         end
         if isfield(uw,'unwrap_ifg_index_sm')
             unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,ps.master_ix)
-            if ~strcmpi(recalc_index,'all')
-                unwrap_ifg_index=intersect(unwrap_ifg_index,recalc_index);
-            end
+            unwrap_ifg_index=setdiff(unwrap_ifg_index,scla_drop_index);
         else
             unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix)
         end

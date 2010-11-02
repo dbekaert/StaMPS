@@ -22,6 +22,7 @@ function ps_parms_default()
 %   03/2010 AH: add logging
 %   09/2010 MA: oversampling factor
 %   09/2010 AH: plot_pixels_scatterer added
+%   11/2010 AH: (sb_)recalc_index replaced by (sb_)scla_drop_index
 %   ======================================================================
 
 
@@ -186,8 +187,34 @@ if ~isfield(parms,'unwrap_gold_alpha')
     parms.unwrap_gold_alpha=0.8;  % unwrapping goldstein filter alpha
 end
 
-if ~isfield(parms,'recalc_index')
-    parms.recalc_index='all';  
+if isfield(parms,'recalc_index')
+    try
+       ps=load('ps2.mat');
+    catch
+       try
+          ps=load('ps1.mat');
+       catch
+       end
+    end
+    if exist('ps','var') & ~strcmpi(parms.recalc_index,'all')
+        if strcmpi(parms.small_baseline_flag,'y')
+           parms.scla_drop_index=setdiff([1:ps.n_image],parms.recalc_index);  
+        else
+           parms.scla_drop_index=setdiff([1:ps.n_ifg],parms.recalc_index);  
+        end
+    end
+    parms=rmfield(parms,'recalc_index');
+    if isfield(parms,'sb_recalc_index')
+        if exist('ps','var') & ~strcmpi(parms.sb_recalc_index,'all')
+            parms.sb_scla_drop_index=setdiff([1:ps.n_ifg],parms.sb_recalc_index);  
+        end
+        parms=rmfield(parms,'sb_recalc_index');
+    end
+    num_fields=0;
+end
+
+if ~isfield(parms,'scla_drop_index')
+    parms.scla_drop_index=[];  
 end
 
 if ~isfield(parms,'scn_wavelength')
@@ -272,9 +299,9 @@ if ~isfield(parms,'scla_deramp')
     parms.scla_deramp='y'; % estimate an orbital ramp before SCLA
 end
 
-if ~isfield(parms,'sb_recalc_index')
+if ~isfield(parms,'sb_scla_drop_index')
     if strcmpi(parms.small_baseline_flag,'y')
-        parms.sb_recalc_index='all';
+        parms.sb_scla_drop_index=[];
     end
 end
 
