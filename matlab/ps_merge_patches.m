@@ -13,8 +13,9 @@ function []=ps_merge_patches(psver)
 %   09/2009 AH: reduce memory needs further
 %   11/2009 AH: ensure mean amplitude width is always correct
 %   06/2010 AH: estimate weights directly from residuals
-%   10/2010 DB: Account for case when patch_noover does not have PS (resampling)
-%   10/2010 DB: Account for case when PS are all rejected due to sum of weight<min_weight (resampling)
+%   10/2010 DB: Fix when patch_noover does not have PS (resampling)
+%   10/2010 DB: Fix when PS all rejected when sum weight<min_weight (resampling)
+%   06/2010 AH: Move mean amplitude merging to ps_load_mean_amp.m 
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
@@ -607,25 +608,4 @@ vars=who;
 vars=setxor(vars,{'n_patch';'dirname'});
 clear(vars{:})
 
-%fprintf('   Merging mean amplitude files\n')
-%widthname='width.txt';
-%if ~exist(widthname,'file')
-%    widthname= ['../',widthname];
-%end
-%width=load(widthname);
-%amp=zeros(width,1,'single');
-%for i=1:n_patch
-%    cd(dirname(i).name);
-%    if exist('./mean_amp.flt','file')    
-%        pxy=load('patch.in');
-%        fid=fopen('mean_amp.flt');
-%        amp(pxy(1):pxy(2),pxy(3):pxy(4))=fread(fid,[pxy(2)-pxy(1)+1,inf],'float=>single');
-%        fclose(fid);
-%    end 
-%    cd ..
-%end
-%
-%fid=fopen('mean_amp.flt','w');
-%fwrite(fid,amp,'float');
-%fclose(fid);
-%logit(1);
+logit(1);

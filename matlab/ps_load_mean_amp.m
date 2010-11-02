@@ -5,6 +5,7 @@ function [saveampname]=ps_load_mean_amp()
 %
 %   ======================================================================
 %   02/2010 AH: Reduce memory needs by reading in chunks
+%   11/2010 AH: Do amplitude merge here instead of ps_merge_patches.m 
 %   ======================================================================
 
 if exist('patch.in','file')
@@ -25,8 +26,48 @@ if ~exist(ampname,'file')
     ampname=['../mean_amp.flt'];
     saveampname=['../amp_mean.mat'];
 end
+
 if ~exist(ampname,'file')
-    error('Cannot find mean_amp.flt in this directory or parent')
+  ampname=['./mean_amp.flt'];
+  saveampname=['./amp_mean.mat'];
+  fprintf('   Merging mean amplitude files\n')
+  widthname='width.txt';
+  if ~exist(widthname,'file')
+      widthname= ['../',widthname];
+  end
+  width=load(widthname);
+  amp=zeros(width,1,'single');
+
+  if exist('./patch.list','file')
+    dirname=struct;
+    fid=fopen('patch.list','r');
+    i=0;
+    while feof(fid)==0
+        i=i+1;
+        dirname(i).name=fgetl(fid);
+    end
+    fclose(fid);
+  else
+    dirname=dir('PATCH_*');
+  end
+  n_patch=length(dirname);
+  for i=1:n_patch
+    cd(dirname(i).name);
+    if exist('./mean_amp.flt','file')    
+        pxy=load('patch.in');
+        fid=fopen('mean_amp.flt');
+        amp(pxy(1):pxy(2),pxy(3):pxy(4))=fread(fid,[pxy(2)-pxy(1)+1,inf],'float=>single');
+        fclose(fid);
+    end 
+    cd ..
+  end
+
+  fid=fopen('./mean_amp.flt','w');
+  fwrite(fid,amp,'float');
+  fclose(fid);
+  clear amp
+    
+%error('Cannot find mean_amp.flt in this directory or parent')
 end
 
 amp_high=[];
