@@ -296,7 +296,7 @@ if ~isfield(parms,'scla_method')
 end
 
 if ~isfield(parms,'scla_deramp')
-    parms.scla_deramp='y'; % estimate an orbital ramp before SCLA
+    parms.scla_deramp='n'; % estimate an orbital ramp before SCLA
 end
 
 if ~isfield(parms,'sb_scla_drop_index')

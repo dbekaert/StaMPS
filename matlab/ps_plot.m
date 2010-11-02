@@ -15,13 +15,14 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %    'w-dmo' for wrapped phase minus dem error, master AOE and orbital ramps
 %    'p' for spatially filtered wrapped phase 
 %    'u' for unwrapped phase
-%    'u-d' 
-%    'u-m'
-%    'u-o' 
-%    'u-dm' 
-%    'u-do'
-%    'u-dmo'
-%    'u-dms'
+%    'u-d' for unwrapped phase minus dem error  
+%    'u-m' for unwrapped phase minus and master AOE  
+%    'u-o' for unwrapped phase minus orbital ramps 
+%    'u-dm' for unwrapped phase minus dem error and master AOE  
+%    'u-do' for unwrapped phase minus dem error and orbital ramps
+%    'u-dmo' for unwrapped phase minus dem error, master AOE and orbital ramps
+%    'u-dms' for unwrapped phase minus dem error and all AOE 
+%    'u-dmos' for unwrapped phase minus dem error, all AOE and orbital ramps
 %    'd' for spatially correlated DEM error (rad/m)
 %    'm' for AOE phase due to master
 %    'o' for orbital ramps 
@@ -102,6 +103,8 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %   07/2010 DB: Correct bug for N_X plotting option
 %   08/2010 DB: Option to plot phase data and edit frontsize colorbar
 %   08/2010 DB: Adding figure names to plotted results
+%   11/2010 AH: Fix bug for w-dmo
+%   11/2010 AH: Add u-dmos
 %   ======================================================================
 
 
@@ -319,7 +322,11 @@ switch(group_type)
      case {'w-dmo'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
-        scla=load(sclasmoothname);
+        if ~strcmpi(small_baseline_flag,'y')
+            scla=load(sclasmoothname);
+        else
+            scla=load(sclasbsmoothname);
+        end
         ph_all=ph_all.*exp(-j*(scla.ph_scla+scla.ph_ramp));
         ph_all=ph_all.*repmat(exp(-j*scla.C_ps_uw),1,size(ph_all,2));
         ph_all(:,ps.master_ix)=1;
@@ -453,6 +460,15 @@ switch(group_type)
         clear uw scla aps
         ref_ps=ps_setref;
         fig_name = 'u-dma';
+    case {'u-dmos'}
+        uw=load(phuwname);
+        scn=load(scnname);
+        scla=load(sclaname);
+        ph_all=uw.ph_uw - scn.ph_scn_slave - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp;
+        clear uw scn scla
+        ph_all(:,ps.master_ix)=0;
+        ref_ps=ps_setref;
+        fig_name = 'u-dms';
     case {'u-a'}
         uw=load(phuwname);
         aps=load(apsname);

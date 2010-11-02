@@ -9,6 +9,7 @@ function []=ps_scn_filt()
 %   05/2007 AH: Spatially correlated look angle error added  
 %   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
 %   02/2010 AH: Bug fixed that could cause a slave scn to be set to zero
+%   11/2010 AH: If ramps estimated in step 7, subtract before scn estimation 
 %   =======================================================================
 logit;
 fprintf('Estimating other spatially-correlated noise...\n')
@@ -47,6 +48,9 @@ if exist([sclaname,'.mat'],'file')
     scla=load(sclaname);
     ph_all=ph_all-single(scla.ph_scla(:,unwrap_ifg_index));
     ph_all=ph_all-repmat(single(scla.C_ps_uw),1,length(unwrap_ifg_index));
+    if ~isempty(scla.ph_ramp)
+        ph_all=ph_all-single(scla.ph_ramp(:,unwrap_ifg_index));
+    end
 end
 ph_all(isnan(ph_all))=0;  
 
