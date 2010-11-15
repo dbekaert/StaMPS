@@ -39,7 +39,7 @@
 %\usepackage{color}
 \bibliographystyle{agu}
 \usepackage{natbib}
-\usepackage[dvips, bookmarks, colorlinks=false, linkcolor=blue, urlbordercolor={0 0 1},citebordercolor={1 0 0},pdftitle={StaMPS/MTI Manual}, pdfauthor={Andy Hooper}, pdfkeywords={PS, PSI, MT-InSAR, StaMPS}]{hyperref}
+\usepackage[dvips, bookmarks, colorlinks=false, linkcolor=blue, urlbordercolor={0 0 1},citebordercolor={1 0 0},pdftitle={StaMPS/MTI Manual}, pdfauthor={Andy Hooper }, pdfkeywords={PS, PSI, MT-InSAR, StaMPS}]{hyperref}
 %\usepackage{url}
 \usepackage[usenames]{color}
 \newcommand{\cs}[1]{{\texttt{\color{RoyalBlue}#1}}}
@@ -262,7 +262,7 @@
 
 %\begin{flushright}
 \begin{center}
-{\sffamily\textbf{Andy Hooper\\
+{\sffamily\textbf{Andy Hooper.\\
 4th November, 2010}}
 %\end{flushright}
 \end{center}
@@ -438,12 +438,11 @@ Currently support is provided for raw data from ERS, Envisat and ALOS satellites
  \cs{cd SLC}\\
  %\cs{cp \$MY\_SCR/roi.proc .}\\
  \cs{mkdir} \cc{yyyymmdd}
- for each scene and within this directory create symbolic links to the raw data (and leader files if they exist). For ERS data the link names must be {\tt IMAGERY}\cc{yyymmdd} and {\tt SARLEADER}\cc{yyyymmdd} (\underline{be sure to use 4 digit, not 2 digit, years}), but for Envisat and ALOS data the link names should be the same as the original names. Script \cs{link_raw} can be used to set-up dir structure SLC/yyyymmdd for ERS (CEOS and Envisat format), Envisat and ALOS platforms. Type \cs{link_raw} \cc{data_path} \cc{processing_path}, with \cc{data_path} the path to your source data and \cc{processing_path} the path where the processing SLC dir and symbolic links need to be created.\\
+ for each scene and within this directory create symbolic links to the raw data (and leader files if they exist). For ERS data the link names must be {\tt IMAGERY}\cc{yyymmdd} and {\tt SARLEADER}\cc{yyyymmdd} (\underline{be sure to use 4 digit, not 2 digit, years}), but for Envisat and ALOS data the link names should be the same as the original names.\\
+ The script \cs{link\_raw} can be used to automatically set-up the directory structure SLC/\cc{yyyymmdd} for ERS (CEOS and Envisat format), Envisat and ALOS platforms. Type \\
+\cs{link\_raw }   \cc{ data\_path }   \cc{ processing\_path}, \\
+with \cc{data\_path} the path to your source data and \cc{processing\_path} the path where the processing SLC dir and symbolic links need to be created.\\
  
-
-
-
-
 
  Choose a master based on minimising perpendicular, Doppler and temporal baselines (see \citet{HooperA2007a}). If you do not know the baseline data, choose a preliminary master based only on time and follow this manual as far as the {\tt make\_coarse} step in Section \ref{sec:ifgs}. After running {\tt make\_coarse}, the script {\tt select\_master} can be used to calculate expected stack coherence. Alternatively, one can enter \cs{grep Bperp */coreg.out} in the {\tt INSAR\_}\cc{master\_date} directory to see the perpendicular baselines with respect to the selected master (enter \cs{grep f\_DC\_con */slave.res} in the {\tt SLC} directory for the Doppler centroids). A new master can then be picked if necessary. If this is the case, edit {\tt master\_crop.in} for the new master, run \cs{step\_master\_setup},  then go directly to Section \ref{sec:ifgs}.
  
