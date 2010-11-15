@@ -1,0 +1,153 @@
+#!/bin/bash
+
+inpath=$1
+linkout=$2
+
+# Bekaert David - October 2010
+
+# SYNTAX: Script to set up stamps directory structure SLC/[YYYYMMDD] of raw data from 
+# ERS (CEOS or ENVISAT format), Envisat and ALOS.
+# Call this program by:	link_raw Your_data_path	your_processing_path
+
+# - data can be, but does not have to be organised in [YYYYMMDD] folders
+# - Folowing data type are recognised: ASA*, ER*CEOS* (ceos format), ER*ESA* (envisat format), ALPSRP*
+# - ALOS has the option to set-up dir structure for merging frames of single frame setup.
+# This will be asked to	the user when calling the script. The user however should check	
+# himself if frames are adjacent for later processing in ROI_PAC
+
+# -------------------------------------------------------------------------------------- #
+# 11/2010       DB:     Adding ALOS and	incorporating options
+# 11/2010 	DB:	Including ERS (CEOS or ENVISAT format)
+# 11/2010	DB:	Including case when [YYYYMMDD] structure has already been set-up
+# -------------------------------------------------------------------------------------- #
+
+
+# condition for dir or file
+echo "Checking if raw data is already in dir [YYYYMMDD] setup"
+cd $inpath  
+dir=`ls -d [0-9]??????? 2>/dev/null`
+##### files are not in date dir set-up
+if [ -z "$dir" ]; then
+  files=`find $inpath -name "ASA*" -type f`  && sensor='ASAR'
+fi 
+if  [ -z "$dir" ] && [ -z "$files" ]; then
+  # search first for ERS in Envisat format
+  files=`find $inpath -name "ER*" -type f` && sensor='ERS'
+  if [ -n $"files" ]; then
+	# searh for the ERS data type: (CEOS) or (ENVISAT)
+	for CEOS_ers_file in `ls -1 *CEOS* 2>/dev/null`
+	do
+		ERS_type="CEOS"
+	done
+	for ENVISAT_ers_file in `ls -1 *ESA* 2>/dev/null`
+	do	
+		ERS_type="ENVISAT"
+	done
+  fi
+fi 
+if  [ -z "$dir" ] && [ -z "$files" ]; then
+  files=`find $inpath -name "ALPSRP*" -type f` && sensor='ALOS'
+  if [ -z "$files" ]; then
+	sensor=''
+  fi
+fi 
+##### files are in data dir set-up
+if [ -n "$dir" ]; then
+       files=`find  -name "ASA*" -type f`  && sensor='ASAR'
+fi
+if  [ -n "$dir" ] && [ -z "$files" ]; then
+
+       	files=`find  -name "DAT*" -type f`  && sensor='ERS'
+	if [ -n "$files" ]; then
+		ERS_type="CEOS"
+	else
+	        files=`find  -name "SAR*" -type f`  && sensor='ERS'
+                ERS_type="ENVISAT"
+	fi
+
+
+fi
+if  [ -n "$dir" ] && [ -z "$files" ]; then
+ 	 sensor=''
+fi
+dir2=`ls -d [0-9]??? 2>/dev/null`
+if  [ -z "$dir" ] && [ -n "$dir2" ]; then
+        files=`find  -name "LED*" -type f`
+	if [ -n "$files" ]; then
+		sensor='ALOS'
+	fi
+fi
+if   [ -n "$dir" ] && [ -z "$files" ]; then
+  sensor=''
+  echo "no valid data for linking on  $inpath"
+fi
+
+
+
+# organize in data dir setup [YYYYMMDD]
+if [ "$sensor" = "ASAR" ] && [ -z "$dir" ];
+  then
+  echo "Sensor is Envisat"
+  for f in $files; do
+   	date=`echo $f | gawk 'BEGIN {FS="/"} {print substr($(NF),15,8)}'`
+	datedir=$inpath/$date
+   	mkdir $datedir
+   	mv $f $datedir/  
+  done
+elif [ "$sensor" = "ERS" ] && [ -z "$dir" ]; 
+  then 
+  echo "Sensor is ERS"
+  cd $inpath
+  prep_ers_raw
+elif [ "$sensor" = "ALOS" ] && [ -z "$dir" ] && [ -z "$dir2" ]; 
+  then
+  echo "Sensor is ALOS"
+  cd $inpath
+  prep_alos_raw  
+fi
+
+
+# setting up symbolic links
+echo "Date dir has been set-up"
+
+echo "Start linking files to $linkout"
+# if date struture was already set-up, then sensor is not yet defined
+# check a data folder for the type of file
+if [ "$sensor" = "ALOS" ];
+  then
+  echo "Set-up linked for merged frames [y] or for individual frames [n]" 
+  read answer
+  while [ "$answer" != "y" ]&&[ "$answer" != "Y" ]&&[ "$answer" != "n" ]&&[ "$answer" != "N" ]
+  do
+        echo "Please select a valid option [y] or [n]"
+        read answer
+  done
+  if [ "$answer" = "y" ]||[ "$answer" = "Y" ];
+   	then
+ 	echo "You choose $answer!"
+        cd $linkout
+	link_alos_merged_raw $inpath
+  elif [ "$answer" = "n" ]||[ "$answer" = "N" ];
+	then
+  	echo "You choose $answer!"
+	cd $linkout
+	link_alos_frame_raw $inpath
+  fi
+elif `[ "$sensor" = "ERS" ] && [ "$ERS_type" = "ENVISAT" ]`||[ "$sensor" = "ASAR" ];
+  then
+  dir=`find  $inpath -name "[0-9]???????" -type d`
+  mkdir -p $linkout/SLC
+  for d in $dir; do
+  	filesin=`ls -1 $d/*`
+  	datedirnew=$linkout/SLC/${d##*/}
+  	mkdir -p $datedirnew
+  	cd $datedirnew
+  	for f in $filesin; do
+  		ln -s $f 
+  	done
+  done
+elif [ "$sensor" = "ERS" ] && [ "$ERS_type" = "CEOS" ]; then
+  cd $linkout
+  link_ers_raw $inpath
+fi
+

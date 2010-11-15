@@ -1,0 +1,56 @@
+#!/bin/bash
+
+## To get the code working
+# make file executable
+# Include the dir of the file on your PATH
+
+## For the user to do:
+# Use prep_alos to get the correct structure first. 
+# Call this program from within the folder where you want the symbolic links to be created. 
+# Use as input argument the data dir (e.g. ~/data/ALOS/) and run link_alos_merged ~/data/ALOS/ 
+
+## The program does:
+# Constructs the structure used as input for Stamps and roipac (such frames are being merged) using symbolic links. 
+# With structure like: track dir/ SLC / date/ symbolic link data 
+# Links are constructed for all files:  LED, IMG-*, VOL and TRL files.
+# Program does not check for missing frames
+
+# David Bekaert March 2010
+# Delft University of Technology
+# ===========================================================================
+# 07/2010  DB:         Adding explanation
+# 07/2010  DB:         Tidying the code
+# 11/2010  DB:         making script compatible with link_raw script
+# ===========================================================================
+
+data_dir=`echo $1`
+echo Setting up structure and symbolic links  ...
+mkdir SLC
+cd SLC
+
+# for each track you do each frame 
+for frame in `ls -d $data_dir/[0-9]*`
+do
+ 	frame_dir=`basename $frame`
+
+	# for each data in the frame dir
+	for date in `ls -d $data_dir/$frame_dir/[0-9]*`
+	do
+		date_dir=`basename $date`
+
+		# check if dir exist and if not construct a new date folder
+		if [ ! -d $date_dir ]
+		then
+			mkdir $date_dir
+		fi
+
+		# link all the files to the date folder
+		cd $date_dir
+		for files in $(ls  $data_dir/$frame_dir/$date_dir/ | grep __*)
+		do
+			ln -s $data_dir/$frame_dir/$date_dir/$files
+		done			
+		cd ..
+	done	
+done
+

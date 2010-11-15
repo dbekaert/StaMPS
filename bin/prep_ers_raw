@@ -1,0 +1,31 @@
+#!/bin/bash
+
+files=`find $inpath -name "ER*" -type f` && sensor='ERS'
+
+# extracting into temporal folders. Putting everything in same structure for later.
+# In case of a gzip file
+echo Uncompressing files ...
+for ers_file in `ls *.gz 2>/dev/null`
+do
+  	gunzip $ers_file
+done
+
+# In case of a .tar file
+echo Unzipping files ...
+for ers_file in `ls *.tar 2>/dev/null`
+do
+        name=`basename $ers_file .tar`
+        date=`echo $name | gawk 'BEGIN {FS="/"} {print substr($(NF),17,8)}'`
+	mkdir $date
+        tar -C $date -xf $ers_file
+        # removal of non necessary files
+	rm $date/*.ps > /dev/null
+
+        # moving the untarred data to the archive folder
+        if [ ! -d "data_archive" ]
+        then
+            mkdir data_archive
+        fi
+        mv $ers_file data_archive/
+
+done

@@ -6,10 +6,8 @@
 
 ## For the user to do:
 # Go to you new location were you want to process the data cd ~/processings/ALOS 
-# and execute and do: setup_alos_frame ~/data/ALOS/A###/
-# Use as input argument the dir for the specific track. (e.g. ~/data/ALOS/A###/)
+# and execute and do: setup_alos_frame ~/data/ALOS/ 
 # To get the correct data structure it is advised to run prep_alos after downloading ALOS data.
-
 ## The program does:
 # Constructs the structure used as input for stamps using symbolic links.
 # With structure like: frame dir/ SLC / date dir/ symbolic link data
@@ -21,14 +19,10 @@
 # ===========================================================================
 # 07/2010  DB:         Adding explanation
 # 07/2010  DB:         Tidying the code
+# 11/2010  DB:	       Making code compatible with link_raw script
 # ===========================================================================
 
 data_dir=`echo $1`
-# constructing the track folder
-echo Constructing track folder ...
-track_name=`echo $data_dir | awk '{print substr($0,length-4)}'`
-mkdir $track_name
-cd $track_name
 
 # linking all the files
 echo Setting up structure and symbolic links ...
@@ -81,4 +75,3 @@ do
 	cd ..
 	cd ..
 done
-cd ..
