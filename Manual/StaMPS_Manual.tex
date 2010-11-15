@@ -473,6 +473,12 @@ Currently support is provided for raw data from ERS, Envisat and ALOS satellites
 %(or whatever is the filewidth - check \cc{master\_date}\cs{.slc.rsc})\\
  %\cs{dismph} \cc{master\_date}\cs{.slc.4looks} \cc{1403 }
 %(former filewidth/4)
+For ERS in Envisat type format:\\
+ \cs{step\_slc\_ers\_envi}\\
+In this case you need to update ROI-PAC with the programs provided in\\
+ \url{http://www.roipac.org/ERS}
+
+
 Take note of the number of azimuth/range looks and the multilooked filewidth.
  
  \cs{dismph image.slc.}\cc{X}\cs{looks.raw} \cc{1294 } (range looks, multilooked filewidth) or\\
@@ -500,7 +506,7 @@ Edit {\tt../roi.proc} and change the following:\\
 
  %\cs{remake\_slcs}\\
  %\cs{cd} \cc{master\_date}\\
- \cs{step\_slc\_alos}, \cs{step\_slc\_ers} or \cs{step\_slc\_envi} (attach \cs{\_V2.2} suffix if necessary).\\
+ \cs{step\_slc\_alos}, \cs{step\_slc\_ers},  \cs{step\_slc\_ers\_envi} or \cs{step\_slc\_envi} (attach \cs{\_V2.2} suffix if necessary).\\
  %\cs{multilook} \cc{master\_date}\cs{.slc} \cc{5612 }
 %(or whatever is the filewidth)\\
  %\cs{dismph} \cc{master\_date}\cs{.slc.4looks} \cc{1403 }
@@ -523,7 +529,7 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
 
  %\cs{$\backslash$ls -d [1,2]* $>$ make\_slcs.list}\\
  %\cs{vi make\_slcs.list} and remove the entry for \cc{master\_date}\\
-\cs{make\_slcs\_alos}, \cs{make\_slcs\_ers},
+\cs{make\_slcs\_alos}, \cs{make\_slcs\_ers}, \cs{make\_slcs\_ers\_envi}, 
  \cs{make\_slcs\_envi} (attach \cs{\_V2.2} suffix if necessary), or  \cs{make\_slcs\_envi\_vor}. This will create SLCs for all directories listed in {\tt make\_slcs.list}, which by default contains all data directories except the master.
 
 
@@ -629,10 +635,25 @@ with the following line, substituting the correct heading (to the nearest degree
 
 
 
- \cs{step\_master\_timing} \\
+ \cs{step\_master\_timing} 
+
+
  This step can be run alongside \cs{make\_orbits}, \cs{make\_coarse} and \cs{make\_coreg}.
  This step was new in version 3.1, and replaces the former StaMPS codes for DEM offset correction with new code in  Doris v4.0. Offsets are calculated for 30 (by default) different windows, which are printed to the screen at the end. Check that the selected offsets are consistent with the mode values of for the windows. If not, change the number of windows in {\tt timing.dorisin} to a higher number, comment out the {\tt M\_SIMAMP} process and rerun the step. If still not successful, delete the output from the timing step in master.res in the INSAR\_\cc{master\_date} directory and \underline{ALL subdirectories}, and calculate the DEM offset manually (see Section \ref{sec:calcdem}). 
 
+
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}\textbf{Tip: } 
+ \cs{step\_master\_timing}  calculates the master timing error, which is mostly used for geocoding. Non precise time information can make geocoding to place the pixels in an inaccurate position. The reliability of the estimated time error mostly depends on the DEM. For example, it is not advisable to run this step if the topography of an area is flat and the DEM does not contain information about building height. In this case, 
+ \cs{step\_master\_timing} can be skipped and continue with the rest of the processing as normal.
+\end{small}
+
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
 
 
  %\cs{$\backslash$ls -d ../SLC/[1,2]* $>$ slcs.list}
@@ -644,11 +665,13 @@ with the following line, substituting the correct heading (to the nearest degree
  
  In the INSAR\_\cc{master\_date} directory:
  
-\cs{make\_orbits}\\ 
+\cs{make\_orbits}
+
 This creates a subdirectory for each slave image. The default is to treat all images in the SLC directory except the master as slave images. If a different set of slave images is required, create a file named {\tt slcs.list} listing the directories containing the images you wish to include, before running {\tt make\_orbits}. Precise orbits are extracted from the ODR files if they are found (ERS and Envisat only).
 
 
-\cs{make\_coarse}\\
+\cs{make\_coarse}
+
 This creates a {\tt coreg.out} file in each slave subdirectory. The last 32 lines of each {\tt coreg.out} file is output to the terminal at the end.  Check the following values for each {\tt coreg.out} file:
 
 {\tt Coarse\_correlation\_translation\_lines:  \cc{-76}\\
@@ -665,10 +688,9 @@ Optionally, you can also check that the master crop is included within each slav
 
 
 
-
-
  \cs{make\_coreg}
- (long runtime) \\
+ (long runtime) 
+
  By default all images with baseline $<$ 100 m are coregistered directly to the master and those with larger baselines are coregistered to the 3 closest slave images with a smaller baseline. These default values can be changed by copying {\tt \$DORIS\_SCR/make\_coreg} to {\tt INSAR\_}\cc{master\_date}, editing the values at the top and running \cs{./make\_coreg}.
  
 If rerunning, {\tt make\_coreg}
@@ -685,7 +707,8 @@ When {\tt make\_coreg} has finished, check the size of the {\tt CPM\_Data} files
  \cs{make\_dems}
  (long runtime - can run alongside {\tt make\_coreg}).
  
- \cs{make\_resample}\\
+ \cs{make\_resample}
+
  After running, check the sizes of  the resampled SLC images (\cs{ls -l */*.slc}). They should be all identical. For any that differ, the slave crop does not include the entire master crop, probably due to a problem with coregistration for that slave. After resolving the problem(s), run \cs{step\_resample} in the slave subdirectory for the problem slaves only.
  %(see discussion under make\_coarse above). Correct this by either altering the master crop and deleting the entire INSAR\_\cc{master\_date} directory or by altering the relevant slave crops and then for each of them rerunning step\_orbit, step\_coarse, make\_coreg (after deleting the relevant CPM\_Data) and step\_resample.
  
@@ -697,9 +720,14 @@ When {\tt make\_coreg} has finished, check the size of the {\tt CPM\_Data} files
  \cs{xv */*dem\_\cc{X}l.ras} (\cc{X} is number of range looks)
  and check that each interferogram looks OK (i.e., the amplitude looks reasonable and there is at least a little coherence apparent in the phase)
 
- Finally, in (only) one of the slave directories run:\\
+
+\textbf{Geocoded} coordinates are needed in subsequent PS processing. To calculate the latitude and longitude of each pixel, run the next command in (only) one of the slave directories.
+
  \cs{step\_geo}
- (calculates the latitude and longitude of each pixel)
+ 
+
+
+
 
 \section{\label{sec:calcdem}Manual DEM offset correction}
 
@@ -888,7 +916,7 @@ Setting this higher, however,  increases the mean $\gamma$ value (coherence-like
 \normalsize
 
 \section{Step 3: PS selection}
-Pixels are selected on the basis of their noise characteristics. Processing is controlled by the following parameters:
+Pixels are selected on the basis of their noise characteristics. This step also estimates the percentage of random (non-PS) pixels in a scene from which the density per km$^2$ can be obtained. Processing is controlled by the following parameters:
 
 \footnotesize
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
@@ -898,7 +926,7 @@ Pixels are selected on the basis of their noise characteristics. Processing is c
 	 {\tt `DENSITY'} &	Other option {\tt `PERCENT'}. 
 	 \\
 {\tt density\_rand} &
-	 {\tt 20} &	Maximum acceptable spatial density (per km$^2$) of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `DENSITY'}. At this stage we can usually accept a high density, as most random-phase pixels will be dropped in the next step.\\
+	 {\tt 20} &	 Maximum acceptable spatial density (per km$^2$) of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `DENSITY'}. At this stage we can usually accept a high density, as most random-phase pixels will be dropped in the next step.\\
 {\tt percent\_rand} &
 	 {\tt 20} &	Maximum acceptable percentage of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `PERCENT'} \\ 
 {\tt slc\_osf} &
@@ -910,6 +938,7 @@ Pixels are selected on the basis of their noise characteristics. Processing is c
 \normalsize
 
 \section{Step 4: PS weeding}
+
 Pixels selected in the previous step are weeded, dropping those that are due to signal contribution from neighbouring ground resolution elements and those deemed too noisy.  Data for the selected pixels are stored in new workspaces.  Processing is controlled by the following parameters:
 
 \footnotesize
@@ -917,6 +946,7 @@ Pixels selected in the previous step are weeded, dropping those that are due to 
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
 %{\tt weed\_alpha} &	 {\tt 8} &	Smoothing parameter for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian window with standard deviation 1/{\tt weed\_alpha}. The original phase minus the smoothed phase is assumed to be noise.\\
  {\tt weed\_standard\_dev} &	 {\tt 1.0} &	Threshold standard deviation. For each pixel, the phase noise standard deviation for all pixel pairs including the pixel is calculated, If the minimum standard deviation is greater than the threshold, the pixel is dropped. If set to {\tt 10}, no noise-based weeding is performed\\
+ {\tt weed\_max\_noise} &	 {\tt Inf} &	Threshold for the maximum noise allowed for a pixel. For each pixel the noise is estimated per interferogram. Pixels with a value of noise higher than the indicated threshold will be dropped. \\
 \
 \end{tabular}
 \normalsize
@@ -924,7 +954,9 @@ Pixels selected in the previous step are weeded, dropping those that are due to 
 
 
 \section{Step 5: Phase correction}
+
 The wrapped phase of the selected pixels is corrected for spatially-uncorrelated look angle (DEM) error. At the end of this step the patches are merged. Processing is controlled by the following parameters:
+
 
 \footnotesize
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
@@ -934,26 +966,24 @@ The wrapped phase of the selected pixels is corrected for spatially-uncorrelated
  \end{tabular}
 \normalsize
 
+
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
 Check the wrapped phase of the selected pixels after running this step, e.g.,\\
  $>>$\cs{ps\_plot(`w')} 
 
 In terms of reprocessing, the first parameter to play with is {\tt weed\_standard\_dev}. If it looks like too many noisy pixels are being chosen, the value can be reduced. If very few pixels are chosen, the value can be increased. 
 
-If still too few pixels are being selected such that any signal is generally undersampled, variation of Step 2 parameters can be tried. The number of initial candidates can also be increased by setting the amplitude dispersion higher in \cs{mt\_prep}.
+If still too few pixels are being selected such that any signal is generally undersampled, variation of Step 2 parameters can be tried. The number of initial candidates can also be increased by setting the amplitude dispersion higher in \cs{mt\_prep}.\end{small}
 
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
 
-
-
-
-
-
- 
- 
- 
- 
- 
- 
- 
+  
  
  
  \section{Step 6: Phase unwrapping}
@@ -978,10 +1008,28 @@ Processing is controlled by the following parameters:
  
 (This subtraction of SCLA and master AOE has not however been implemented with the {\tt unwrap\_prefilter\_flag} = {\tt `n'} option.)
  
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
+
 After running step 6, display the output with\\
 $>>$\cs{ps\_plot(`u')}
 
-Check for unwrapping errors i.e., phase jumps in space which are uncorrelated in time. Unwrapping errors are more likely to occur in longer perpendicular baseline interferograms. This is for two reasons, firstly there is more noise associated with each PS pixel, and secondly, the phase due to any spatially-correlated look angle (SCLA) error is larger, as it is proportional to perpendicular baseline. Noise is reduced by spatial filtering before unwrapping, but it is also possible to reduce the SCLA error phase by estimating the SCLA error from the interferograms that have been unwrapped OK by running Step 7. If Step 6 is re-run after Step 7 has been run, the SCLA error phase is temporarily subtracted from the wrapped phase before unwrapping. The unwrapping accuracy is further improved by also temporarily subtracting the atmosphere and orbit error (AOE) phase of the master image, present in all the interferograms, which is also estimated in Step 7.
+Check for unwrapping errors i.e., phase jumps in space which are uncorrelated in time. Pay attention to the color scale. In this case it is adviaslbe to set it from $[-2\pi , 2\pi]$. See plotting options in chapter \ref{ch:plotting}.\\
+ Unwrapping errors are more likely to occur in longer perpendicular baseline interferograms. This is for two reasons, firstly there is more noise associated with each PS pixel, and secondly, the phase due to any spatially-correlated look angle (SCLA) error is larger, as it is proportional to perpendicular baseline. Noise is reduced by spatial filtering before unwrapping, but it is also possible to reduce the SCLA error phase by estimating the SCLA error from the interferograms that have been unwrapped OK by running Step 7. If Step 6 is re-run after Step 7 has been run, the SCLA error phase is temporarily subtracted from the wrapped phase before unwrapping. The unwrapping accuracy is further improved by also temporarily subtracting the atmosphere and orbit error (AOE) phase of the master image, present in all the interferograms, which is also estimated in Step 7.
+
+
+
+\end{small}
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
+
+
+
+
 
 
 \section{Step 7: Estimate spatially-correlated look angle error}
@@ -1009,14 +1057,43 @@ $>>$\cs{ps\_plot(`o')}
 
 Unwrapped phase minus one of, or a combination of the above can be plotted with \cs{`u-d'}, \cs{`u-m'}, \cs{`u-o'}, \cs{`u-dm'}, \cs{`u-do'},  or \cs{`u-dmo'}. 
 
-After running Step 7, check that the estimates seem reasonable, i.e., \cs{ps\_plot(`u-dm')} looks generally smoother than \cs{ps\_plot(`u')} (note that the default colour scales will be different). If not generally smoother, one or more interferograms has probably unwrapped incorrectly (usually those with large perpendicular baselines). Drop it/them from {\tt recalc\_index} and rerun Step 7, e.g., to drop the 13th and 14th interferograms,\\
+
+
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
+
+After running Step 7, check that the estimates seem reasonable, i.e., \cs{ps\_plot(`u-dm')} looks generally smoother than \cs{ps\_plot(`u')} (note that the default colour scales will be different). If not generally smoother, one or more interferograms has probably unwrapped incorrectly (usually those with large perpendicular baselines). Drop it/them from {\tt recalc\_index} and rerun Step 7, e.g., to drop the 13th and 14th interferograms,
+
 $>>$\cs{setparm(`recalc\_in',[}\cc{1:12,15:17}\cs{])}\\
 $>>$\cs{stamps(7,7)}
 
-An index for interferograms with baselines smaller than, for instance, 200 m can be set with\\
-$>>$\cs{[bperp,index]=ps\_baselines(}\cc{200}\cs{)} 
- 
-Once happy that all included interferograms are generally smoother, rerun step 6. Step 6 will subtract the estimates of SCLA and master AOE before unwrapping (as long as {\tt unwrap\_prefilter\_flag} = {\tt `y'}), and add them back in afterwards . If more interferograms become reliably unwrapped on re-running, add them into {\tt recalc\_index} before re-running Step 7. This can be repeated until all interferograms are reliably unwrapped, or until no further improvement is seen.
+An \cs{index} for interferograms with baselines smaller than, for instance, 200~m can be set with\\
+$>>$\cs{[bperp,index]=ps\_baselines(}\cc{200}\cs{)}.
+
+If you want to assess any change in your results after reruning Step 7, do not forget to save your figures, e.g.,\\
+$>>$\cs{ps-plot(`v-d',-1)}\\
+will save as a \cs{.mat} file the results of calculating  the option \cs{`v-d'}.
+
+Once happy that all included interferograms are generally smoother, rerun Step 6. 
+
+Step 6 will subtract the estimates of SCLA and master AOE before unwrapping (as long as {\tt unwrap\_prefilter\_flag} = {\tt `y'}), and add them back in afterwards . If more interferograms become reliably unwrapped on re-running, add them into {\tt recalc\_index} before re-running Step 7. This can be repeated until all interferograms are reliably unwrapped, or until no further improvement is seen.
+
+\end{small}
+
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
+
+
+
+
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
 
 If there is non-steady deformation present in some interferograms and, by chance, it correlates with perpendicular baseline, it can get mapped into the SCLA error. This may be evidenced as propagation of any deformation  in \cs{ps\_plot(`u-dm')}to all interferograms (though the sign for each will depend on the perpendicular baseline sign), or correlation of \cs{ps\_plot(`d')} with \cs{ps\_plot(`m')}. If you suspect this is occurring, you can attempt to remove the deformation/baseline correlation by adding or subtracting interferograms from {\tt recalc\_index}. Note that time and baseline info can be displayed with\\
 $>>$\cs{ps\_info} 
@@ -1024,6 +1101,15 @@ $>>$\cs{ps\_info}
 If some interferograms are still not reliably unwrapped, 
 %try setting {\tt unwrap\_patch\_phase} to `n' and rerunning Step 6. This will use the filtered phase of the PS pixels only, rather than that derived in Step 3 for unwrapping. 
 try increasing {\tt unwrap\_grid\_size} to 200 m or more. This will reduce the effects of noise by smoothing more, but do not set it higher than the distance over which you expect deformation phase to vary by about $\pi/2$.  Another thing to try is dropping noisier pixels by setting {\tt weed\_standard\_dev} to a lower value, and re-running from Step 4. 
+
+
+
+\end{small}
+
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
 
 
 
@@ -1047,9 +1133,6 @@ try increasing {\tt unwrap\_grid\_size} to 200 m or more. This will reduce the e
  %Run ma\_prep as before. To use the previous selection of candidate pixels, run ma\_extract\_cands 1, otherwise just run ma\_extract\_cands as before. If the previous candidate pixels are used you can also use the previous pixel selection by running stamps(1,2,`y',2) followed by stamps(4). 
 
 
-
-
-
 \chapter{Small Baseline Processing}
 First, create single master interferograms by following Chapter~\ref{sec:ifgs}.
 
@@ -1065,8 +1148,11 @@ Adjust the input parameters according to your data set. There should be no isola
 $>>$\cs{plot\_sb\_baselines}. 
  
  To create the small baseline interferograms listed in {\tt small\_baselines.list} in the {\tt INSAR\_}\cc{master\_date} directory, run:\\
- \cs{make\_small\_baselines} (or \cs{make\_small\_baselines 1} to skip azimuth filtering)\\
- This will create a new subdirectory called {\tt SMALL\_BASELINES} within the {\tt INSAR\_}\cc{master\_date} directory, containing a subdirectory for each small baseline interferogram.
+ \cs{make\_small\_baselines}.\\ 
+In occasions, doris seems to fail when filtering in azimuth. You can skip azimuth filtering with:\\
+ \cs{make\_small\_baselines 1} 
+
+ The script  \cs{make\_small\_baselines} will create a new subdirectory called {\tt SMALL\_BASELINES} within the {\tt INSAR\_}\cc{master\_date} directory, containing a subdirectory for each small baseline interferogram.
  
  Within the {\tt SMALL\_BASELINES} directory run\\
 \cs{mt\_prep} \cc{0.6 3 2 50 200} where
@@ -1085,8 +1171,12 @@ Note that the first parameter is amplitude {\em difference} dispersion rather th
  
  As for PS processing, small baseline MTI processing is controlled by various parameters that can be modified with $>>$\cs{setparm} and processing is initiated with\\
   \cs{matlab}\\
- $>>$\cs{stamps}\\
- 
+ $>>$\cs{stamps}
+
+
+When running this process, the amount of the computer load is probably much higher than  during PS processing. This may cause the program to stop due PC memory limitations. If this is the case, the number of patches should be increased, then rerun \cs{mt\_prep}.
+
+
  Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. Step 7 includes extra processing to calculate the SCLA error from both small baseline and single master interferograms.
 Step 7 is controlled by the following parameters:
 
@@ -1117,7 +1207,9 @@ $>>$\cs{ps\_sb\_merge}
 This will create a new subdirectory {\tt MERGED} in the {\tt INSAR\_}\cc{master\_date} directory, and a {\tt PATCH\_}\cc{X} subdirectory within this, if you are merging only an individual patch.
 
 For Step 6 onwards, processing is the same as for small baseline processing
+
 \chapter{Plotting}
+\label{ch:plotting}
 
 
 
