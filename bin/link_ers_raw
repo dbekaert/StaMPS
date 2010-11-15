@@ -1,36 +1,22 @@
-#!/bin/csh -f
-#create SLC directory and run this from there. Input is the name of
-#diapason directory (with the path)
+#!/bin/bash
+#create SLC directory and set-up dir structure [YYYYMMDD]
+
+# Bekaert David - November 2010
 
 # DB 10/2010	Changing the coding and input arguments
 # DB 11/2010    Supressing outputs
 # DB 11/2010    Making compatible with link_raw script
 
-set indir = $argv[1]
+indir=$1
 
 mkdir SLC
 cd SLC
-foreach dir(`\ls -d $indir/[0-9]*`)
-   if (-e $dir/VDF_DAT.001) then
-     set ddate = `cat $dir/VDF_DAT.001 | gawk '{print substr($0,77,8)}'`
-     set ddate14 = `echo $ddate | gawk '{print substr($0,1,4)}'` 
-     set ddate5 = `echo $ddate | gawk '{print substr($0,5,1)}'` 
-     set ddate6 = `echo $ddate | gawk '{print substr($0,6,1)}'` 
-     set ddate7 = `echo $ddate | gawk '{print substr($0,7,1)}'` 
-     set ddate8 = `echo $ddate | gawk '{print substr($0,8,1)}'` 
-     if ($ddate5 != '1') then 
-         set ddate5 = 0
-     endif
-     if ($ddate7 != '1' & $ddate7 != '2' & $ddate7 != '3') then 
-         set ddate7 = 0
-     endif
-     set ddate = `echo $ddate14$ddate5$ddate6$ddate7$ddate8`
-     mkdir $ddate
-     cd $ddate 
-     ln -s $dir/DAT_01.001 IMAGERY$ddate
-     ln -s $dir/VDF_DAT.001 VDF$ddate
-     ln -s $dir/LEA_01.001 SARLEADER$ddate
-     cd ..
-   endif
-end
+for dir in `\ls -d $indir/[0-9]*`
+do
+ 	date=`basename $dir`
+	mkdir $date
+ 	ln -s $dir/DAT_01.001 $date/IMAGERY$date
+ 	ln -s $dir/VDF_DAT.001 $date/VDF$date
+ 	ln -s $dir/LEA_01.001 $date/SARLEADER$date
+done
 cd ..
