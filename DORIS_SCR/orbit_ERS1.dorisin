@@ -27,8 +27,8 @@ I_RESFILE       coreg.out               // parameter file
  c
  comment   ___PORBITS___
  c
-c S_ORBDIR        $SAR_ODR_DIR/ERS1
-S_ORBDIR        $SAR_ODR_DIR/ers1/dgm-e04
+c S_ORBDIR        $SAR_ODR_DIR/ers1/dgm-e04
+S_ORBDIR        $SAR_ODR_DIR/ERS1
 S_ORB_INTERVAL  1
 S_ORB_EXTRATIME 6
  c
