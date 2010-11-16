@@ -400,7 +400,7 @@ These files should be stored in directories {\tt .../ODR/}\cc{XXXX} where \cc{XX
 
 \section{Doris}
  Details on installing Doris can be found at:\\
-  \url{http://doris.tudelft.nl}.
+  \url{http://doris.tudelft.nl} .
 
 
 
@@ -539,13 +539,13 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
  It may become apparent later that one or more scenes are offset from the master by so much that the focused image does not include the entire cropped master image. In which case copy {\tt roi.proc} from the SLC directory to the relevant \cc{yyyymmdd} directory, rename it {\tt \cc{yyyymmdd}.proc} and edit it so that the the part processed includes the cropped master image. Edit {\tt make\_slcs.list} to leave only scenes that need recreating and run \cs{make\_slcs\_}\cc{XXXX}. 
 
 
-\chapter{Processing CEOS SLCs (Level 1 product) }
+\chapter{Pre-processing SLCs (Level 1 product) }
 
-Currently, scripts exist for processing SLCs from ERS, Envisat and RADARSAT-1 satellites.
+{\em If you created SLCs with ROI\_PAC using raw data (Level 0 product), skip Sections: \ref{sec:slcread1} and \ref{sec:slcread2} .}
 
-{\em If you created SLCs with ROI\_PAC, skip this section.}
+Currently, scripts exist for pre-processing (reading and cropping) single look complex (SLC) products from ERS, Envisat and RADARSAT-1 and TerraSAR-X satellites.
 
- In your processing directory:\\
+ In your processing directory, for example, under /mnt/iceland\_volcanos/:\\
  \cs{mkdir SLC}\\
  \cs{cd SLC}\\
  \cs{mkdir} \cc{yyyymmdd}
@@ -556,13 +556,13 @@ Choose a master based on minimising perpendicular, Doppler and temporal baseline
 
 
  \cs{cd} \cc{master\_date}\\
- \cs{step\_read\_whole\_}\cc{XXX} (where \cc{XXX} is `\cs{ERS}', `\cs{Envisat}' or `\cs{RSAT}')
+ \cs{step\_read\_whole\_}\cc{XXX} (where \cc{XXX} is `\cs{ERS}', `\cs{Envisat}', `\cs{RSAT}', or `\cs{TSX}')
  
  Take note of the number of azimuth/range looks and the multilooked filewidth.
  
  \cs{dismph image.slc.}\cc{X}\cs{looks.raw} \cc{1294 } (range looks, multilooked filewidth) or \cs{xv image.slc.}\cc{X}\cs{looks.ras}
  
-\section{Option 1: Specify by latitude and longitude}
+\section{\label{sec:slcread1} Option 1: Specify by latitude and longitude}
 edit {\tt master\_crop\_geo.in} in the SLC directory, and specify your area of interest.  
 
 \cs{cd} \cc{master\_date}\\
@@ -570,7 +570,7 @@ edit {\tt master\_crop\_geo.in} in the SLC directory, and specify your area of i
 cd ..\\
 make\_read\_geo}
  
-\section{Option 2: Specify by line/pixel number}
+\section{\label{sec:slcread2}Option 2: Specify by line/pixel number}
 Choose area of interest and note first/last azimuth line and first/last range pixel. You should try to pick an area that is included in all the slave images too, which may not be the case if you choose an area too close to the image edge. Multiply the line numbers by the number of azimuth looks and the pixel numbers by the number of range looks to get numbers referenced to the SLC. 
 %Generally you should be at least 1000 lines in azimuth and 40 pixels in range from the edges, but even this may not be enough. 
 
@@ -589,10 +589,31 @@ and update the crop area. {\tt first\_l} and {\tt last\_l} are the first and las
  \cs{cd ..} (back to SLC directory)\\
  %\cs{$\backslash$ls -d [1,2]* $>$ make\_slcs.list}\\
  %!TEX encoding = UTF-8 Unicode\cs{vi make\_slcs.list} and remove the entry for \cc{master\_date}\\
- \cs{make\_read} This will read and crop SLCs from all directories listed in {\tt make\_slcs.list}, which by default contains all SLC directories except the master.\\
+ \cs{make\_read}\\
+ This will read and crop SLCs from all directories listed in {\tt make\_slcs.list}, which by default contains all SLC directories except the master date.\\
 
+% OVERSAMPLING
+% Mahmut
+\section{\label{sec:ovs} Oversampling SLC data (Optional)}
 
+After focusing your RAW data or reading/cropping your SLCs, optionally, you can oversample your dataset using Doris.
 
+In your processing directory, for example, under /mnt/iceland\_volcanos/:\\
+ \cs{cd SLC}\\
+ \cs{cd} \cc{master\_date}\\
+ \cs{step\_master\_ovs}
+
+ \cs{cd ..} (back to SLC directory)\\
+ \cs{make\_ovs}\\
+ This will oversample SLCs from all directories listed in {\tt make\_slcs.list}, which by default contains all SLC directories except the master date.\\
+
+By default, oversampling is done with a factor of 2 in both range and azimuth directions. You can change this by copying files {\tt master\_ovs.dorisin} and {\tt ovsfiles.dorisin} to {\tt SLC} directory.\\
+  cp {\tt \$DORIS\_SCR/master\_ovs.dorisin} {\tt SLC/}\\
+  cp {\tt \$DORIS\_SCR/ovsfiles.dorisin} {\tt SLC/}
+
+  and then edit the parameters listed under oversampling section on each file. Finally, re-run \cs{step\_master\_ovs} and \cs{make\_ovs} to create new oversampled dataset.
+
+%add some tips in the future
 
 \chapter{\label{sec:ifgs} Create IFGs (using DORIS)}
 
@@ -1409,7 +1430,7 @@ to display the image in matlab instead of using {\tt disrg}
 
 
 Links to PDF files for  the references above can be found at:\\
- \url{http://doris.tudelft.nl/~ahooper/pubs.html}
+ \url{http://radar.tudelft.nl/~ahooper/pubs.html}
 
 
 
