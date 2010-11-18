@@ -1,6 +1,9 @@
-function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,textsize,textcolor,lon_rg,lat_rg)
+function []=ps_plot(value_type,varargin)
+%function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,...
+%    cbar_flag,textsize,textcolor,lon_rg,lat_rg)
 % PS_PLOT plot ps values for selected ifgs
-%    PS_PLOT(VALUE_TYPE,BACKGROUND,PHASE_LIMS,REF_IFG,IFG_LIST,N_X,CBAR_FLAG,TEXTSIZE,TEXTCOLOR,LON_RG,LAT_RG) 
+%    PS_PLOT(VALUE_TYPE,BACKGROUND,PHASE_LIMS,REF_IFG,IFG_LIST,N_X,...
+%            CBAR_FLAG,TEXTSIZE,TEXTCOLOR,LON_RG,LAT_RG) 
 %
 %    In the case of phase, +ve values imply displacement away from the satellite
 %       when the master is earlier than the slave.
@@ -83,6 +86,9 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %
 %    LAT_RG = latitude range - defaults to [] (whole image)
 %
+%    'ts'   = produce time series plot on user click over velocity plots.
+%             the position of this switch is not important.
+%
 %   Andy Hooper, June 2006
 %
 %   ======================================================================
@@ -105,44 +111,47 @@ function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,cbar_flag,tex
 %   08/2010 DB: Adding figure names to plotted results
 %   11/2010 AH: Fix bug for w-dmo
 %   11/2010 AH: Add u-dmos
+%   11/2010 MMC & MA: plotting time series using 'ts' option 
 %   ======================================================================
 
+stdargin = nargin ;
 
+parseplotprm  % check if 'ts' is specified
 
-if nargin<1
+if stdargin<1
     help ps_plot
     error('not enough input args')
 end
     
-if nargin < 2
+if stdargin < 2
     plot_flag=1;
 end
 
-if nargin < 3
+if stdargin < 3
     lims=[];
 end
 
-if nargin < 4
+if stdargin < 4
     ref_ifg=0;
 end
 
-if nargin < 5
+if stdargin < 5
     ifg_list=[];
 end
 
-if nargin < 6
+if stdargin < 6
     n_x=0;
 end
 
-if nargin < 7
+if stdargin < 7
     cbar_flag=0;
 end
 
-if nargin < 8
+if stdargin < 8
     textsize=0;
 end
 
-if nargin < 9 | isempty(textcolor)
+if stdargin < 9 | isempty(textcolor)
     if plot_flag==1 | plot_flag==6
         textcolor=[0 0 0.004];
     else
@@ -154,11 +163,11 @@ if lims==0
     lims=[];
 end
 
-if nargin < 10
+if stdargin < 10
     lon_rg=[];
 end
 
-if nargin < 11
+if stdargin < 11
     lat_rg=[];
 end
 
@@ -659,6 +668,12 @@ switch(group_type)
         end
         textsize=0;
         units='mm/yr';
+        
+        % TS PLOT preparation
+        if ts_flag==1
+           ts_flaghelper; % script to save neccessary matrices for TS plot
+        end
+        
    case {'vsb'}
         phuw=load(phuwsbname);
         ref_ps=ps_setref;
@@ -961,6 +976,12 @@ end
     
 
 fprintf('Color Range: %g to %g %s\n',lims,units)
+
+if ts_flag == 1
+  whos
+  clear all % clean up to save memory
+  ts_plot   % select a point then plot
+end
 
 
     
