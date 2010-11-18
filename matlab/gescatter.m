@@ -73,7 +73,7 @@ clims=[min(c) max(c)];
 cmap=fliplr(jet);
 t=[];
 scale=0.5;
-opacity=0.4  % default value for 40 percent opacity [MA]
+opacity=0.4;  % default value for 40 percent opacity [MA]
 
 %parse inputs and do some error-checking
 if nargin>0
@@ -115,6 +115,7 @@ if nargin>0
                             cmap= func2str(cmap); 
                         end
                         cmap=fliplr(feval(cmap));
+                    end
                 case 5
                     opacity=varargin{i+1};
                     if ~isnumeric(opacity) ||  opacity > 1.0 || opacity < 0
