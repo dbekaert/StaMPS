@@ -1,4 +1,4 @@
-functions ps_gescatter(filename,data,step)
+function ps_gescatter(filename,data,step)
 % Generate kml form PS results
 %
 %
