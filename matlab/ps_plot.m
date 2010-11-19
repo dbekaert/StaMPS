@@ -112,6 +112,7 @@ function []=ps_plot(value_type,varargin)
 %   11/2010 AH: Fix bug for w-dmo
 %   11/2010 AH: Add u-dmos
 %   11/2010 MMC & MA: plotting time series using 'ts' option 
+%   11/2010 DB: Changing position of colorbar for ts plot
 %   ======================================================================
 
 stdargin = nargin ;
@@ -912,7 +913,7 @@ if plot_flag==-1
     savename=['ps_plot_',value_type];
     save(savename,'ph_disp','ifg_list')
 else
-  figure
+  h_fig = figure;
   set(gcf,'renderer','zbuffer','name',fig_name)
 
   if fig_size==1
@@ -953,22 +954,33 @@ else
     if cbar_flag==0 & (i==ref_ifg | (isempty(intersect(ref_ifg,ifg_list)) & i==ifg_list(1))) 
         if n_ifg_plot>1
             h=colorbar('South');
+	    xlim=get(h,'xlim');
+	    set(h,'xlim',[xlim(2)-64,xlim(2)])
+
         else
-            h=colorbar('SouthOutside');
+            %h=colorbar('SouthOutside');
+	    h = colorbar('peer',gca);
+            ylim=get(h,'ylim');
+            set(h,'ylim',[ylim(2)-64,ylim(2)])
         end
-        xlim=get(h,'xlim');
-        set(h,'xlim',[xlim(2)-64,xlim(2)])
+
         if diff(lims)>1 | diff(lims)==0
             plotlims=round(lims*10)/10;
         else
             limorder=ceil(-log10(diff(lims)))+2;
             plotlims=round(lims*10^limorder)/10^limorder;
         end
-        set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
-        h=xlabel(h,units);
-        pos=get(h,'position');
-        pos(2)=pos(2)/2.2;
-        set(h,'position',pos,'FontSize',abs(textsize));
+	if n_ifg_plot>1
+        	set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
+	        h=xlabel(h,units);
+        	pos=get(h,'position');
+        	pos(2)=pos(2)/2.2;
+        	set(h,'position',pos,'FontSize',abs(textsize));
+	else
+                set(h,'ytick',[ylim(2)-64,ylim(2)],'yticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
+	        set(get(h,'ylabel'),'String',units,'FontSize',abs(textsize))  
+
+	end
     end
 
   end
@@ -978,7 +990,10 @@ end
 fprintf('Color Range: %g to %g %s\n',lims,units)
 
 if ts_flag == 1
-  whos
+  figure(h_fig);
+%  pos = get(gca,'Position');			% get the axes of the time series figure
+%  pos_new = [pos(1) pos(2)+0.1 pos(3) pos(4)-0.1]
+%  set(gca,'position',pos_new);			% set the axes to the new positon
   clear all % clean up to save memory
   ts_plot   % select a point then plot
 end
