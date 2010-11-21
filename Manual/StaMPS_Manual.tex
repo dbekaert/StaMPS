@@ -392,6 +392,9 @@ Details on installing and running ROI\_PAC (if needed) can be found at:
 For ERS, ROI\_PAC requires the program getorb which must be installed in the {\tt ROI\_PAC/INT\_BIN} directory and can be downloaded from:\\ 
 \url{http://www.deos.tudelft.nl/ers/precorbs/tools/getorb_pack.shtml}.
 
+ALOS requires the latest script of {\tt make\_raw\_alos.pl}, which makes it possible to convert FBD to FBS and merge adjacent frames using the {\tt ALOS\_fbd2fbs} and {\tt ALOS\_merge} programs. These files can be downloaded from:\\
+\url{http://www.roipac.org/ALOS_PALSAR}
+
 ODR and arclist files containing the orbit information used by getorb can be downloaded from:\\ 
 \url{http://www.deos.tudelft.nl/ers/precorbs/orbits/}.\\
 These files should be stored in directories {\tt .../ODR/}\cc{XXXX} where \cc{XXXX} is {\tt ERS1} or {\tt ERS2}.   For Envisat data, getorb can also be used, in which case \cc{XXXX} should be {\tt Envisat}. Alternatively, use the ESA DORIS (the tracking system on Envisat, not to be confused with the Doris interferometry software) orbits. This is a better option at the date of writing as the ODR files have not been updated since the beginning of 2008.
