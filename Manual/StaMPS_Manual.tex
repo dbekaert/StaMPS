@@ -1246,11 +1246,17 @@ For Step 6 onwards, processing is the same as for small baseline processing
   $>>$\cs{plot\_all\_ifgs}
  plots all multilooked interferograms.
 
-  $>>$\cs{ps\_plot}
+ $>>$\cs{ps\_plot}
  plots values for each selected pixel, on various backgrounds, for chosen interferograms, e.g.,\\
+
+ {\em  Velocity plots}\\
  $>>$\cs{ps\_plot(`v-d',1,0,0,[1:3,7:8])} 
  plots the mean LOS velocity corrected for DEM (SCLA) error, on a white background, calculated from the unwrapped phase of interferograms 1 to 3 and 7 to 8.  
-
+ 
+ {\em  Time series plots}\\
+ $>>$\cs{ps\_plot(`v-d',1,0,0,[1:3,7:8],`ts')} 
+ plots the mean LOS velocity, as specified above and with \textbf{`ts'} switch enables user to select individual points for generating time series (TS) plots. 
+ Initially, mouse input is activated to select a point on the velocity plot which is define by \textbf{`v-d'} switch. Later using the \textbf{`new TS plot'} button you can define additional new points for TS plot. You can change \textbf{`radius factor'} in the white text box to search in a larger radius, unless you can't find points with the default factor (search radius = radius factor * radius, where radius is 1 arcsecond by default). Another example:  \cs{ ps\_plot('v-d',1,0,0,[], 0, 0, 0,[], [28.6 28.9], [41.2 41.27],'ts')} which plots velocities for the subset defined by longitude and latitude, and generates TS plots, the rest of the switches are set to default values.  \textbf{Tip}: The position of \textbf{`ts'} switch could be anywhere after plot option \textbf{`v-d`}. For details type \cs{ps\_plot} without any arguments on the matlab prompt to get help.  \\
  
   $>>$\cs{ps\_plot\_ifg}
  Plots a value for each selected pixel, on various backgrounds.
