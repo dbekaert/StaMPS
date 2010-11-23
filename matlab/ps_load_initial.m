@@ -15,6 +15,7 @@ function []=ps_load_initial()
 %   03/2009 AH: Change bperp back to be the bperp at local height
 %   10/2009 AH: Add n_image to mat file
 %   04/2010 KS: Fixed small issue with new logit function
+%   10/2009 MA: Oversampling factor file introduced
 %   ======================================================================
 
 
@@ -36,6 +37,7 @@ lambdaname=['lambda.1.in'];         % wavelength
 calname=['calamp.out'];             % amplitide calibrations
 widthname=['width.txt'];            % width of interferograms
 lenname=['len.txt'];                % length of interferograms
+slc_osfname=['slc_osfactor.1.in']    % oversampling factor  value 1 for no oversampling
 
 psver=1;
 
@@ -86,6 +88,15 @@ if ~exist(lambdaname,'file')
 end
 lambda=load(lambdaname);
 setparm('lambda',lambda,1);
+
+if ~exist(slc_osfname,'file')
+    slc_osfname= ['../',slc_osfname];
+end
+slc_osf=load(slc_osfname);
+if isempty(slc_osf)
+    error([slc_osfname, ' is empty'])
+end
+setparm('slc_osf',slc_osfname,1);
 
 if ~exist(calname,'file')
     calname= ['../',calname];
@@ -243,7 +254,7 @@ if length(bperpdir)>0
         bp1000=bperp_grid(2:2:end);
         bp1000=reshape(bp1000,50,50)';
         bp0_ps=griddata(gridX,gridY,bp0,ij(:,3),ij(:,2),'linear',{'QJ'});
-% AH adujst bperp for local height
+% AH adjust bperp for local height
         bp1000_ps=griddata(gridX,gridY,bp1000,ij(:,3),ij(:,2),'linear',{'QJ'});
         bperp_mat(:,i2)=bp0_ps+(bp1000_ps-bp0_ps).*hgt/1000;
     end
