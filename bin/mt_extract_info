@@ -25,7 +25,9 @@ else
     set INSARDIR = $WORKDIR
 endif
 
-set SLC_OSF = `check_slc_sampling $INSARDIR/master.res`
+set SLC_OSF = `check_slc_sampling $INSARDIR/master.res`  # check if oversampled or not
+
+echo $SLC_OSF > $INSARDIR/ovsfactor.1.in                 # put oversampling factor to file 
 
 #set first = `grep 'First_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
 #set last = `grep 'Last_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
