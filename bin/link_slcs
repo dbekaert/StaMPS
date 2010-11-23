@@ -1,0 +1,108 @@
+#!/bin/bash
+##
+## Mahmut Arikan - 20091021 
+##
+## Setup SLC directory structure for StaMPS
+##
+## Sensors: ERS,  Envisat and TSX
+
+# Variable 
+DATADIR=$1
+sensor=$2
+CWD=`pwd`
+#AWK=`which gawk`
+AWK=`which awk`
+ 
+
+## Functions 
+goodERS(){
+
+  [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
+
+  for f in $(ls -1d ${DATADIR}/*); do
+    echo info: $f
+    date=$( ${AWK} '/ORBIT/{print substr($5,1,8)}' ${f}/L* )
+    cd $CWD/SLC
+    mkdir ${date}
+    cd  ${date}
+    ln -s ${f}/L*
+    ln -s ${f}/D*
+    ln -s ${f}/V*
+    ln -s ${f}/N*
+    ln -s D* image.slc
+    
+    ${AWK} '/ORBIT/{print  "HEADING   "$22 }' LEA_01.001 > image.slc.rsc # ERS
+    cd ..
+  done
+}
+
+
+goodENV(){
+  [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
+
+  for f in $(ls -1d ${DATADIR}/*); do
+    echo info: $f
+    bname=$( basename ${f}/A*.N1 )
+    date=$( basename ${f}/A*.N1 | ${AWK} -F '_' '{print substr($3,7)}' )
+    cd $CWD/SLC
+    mkdir ${date}
+    cd  ${date}
+    ln -s ${f}/A*.N1
+    ln -s ${bname} image.slc
+    
+    envisat_dump_header ASA*.N1 | awk '/sub_sat_track/{print "HEADING   "$3}' > image.slc.rsc
+
+    cd ..
+  done
+}
+
+goodTSX(){
+  [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
+
+  for f in $(find ${DATADIR} -name "T*.xml"); do
+    echo info: $f
+    bname=$( basename ${f} )
+    date=$(echo $bname | ${AWK} -F '_' {'print substr($13,1,8)'} )
+    tsxdir=${f%/*}
+    cosfile=`find $tsxdir -name "*.cos"` 
+    cosbname=$( basename ${cosfile} )
+    cd $CWD/SLC
+    mkdir ${date}
+    cd  ${date}
+    ln -s ${f}              # xml
+    ln -s ${cosfile} 
+    ln -s ${cosbname} image.slc
+   
+    tsx_dump_heading.py ${f} > image.slc.rsc
+
+    cd ..
+  done
+}
+
+goodSENSE(){
+        local sense=''
+        #local file=`find ${DATADIR} -name "*.cos" | head -n 1 `
+        local file=`find ${DATADIR} -name "T*.xml" | head -n 1 `
+        if [ -n "$file" ]; then
+          sense='TSX'
+        else
+          sense=$(ls -1 ${DATADIR}/*/ASA* &>/dev/null && echo ENV || echo ERS)
+        fi
+        echo $sense
+}
+
+case $# in
+         1) sensor=`goodSENSE`
+            { [ "${sensor}" == "ERS" ] && goodERS ; } || \
+            { [ "${sensor}" == "ENV" ] && goodENV ; } || \
+            { [ "${sensor}" == "TSX" ] && goodTSX ; } || \
+            echo "Fout gemaakt: Something is wrong!"
+            ;;
+         *) echo -e "Usage: ${0##*/} <location of original SLC files> \n"
+            echo -e "ex   : ${0##*/} /mnt/projectname_d_e_336-2835/data \n"
+	    ;;
+esac
+
+
+
+#EOF
