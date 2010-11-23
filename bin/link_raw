@@ -1,8 +1,5 @@
 #!/bin/bash
 
-inpath=$1
-linkout=$2
-
 # Bekaert David - October 2010
 
 # SYNTAX: Script to set up stamps directory structure SLC/[YYYYMMDD] of raw data from 
@@ -20,6 +17,20 @@ linkout=$2
 # 11/2010 	DB:	Including ERS (CEOS or ENVISAT format)
 # 11/2010	DB:	Including case when [YYYYMMDD] structure has already been set-up
 # -------------------------------------------------------------------------------------- #
+
+
+if [ $# != 2  ];then
+
+echo USAGE:
+echo $0 FULL_PATH_to_data  FULL_PATH_to_processing_directory
+
+exit 127
+fi
+
+
+
+inpath=$1
+linkout=$2
 
 
 # condition for dir or file
