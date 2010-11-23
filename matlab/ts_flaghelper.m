@@ -15,8 +15,9 @@ savetxt='ps_plot_ts_matname.txt';  % if you change here update ts_plot as well
 % save ps_ts ph_uw unwrap_ifg_index ref_ps day n_ps lambda ifg_list master_day m ph_all G
 % put matrice name to 
 dlmwrite(savetxt,[savename, '.mat'],'') % put savename to ts_plot_matname.txt
+load ps2 bperp;
 save(savename,'ph_uw','lonlat', 'unwrap_ifg_index', 'ref_ps',...
-    'day', 'n_ps', 'lambda', 'ifg_list', 'master_day') % 'ph_all', 'G', 'm'
+    'day', 'n_ps', 'lambda', 'ifg_list', 'master_day', 'bperp') % 'ph_all', 'G', 'm'
 %clear all % clean up 
 
 %EOF
