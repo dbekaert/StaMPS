@@ -18,7 +18,9 @@
 %     'String','1', 'Position', [280 30 90 30] );
 
 mEditBox=findobj('Background',[1 1 1]); % get the handle of editable textbox
-radiusfactor=str2num(get(mEditBox,'String')) % get radius factor from editbox
+%radiusfactor=str2num(get(mEditBox,'String')) % get radius factor from editbox
+radiusfactor=str2num(char(get(mEditBox,'String')));					% added by david this is also not a single value but a vector
+radiusfactor = radiusfactor(1);								% select only the first value, i checked it for a couple of values and radius is correct
 
 if radiusfactor > 100
     disp('radius factor should be <= 100')
@@ -28,7 +30,6 @@ end
 % if ph_uw does not exist load otherwise don't load TODO
 momfig_name=['(', get(gcf,'name'), ')']; % inherent fig_name from the velocity plot
 
-% whos;
 % clear all % clean up
   %fid = fopen(savetxt);
   fid = fopen('ps_plot_ts_matname.txt');
@@ -43,7 +44,7 @@ momfig_name=['(', get(gcf,'name'), ')']; % inherent fig_name from the velocity p
 % GET USER INPUT from MOUSE CLICK
 %
  disp('Please select a point on the figure to plot time series (TS)')
- [lon0,lat0] = ginput(1) % turn on when final
+ [lon0,lat0] = ginput(1); % turn on when final
  disp(['Selected point coordinates (lon,lat):' num2str(lon0),', ', num2str(lat0) ])
 
 % MAKE A CIRCLE AROUND SELECTED POINT (lon0,lat0)
@@ -76,7 +77,7 @@ figure
     plot(lon0,lat0,'*')
 
     lon2=lonlat(in,1);
-    lat2=lonlat(in,2)
+    lat2=lonlat(in,2);
     plot(lon2,lat2,'dr')               
     axis image; hold off
     
@@ -95,7 +96,7 @@ figure
 % PLOT TS for given point(s)
 ts=-ph_uw(in,:)*lambda*1000/(4*pi);
 G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
-x_hat=G\double(ts')
+x_hat=G\double(ts');
 
 offset=pi*1000*lambda/(4*pi);
 x1_hat=[x_hat(1)+offset; x_hat(2)];
@@ -104,7 +105,7 @@ x2_hat=[x_hat(1)-offset; x_hat(2)];
 ts_hat=G*x_hat;
 tsup_hat=G*x1_hat;
 tslo_hat=G*x2_hat;
-whos ts G x_hat ts_hat
+% whos ts G x_hat ts_hat
 
 % % typical TS plot
 % figure
