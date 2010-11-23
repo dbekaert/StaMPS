@@ -324,7 +324,7 @@
 
 \chapter{Introduction}
 
-StaMPS/MTI is made available for non-commercial applications only. 
+StaMPS/MTI is made available for non-commercial applications only and can be downloaded from \url{http://radar.tudelft.nl/~ahooper/stamps}
 
 StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland and Delft University of Technology. There are also contributions from users of the package based at other institutions.
 
@@ -435,16 +435,20 @@ Currently support is provided for raw data from ERS, Envisat and ALOS satellites
  Scripts have been updated to run with ROI\_PAC version 2.3 or 3.0. If you have the ROI\_PAC version 2.2 installed, you should run the versions of the SLC generation scripts with the suffix \cs{\_V2.2} attached.
 
 
+\cs{link\_raw }   \cc{ data\_path }   \cc{ processing\_path}
+(where \cc{data\_path} is the FULL path to your source data and \cc{processing\_path} is the FULL path to a new processing directory you have created)
+
+This will create a directory named {\tt SLC} in the \cc{processing\_path} directory, with a subdirectory for each image named \cc{yyyymmdd}. Within each subdirectory, symbolic links will be created to the data files. For ERS data the link names are  {\tt IMAGERY}\cc{yyymmdd} and {\tt SARLEADER}\cc{yyyymmdd} (\underline{4 digit, not 2 digit, years}), and for Envisat and ALOS data, the link names are the same as the original names. 
 
  In your processing directory:\\
  \cs{mkdir SLC}\\
  \cs{cd SLC}\\
  %\cs{cp \$MY\_SCR/roi.proc .}\\
  \cs{mkdir} \cc{yyyymmdd}
- for each scene and within this directory create symbolic links to the raw data (and leader files if they exist). For ERS data the link names must be {\tt IMAGERY}\cc{yyymmdd} and {\tt SARLEADER}\cc{yyyymmdd} (\underline{be sure to use 4 digit, not 2 digit, years}), but for Envisat and ALOS data the link names should be the same as the original names.\\
- The script \cs{link\_raw} can be used to automatically set-up the directory structure SLC/\cc{yyyymmdd} for ERS (CEOS and Envisat format), Envisat and ALOS platforms. Type \\
-\cs{link\_raw }   \cc{ data\_path }   \cc{ processing\_path}, \\
-with \cc{data\_path} the path to your source data and \cc{processing\_path} the path where the processing SLC dir and symbolic links need to be created.\\
+ for each scene and within this directory create symbolic links to the raw data (and leader files if they exist). For ERS data the link names must be {\tt IMAGERY}\cc{yyymmdd} and {\tt SARLEADER}\cc{yyyymmdd} (\underline{be sure to use 4 digit, not 2 digit, years}), but for Envisat and ALOS data the link names should be the same as the original names.
+ 
+
+
  
 
  Choose a master based on minimising perpendicular, Doppler and temporal baselines (see \citet{HooperA2007a}). If you do not know the baseline data, choose a preliminary master based only on time and follow this manual as far as the {\tt make\_coarse} step in Section \ref{sec:ifgs}. After running {\tt make\_coarse}, the script {\tt select\_master} can be used to calculate expected stack coherence. Alternatively, one can enter \cs{grep Bperp */coreg.out} in the {\tt INSAR\_}\cc{master\_date} directory to see the perpendicular baselines with respect to the selected master (enter \cs{grep f\_DC\_con */slave.res} in the {\tt SLC} directory for the Doppler centroids). A new master can then be picked if necessary. If this is the case, edit {\tt master\_crop.in} for the new master, run \cs{step\_master\_setup},  then go directly to Section \ref{sec:ifgs}.
@@ -544,16 +548,17 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
 
 \chapter{Pre-processing SLCs (Level 1 product) }
 
-{\em If you created SLCs with ROI\_PAC using raw data, skip Sections: \ref{sec:slcread1} and \ref{sec:slcread2} .}
+{\em If you created SLCs with ROI\_PAC using raw data, skip Section: \ref{sec:slcread}.}
 
-Currently, scripts exist for pre-processing (reading and cropping) single look complex (SLC) products from ERS, Envisat, RADARSAT-1 and TerraSAR-X satellites.
+\section{\label{sec:slcread}Reading and Cropping}
+Currently, scripts exist for (reading and cropping single look complex (SLC) products from ERS, Envisat, RADARSAT-1 and TerraSAR-X satellites.
 
- In your processing directory, for example, under /d2/iceland\_volcanos/\\
+ In your processing directory, for example, under /d2/iceland\_volcanoes/\\
  \cs{mkdir SLC}\\
  \cs{cd SLC}\\
  \cs{mkdir} \cc{yyyymmdd}
  %for each scene and make a symbolic link to the corresponding ASA\_IMP\_1P file, named image.slc 
-for each scene and within this directory create symbolic links to the raw data (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001} and {\tt  LEA\_01.001} and {\tt VDF\_DAT.001}. For Envisat  data the link name must be {\tt image.slc}.
+for each scene and within this directory create symbolic links to the raw data (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001}, {\tt  LEA\_01.001}, and {\tt VDF\_DAT.001}. For Envisat  data the link name must be {\tt image.slc}. For TerraSAR-X data, the link names must be {\tt image.slc} and {\tt leader.xml}.
 
 Choose a master based on minimising perpendicular, Doppler and temporal baselines (see \citet{HooperA2007a}). Substitute your master date in the format {\tt yyyymmdd} wherever \cc{master\_date} appears below.
 
@@ -566,7 +571,7 @@ Choose a master based on minimising perpendicular, Doppler and temporal baseline
  %\cs{dismph image.slc.}\cc{X}\cs{looks.raw} \cc{1294 } (range looks, multilooked filewidth) or 
  \cs{xv image.slc.}\cc{X}\cs{looks.ras}
  
-\section{\label{sec:slcread1} Option 1: Specify by latitude and longitude}
+\subsection{\label{sec:slcread1} Option 1: Specify by latitude and longitude}
 edit {\tt master\_crop\_geo.in} in the SLC directory, and specify your area of interest.  
 
 \cs{cd} \cc{master\_date}\\
@@ -574,7 +579,7 @@ edit {\tt master\_crop\_geo.in} in the SLC directory, and specify your area of i
 cd ..\\
 make\_read\_geo}
  
-\section{\label{sec:slcread2}Option 2: Specify by line/pixel number}
+\subsection{\label{sec:slcread2}Option 2: Specify by line/pixel number}
 Choose area of interest and note first/last azimuth line and first/last range pixel. You should try to pick an area that is included in all the slave images too, which may not be the case if you choose an area too close to the image edge. Multiply the line numbers by the number of azimuth looks and the pixel numbers by the number of range looks to get numbers referenced to the SLC. 
 %Generally you should be at least 1000 lines in azimuth and 40 pixels in range from the edges, but even this may not be enough. 
 
@@ -602,7 +607,7 @@ and update the crop area. {\tt first\_l} and {\tt last\_l} are the first and las
 
 After focusing your RAW data or reading/cropping your SLCs, optionally, you can oversample your dataset using Doris.
 
-In your processing directory, for example, under /d2/iceland\_volcanos/\\
+In your processing directory, for example, under /d2/iceland\_volcanoes/\\
  \cs{cd SLC}\\
  \cs{cd} \cc{master\_date}\\
  \cs{step\_master\_ovs}
@@ -636,9 +641,11 @@ Then re-run \cs{step\_master\_ovs} and \cs{make\_ovs} to create a new oversample
 
 \cs{cd INSAR\_}\cc{master\_date}
 
- If the SLCs weren't created by ROI\_PAC create {\tt \cc{master\_date}.slc.rsc}
-with the following line, substituting the correct heading (to the nearest degree is fine):\\
- {\tt HEADING \ \ \ \cc{-167}}
+ If the SLCs were not created by ROI\_PAC create a file named {\tt dummy.slc.rsc}
+with the following line (substituting the correct heading, to the nearest degree is fine):\\
+ {\tt HEADING \ \ \ \cc{-167}}\\
+ For TerraSAR-X, the value can be found  in leader.xml, and can be extracted automatically using
+ \cs{tsx\_extract\_heading} (you must have python installed to run this)
 
  \cs{step\_master\_orbit\_ODR} (only run if using precise ODR orbits)
 
@@ -746,7 +753,7 @@ When {\tt make\_coreg} has finished, check the size of the {\tt CPM\_Data} files
  and check that each interferogram looks OK (i.e., the amplitude looks reasonable and there is at least a little coherence apparent in the phase)
 
 
-\textbf{Geocoded} coordinates are needed in subsequent PS processing. To calculate the latitude and longitude of each pixel, run the next command in (only) one of the slave directories.
+Geocoded coordinates are needed in subsequent PS processing. To calculate the latitude and longitude of each pixel, run the next command in \ul{only one} of the slave directories.
 
  \cs{step\_geo}
  
@@ -972,7 +979,7 @@ Pixels selected in the previous step are weeded, dropping those that are due to 
 %{\tt weed\_alpha} &	 {\tt 8} &	Smoothing parameter for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian window with standard deviation 1/{\tt weed\_alpha}. The original phase minus the smoothed phase is assumed to be noise.\\
  {\tt weed\_standard\_dev} &	 {\tt 1.0} &	Threshold standard deviation. For each pixel, the phase noise standard deviation for all pixel pairs including the pixel is calculated, If the minimum standard deviation is greater than the threshold, the pixel is dropped. If set to {\tt 10}, no noise-based weeding is performed\\
  {\tt weed\_max\_noise} &	 {\tt Inf} &	Threshold for the maximum noise allowed for a pixel. For each pixel the minimum pixel-pair noise is estimated per interferogram. Pixels whose maximum interferogram noise value is higher than the indicated threshold are dropped. \\
- {\tt weed\_time\_win} &	 {\tt 730} &	Smoothing window (in days) for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian weighted piecewise linear fit with standard deviation of Guassian this size. Original phase minus smoothed phase is assumed to be noise. \\
+ {\tt weed\_time\_win} &	 {\tt 730} &	Smoothing window (in days) for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian-weighted piecewise linear fit.  {\tt weed\_time\_win} specifies the standard deviation of the Gaussian. The original phase minus the smoothed phase is assumed to be noise. \\
  {\tt drop\_ifg\_index} &
 	 {\tt []} & Interferograms listed here (by order number given in $>>$\cs{ps\_info}) will not be included in the weeding calculations.	 \\
 \
@@ -994,6 +1001,7 @@ The wrapped phase of the selected pixels is corrected for spatially-uncorrelated
  \end{tabular}
 \normalsize
 
+If your merged results contain so many PS pixels  that your computer has memory issues, consider setting {\tt merge\_resample\_size} to a higher number, which will result in coarser sampling.
 
 \begin{center}
 \colorbox{notegray}{
@@ -1004,7 +1012,7 @@ Check the wrapped phase of the selected pixels after running this step, e.g.,\\
 
 In terms of reprocessing, the first parameter to play with is {\tt weed\_standard\_dev}. If it looks like too many noisy pixels are being chosen, the value can be reduced. If very few pixels are chosen, the value can be increased. 
 
-If still too few pixels are being selected such that any signal is generally undersampled, variation of Step 2 parameters can be tried. The number of initial candidates can also be increased by setting the amplitude dispersion higher in \cs{mt\_prep}.\end{small}
+If still too few pixels are being selected such that any signal is generally undersampled, variation of Step 3 parameters can be tried. The number of initial candidates can also be increased by setting the amplitude dispersion higher in {\tt mt\_prep}.\end{small}
 
  \vspace{0.5mm}
 \end{minipage}
@@ -1074,7 +1082,7 @@ Check for unwrapping errors i.e., phase jumps in space which are uncorrelated in
 
 Display the estimate of SCLA error with\\
 $>>$\cs{ps\_plot(`d')} 
-Units are phase per m of perpendicular baseline, with 0.01 radians/m corresponding to about 12 m of DEM error for the Envisat I2 swath.
+Units are phase per m of perpendicular baseline, with 0.01 radians/m corresponding to about 12 m of DEM error for the Envisat I2 swath. You can use $>>$\cs{K2q} to  do the conversion for ERS, Envisat I2 swath or ALOS.
 
 Display the estimate of master atmosphere and orbit error (AOE) phase  with\\
 $>>$\cs{ps\_plot(`m')}
@@ -1091,20 +1099,19 @@ Unwrapped phase minus one of, or a combination of the above can be plotted with 
 \begin{minipage}{0.95\linewidth}
 \begin{small}
 
-After running Step 7, check that the estimates seem reasonable, i.e., \cs{ps\_plot(`u-dm')} looks generally smoother than \cs{ps\_plot(`u')} (note that the default colour scales will be different). If not generally smoother, one or more interferograms has probably unwrapped incorrectly (usually those with large perpendicular baselines). Add it/them to {\tt scla\_drop\_index} and rerun Step 7, e.g., to drop the 13th and 14th interferograms,
+After running Step 7, check that the estimates seem reasonable, i.e., $>>$\cs{ps\_plot(`u-dm')} looks generally smoother than $>>$\cs{ps\_plot(`u')} (note that the default colour scales will be different). If not generally smoother, one or more interferograms have probably been incorrectly unwrapped  (usually those with large perpendicular baselines). Identify those  that appear incorrectly unwrapped, add them to {\tt scla\_drop\_index} and rerun Step 7, e.g., to drop the 13th and 14th interferograms,
 
 $>>$\cs{setparm(`scla\_d',[}\cc{13:14}\cs{])}\\
-$>>$\cs{stamps(7,7)}
+$>>$\cs{stamps(7,7)}\\
 
-An {\tt index} for interferograms with baselines greater than, for instance, 200~m can be retrieved with\\
-$>>$\cs{[bperp,index]=ps\_baselines(}\cc{200}\cs{)}
+A list of interferograms with baselines greater than, for instance, 400~m can be retrieved with\\
+$>>$\cs{[bperp,index]=ps\_baselines(}\cc{400}\cs{)}\\
 
-If you want to assess any change in your results after reruning Step 7, do not forget to save your figures, e.g.,\\
-$>>$\cs{ps-plot(`v-d',-1)}\\
-will save as a \cs{.mat} file the results of calculating  the option \cs{`v-d'}.
+If you want to assess any change in your results after reruning Step 7, you can save your figures, e.g.,\\
+$>>$\cs{ps-plot(`d',-1)}\\
+will save as a {\tt .mat} file the results of calculating  the option {\tt `d'}.\\
 
 Once happy that all included interferograms are generally smoother, rerun Step 6. 
-
 Step 6 will subtract the estimates of SCLA and master AOE before unwrapping (as long as {\tt unwrap\_prefilter\_flag} = {\tt `y'}), and add them back in afterwards . If more interferograms become reliably unwrapped on re-running, remove them from {\tt scla\_drop\_index} before re-running Step 7. This can be repeated until all interferograms are reliably unwrapped, or until no further improvement is seen.
 
 \end{small}
@@ -1518,6 +1525,7 @@ to display the image in matlab instead of using {\tt disrg}
 \item Change {\tt plot\_sb\_baselines} to work also in small baseline/merged directories and plot only interferograms that are not dropped.
 \item Plots on DEM changed to include only the necessary part of the DEM.
 \item Plotting resolution changed to be controlled by  {\tt plot\_scatter\_size} and {\tt plot\_pixels\_scatterer}. Shape of pixels changed to be always square (instead of rectangular).
+\item Option added to run without a DEM (in the case where topography is not significant).
 \end{itemize}
 
 

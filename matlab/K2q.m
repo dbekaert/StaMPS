@@ -1,6 +1,17 @@
 function [q]=K2q(K,range_pixel,sensor)
-%[q]=K2q(K)
-%convert from K to topo error
+%Convert from K (slope of phase with perpendicular baseline) to DEM error
+%   q=K2q(K,range_pixel,sensor)
+%   where K is in rad/m, range_pixel refers to pixel number in range with no 
+%   oversampling and sensor is 'E' for ERS/Envisat I2 or 'A' for ALOS FBS. 
+%   q the DEM error in m.
+%
+%
+%   Andy Hooper, June 2006
+%
+%   ======================================================================
+%   11/2010 DB: ALOS option added
+%   ======================================================================
+
 if nargin<2
     range_pixel=2300;
 end
