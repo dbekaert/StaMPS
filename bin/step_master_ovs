@@ -2,7 +2,7 @@
 
 # ===========================================================================
 # 04/2008 AH: Add RS_DBOW card to resample.dorisin
-# 10/2009 MA: OVS with matlab
+# 10/2009 MA: Oversampling using Doris
 # ===========================================================================
 
 set masterdate = `echo $cwd | gawk 'BEGIN {FS="/"} {print $NF}'`
