@@ -32,8 +32,8 @@ I_RESFILE       coreg.out               // parameter file
 FC_METHOD       oversample                          //
 c FC_METHOD       magfft                          //
 c FC_METHOD     magspace                        //
-c FC_NWIN         8000                             // number of windows
-FC_IN_POS       fc_pos.in                // file containing position of windows
+FC_NWIN         2000                             // number of windows
+c FC_IN_POS       fc_pos.in                // file containing position of windows
 FC_WINSIZE      128 128                           // size of windows
 FC_ACC          16 16                            // search window, 2^n
 FC_INITOFF      coarsecorr                      // use result of coarse to compute first
