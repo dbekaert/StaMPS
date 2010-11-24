@@ -43,6 +43,11 @@ for k = 1:length(varargin(:))
     %disp([arglist{k}, num2cell(val)]);                % debug
 end
 
+if plot_flag > 1
+    disp('TS plot is possible with backgrounds options 0 or 1')
+    plot_flag=1
+end
+
 
 %%% debug
 %disp('summary: ')

@@ -992,22 +992,23 @@ fprintf('Color Range: %g to %g %s\n',lims,units)
 if ts_flag == 1
   figure(h_fig);
   clear all % clean up to save memory
+  
   % Place button for new TS plots
   fPosition=get(gcf,'position');
   %  pos_new = [pos(1) pos(2)+0.1 pos(3) pos(4)-0.1]
+  
+  % new TS plot button
   mButton=uicontrol('Style', 'pushbutton', 'Callback', 'ts_plot',...
-    'String','new TS plot', 'Position', [240 30 90 20] ); % if exist don't create
+    'String','new TS plot', 'Position', [150 30 90 20] ); % if exist don't create
   %                                      left bottom width height
   %mButtonposition=get(mButton,'Position')
-
-  %mTextBox=uicontrol('Style', 'edit','String','radius x ', 'Position',...
-  %    [350 30 50 20] );
-  
+ 
+  % Radius Text boxes
   mTextBox=uicontrol('Style', 'edit','String','radius = 2.778e-4 deg. x', 'Position',...
-      [350 30 150 20] );
+      [260 30 150 20] );
 
   mEditBox=uicontrol('Style', 'edit','String','2', 'Position',...
-      [500 30 30 20],'BackgroundColor',[1 1 1] );
+      [410 30 30 20],'BackgroundColor',[1 1 1] );
   ts_plot   % select a point then plot
 end
 
