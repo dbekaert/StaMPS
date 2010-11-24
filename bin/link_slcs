@@ -70,6 +70,7 @@ goodTSX(){
     mkdir ${date}
     cd  ${date}
     ln -s ${f}              # xml
+    ln -s ${bname} leader.xml   # xml
     ln -s ${cosfile} 
     ln -s ${cosbname} image.slc
    
