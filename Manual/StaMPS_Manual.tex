@@ -736,9 +736,11 @@ Optionally, you can also check that the master crop is included within each slav
 
 
  \cs{make\_coreg}
- (long runtime) 
+ (long runtime) or \cs{make\_coreg\_simple}
 
- By default all images with baseline $<$ 100 m are coregistered directly to the master and those with larger baselines are coregistered to the 3 closest slave images with a smaller baseline. These default values can be changed by copying {\tt \$DORIS\_SCR/make\_coreg} to {\tt INSAR\_}\cc{master\_date}, editing the values at the top and running \cs{./make\_coreg}.
+{\tt make\_coreg} coregisters all images with baseline $<$ 100 m directly to the master and coregisters those with larger baselines  to the 3 closest slave images with a smaller baseline. These default values can be changed by copying {\tt \$DORIS\_SCR/make\_coreg} to {\tt INSAR\_}\cc{master\_date}, editing the values at the top and running \cs{./make\_coreg}.
+ 
+ {\tt make\_coreg\_simple} coregisters all images directly to the master. It therefore runs quicker than {\tt make\_coreg} but may fail in some instances for large baselines.
  
 If rerunning, {\tt make\_coreg}
  does not re-coregister scenes that have already been processed. If this is required, delete the corresponding {\tt CPM\_Data.}\cc{n1}.\cc{n2} files in the coreg subdirectory, where \cc{n1} and \cc{n2} refer to the order of the two coregistered scenes in {\tt make\_coreg.list} ({\tt 0} for the master), or delete the entire {\tt coreg} subdirectory to re-coregister all scenes.
@@ -1542,6 +1544,7 @@ to display the image in matlab instead of using {\tt disrg}
 \item Plotting resolution changed to be controlled by  {\tt plot\_scatter\_size} and {\tt plot\_pixels\_scatterer}. Shape of pixels changed to be always square (instead of rectangular).
 \item Option added to run without a DEM (in the case where topography is not significant).
 \item Linking scripts: link\_raw and link\_slcs to generate SLC directory structure for pre-processing.
+\item Option added to coregister all slaves directly to the master.
 \end{itemize}
 
 
