@@ -34,7 +34,7 @@ if sum(prmsrch) >= 1
   stdargin=stdargin-1;  % drop one optional prm form the list of arguments
   varargin(prmsrch)=[]; % drop 'ts' from the list.
 end
-length(varargin(:))
+%length(varargin(:))
 
 for k = 1:length(varargin(:))
     eval([arglist{k},'=varargin{',num2str(k),'};']);     
