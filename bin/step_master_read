@@ -110,11 +110,10 @@ endif
 #    cp -f master.res $masterres
 #end
 if (-e image.slc.rsc) then
-    cp -f image.slc.rsc $INSARDIR
+    cp -f image.slc.rsc $INSARDIR/$masterdate.slc.rsc # MA
 endif
 cp -f master.res $INSARDIR
 mv $master_slc $INSARDIR
-cp -f image.slc.rsc $INSARDIR/$masterdate.slc.rsc # MA 
 ln -s $INSARDIR/$master_slc # MA
 
 if (! -e $INSARDIR/timing.dorisin) then
