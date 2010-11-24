@@ -1,5 +1,11 @@
-\begin{thebibliography}{5}
+\begin{thebibliography}{6}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+
+\bibitem[{{\it Arikan et~al.\/}(2010){\it Arikan, Hooper, and
+  Hanssen\/}}]{Arikan2010}
+Arikan, M., A.~Hooper, and R.~Hanssen, Radar time series analysis over west
+  anatolia, {\it European Space Agency, (Special Publication) ESA SP-677\/},
+  2010.
 
 \bibitem[{{\it Hooper\/}(2008)}]{HooperA2008}
 Hooper, A., A multi-temporal {InSAR} method incorporating both persistent
@@ -9,11 +15,6 @@ Hooper, A., A multi-temporal {InSAR} method incorporating both persistent
 \bibitem[{{\it Hooper\/}(2010)}]{HooperA2010b}
 Hooper, A., A statistical-cost approach to unwrapping the phase of {InSAR} time
   series, {\it European Space Agency, (Special Publication) ESA SP-677\/},
-  2010.
-
-\bibitem[{{\it Ar{\i}kan\/}(2010)}]{Arikan2010}
-Hooper, A., A. Hooper and R. Hanssen, Radar time series analysis over West Anatolia,
-   {\it European Space Agency, (Special Publication) ESA SP-677\/},
   2010.
 
 \bibitem[{{\it Hooper et~al.\/}(2004){\it Hooper, Zebker, Segall, and
