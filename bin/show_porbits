@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-## MA - 20091021 
+## Mahmut Arikan - 20091021 
 ##
 ## TUDelft - 2009
 
@@ -9,8 +9,13 @@
 # Functions 
 goodfunc(){
 
-for f in `find . -name slave.res`; do
-   grep -H "^precise_orbits:" ${f}
+#for f in `find . -name master.res`; do
+filelist="`find . -maxdepth 1 -name master.res` `find . -name slave.res`"
+for f in $filelist; do
+   # grep -H "^precise_orbits:" ${f}
+   n=`grep NUMBER_OF_DATAPOINTS ${f}`
+   p=`grep -H "^precise_orbits:" ${f}`
+   echo -e "$p $n"
 done 
 }
 

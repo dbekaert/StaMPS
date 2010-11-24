@@ -645,9 +645,10 @@ Then re-run \cs{step\_master\_ovs} and \cs{make\_ovs} to create a new oversample
 
  If the SLCs were not created by ROI\_PAC create a file named {\tt dummy.slc.rsc}
 with the following line (substituting the correct heading, to the nearest degree is fine):\\
- {\tt HEADING \ \ \ \cc{-167}}\\
+ {\tt HEADING \ \ \ \cc{-167}}
+
  For TerraSAR-X, the value can be found  in leader.xml, and can be extracted automatically using
- \cs{tsx\_extract\_heading} (you must have python installed to run this)
+ \cs{tsx\_extract\_heading} (you must have python installed to run this). If you linked SLCs using \cs{link\_slcs} master heading is automatically extracted as image.slc.rsc and later copied to \cs{INSAR\_}\cc{master\_date} as \cc{master\_date}.slc.rsc.
 
  \cs{step\_master\_orbit\_ODR} (only run if using precise ODR orbits)
 
@@ -703,6 +704,18 @@ with the following line (substituting the correct heading, to the nearest degree
 
 This creates a subdirectory for each slave image. The default is to treat all images in the SLC directory except the master as slave images. If a different set of slave images is required, create a file named {\tt slcs.list} listing the directories containing the images you wish to include, before running {\tt make\_orbits}. Precise orbits are extracted from the ODR files if they are found (ERS and Envisat only).
 
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}\textbf{Tip:} 
+ \cs{show\_porbits}   will let you verify the result of \cs{make\_orbits} by indicating NUMBER\_OF\_DATAPOINTS successfully extracted the ODR files. precise\_orbits equal 0 indicate that no precise orbits found in the specifed ODR directory. Either check the ODR path in the doris input file in the slave directory or remove that SLC date from the slcs.list.
+
+\end{small}
+
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
 
 \cs{make\_coarse}
 
