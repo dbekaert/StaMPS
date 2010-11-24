@@ -5,7 +5,17 @@
 #
 # Andy Hooper, 2009
 
+set SLC_OSF = `check_slc_sampling master.res`
+
 set WORKDIR = $cwd
+
+if (! -e coreg.dorisin) then
+    if ( $SLC_OSF > 1 ) then
+      cp $DORIS_SCR/coreg_simple_ovs.dorisin coreg_simple.dorisin
+    else
+      cp $DORIS_SCR/coreg_simple.dorisin .
+    endif
+endif
 
 if (! -e make_ifgs.list) then
     \ls -d $WORKDIR/[1,2]*/coreg.out | gawk 'BEGIN {FS="coreg.out"} {print $1}'  > make_ifgs.list
