@@ -16,22 +16,22 @@ mEditBox=findobj('Background',[1 1 1]); % get the handle of editable textbox
 radiusfactor = str2num(char(get(mEditBox,'String')));					% added by david this is also not a single value but a vector
 radiusfactor = radiusfactor(1);								% select only the first value, i checked it for a couple of values and radius is correct
 
-if radiusfactor > 100
-    disp('radius factor should be <= 100')
+if radiusfactor > 3600
+    disp('radius factor should be <= 3600')
     break
 end
 
-% if ph_uw does not exist load otherwise don't load TODO
 momfig_name=['(', get(gcf,'name'), ')']; % inherent fig_name from the velocity plot
 
-% clear all % clean up
+% LOAD TS mat file ~ ps_plot_ts_v-d.mat
+if ~exist('ph_uw','var')
   %fid = fopen(savetxt);
   fid = fopen('ps_plot_ts_matname.txt');
   tsmat=textscan(fid,'%s'); % get mat filename to load parameters
   fclose(fid);
   clear fid
   eval(['load ' tsmat{1}{1}])% load saved matrix
-
+end
 % end of load  
   
 %  
@@ -62,7 +62,7 @@ if sum(in) == 0
     break     % no pts selecte
 end
 
-
+% PLOT selection and points
 figure
     set(gcf,'name',['Found #pt(s): ', num2str(n_pts_near),...
         '  in radius: ', num2str(r), ' deg. ', momfig_name ])
@@ -114,7 +114,7 @@ tslo_hat=ts_hat-offset;
 %     %set(gca, 'XTick',day);
 %     set(gca, 'XTickLabel', datestr(day,'mmmyy'));
 
-%%% enhanced TS plot
+%%% Enhanced TS plot
  figure % main figure
    orient landscape
    % Bperp
@@ -136,12 +136,15 @@ tslo_hat=ts_hat-offset;
     grid on
     ylabel('mm');
     xlabel('Time [mmmyy]')
-    %format long g
-    datetick('x','mmmyy')  % keepticksdoc 
-% annotate slope 
-    %set(gca, 'XTick',day./10^5);
-    %set(gca, 'XTickLabel', datestr(day,'mmmyy'));
-    
+    %datetick('x','mmmyy')  % keepticks or see below
+   
+    ts_years=unique(datenum(datestr(day,'yyyy'),'yyyy'));
+    ts_dates=[ts_years(1):365.25:ceil(ts_years(end)+365.25)];
+    %ts_dates=[day(1):365:day(end)+365];
+    set(gca, 'XTick',ts_dates);
+    set(gca, 'XTickLabel', datestr(ts_dates,'mmmyy'));
+    % annotate velocit slope in ts plot  
+     
    % IFG Dates - excluding master 
    subplot(10,10,[18 90]) % subplot for rectangle
       putdates(0.05,1,datestr(day,'yyyy-mm-dd'),0.035,9) % putdates(xstart, ystart, labels, labeloffset, fontsize)
