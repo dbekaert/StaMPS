@@ -554,11 +554,11 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
 Currently, scripts exist for (reading and cropping single look complex (SLC) products from ERS, Envisat, RADARSAT-1 and TerraSAR-X satellites.
 
  In your processing directory, for example, under /d2/iceland\_volcanoes/\\
- \cs{mkdir SLC}\\
- \cs{cd SLC}\\
- \cs{mkdir} \cc{yyyymmdd}
- %for each scene and make a symbolic link to the corresponding ASA\_IMP\_1P file, named image.slc 
-for each scene and within this directory create symbolic links to the raw data (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001}, {\tt  LEA\_01.001}, and {\tt VDF\_DAT.001}. For Envisat  data the link name must be {\tt image.slc}. For TerraSAR-X data, the link names must be {\tt image.slc} and {\tt leader.xml}.
+\cs{link\_slcs }   \cc{ data\_path }  
+(where \cc{data\_path} is the FULL path to your source data )
+
+This will create a directory named {\tt SLC} in the current directory, with a subdirectory for each image named \cc{yyyymmdd}. Within each subdirectory, symbolic links will be created to the slc files (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001}, {\tt  LEA\_01.001}, and {\tt VDF\_DAT.001}. For Envisat  data the link name must be {\tt image.slc}. For TerraSAR-X data, the link names must be {\tt image.slc} and {\tt leader.xml}. \\
+
 
 Choose a master based on minimising perpendicular, Doppler and temporal baselines (see \citet{HooperA2007a}). Substitute your master date in the format {\tt yyyymmdd} wherever \cc{master\_date} appears below.
 
