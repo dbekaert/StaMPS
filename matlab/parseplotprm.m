@@ -48,6 +48,10 @@ if plot_flag > 1
     plot_flag=1
 end
 
+if plot_flag < 0
+    disp('No time series plotting is possible with backgrounds option -1')
+    break
+end
 
 %%% debug
 %disp('summary: ')

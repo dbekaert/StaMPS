@@ -9,13 +9,7 @@
 %   ======================================================================
 
 % Place button for new TS plots
-% mButton=uicontrol('Style', 'pushbutton', 'Callback', 'ts_plot',...
-%     'String','new TS plot', 'Position', [240 30 90 30] ); % if exist don't create
-% 
-% mButtonposition=get(mButton,'Position')
-% 
-% mTextBox=uicontrol('Style', 'edit',...
-%     'String','1', 'Position', [280 30 90 30] );
+% see ps_plot
 
 mEditBox=findobj('Background',[1 1 1]); % get the handle of editable textbox
 %radiusfactor=str2num(get(mEditBox,'String')) % get radius factor from editbox
@@ -82,8 +76,7 @@ figure
     axis image; hold off
     
 % if ps>1 than average
-[dist,az] = distance(lat0,lon0,lat2,lon2); % or use llh2local
-
+% [dist,az] = distance(lat0,lon0,lat2,lon2); % or use llh2local
 
 % plot closest point or avg of multiple points.
 
@@ -91,7 +84,7 @@ figure
 % phases
 % ph_uw holds corrected phase
 % ph_all holds radians to meters
-%v_all=-m(2,:)'; % ?
+% v_all=-m(2,:)'; % ?
   
 % PLOT TS for given point(s)
 ts=-ph_uw(in,:)*lambda*1000/(4*pi);
