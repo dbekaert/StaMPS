@@ -45,9 +45,9 @@ c FC_PLOT         0.65 BG
  c
 CPM_THRESHOLD   0.30
 CPM_DEGREE      2
-CPM_WEIGHT      bamler                          // none
+c CPM_WEIGHT      bamler                          // none
 c CPM_WEIGHT      linear                          // none
-c CPM_WEIGHT      quadratic                          // none
+CPM_WEIGHT      quadratic                          // none
 CPM_MAXITER     8000
 c CPM_PLOT        BG
  c
