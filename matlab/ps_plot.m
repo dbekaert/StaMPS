@@ -991,23 +991,23 @@ fprintf('Color Range: %g to %g %s\n',lims,units)
 
 if ts_flag == 1
   figure(h_fig);
-%  pos = get(gca,'Position');			% get the axes of the time series figure
-%  pos_new = [pos(1) pos(2)+0.1 pos(3) pos(4)-0.1]
-%  set(gca,'position',pos_new);			% set the axes to the new positon
   clear all % clean up to save memory
   % Place button for new TS plots
-  %figure
   fPosition=get(gcf,'position');
+  %  pos_new = [pos(1) pos(2)+0.1 pos(3) pos(4)-0.1]
   mButton=uicontrol('Style', 'pushbutton', 'Callback', 'ts_plot',...
     'String','new TS plot', 'Position', [240 30 90 20] ); % if exist don't create
   %                                      left bottom width height
   %mButtonposition=get(mButton,'Position')
 
-  mTextBox=uicontrol('Style', 'edit','String','radius x ', 'Position',...
-      [350 30 50 20] );
+  %mTextBox=uicontrol('Style', 'edit','String','radius x ', 'Position',...
+  %    [350 30 50 20] );
   
+  mTextBox=uicontrol('Style', 'edit','String','radius = 2.778e-4 deg. x', 'Position',...
+      [350 30 150 20] );
+
   mEditBox=uicontrol('Style', 'edit','String','2', 'Position',...
-      [400 30 30 20],'BackgroundColor',[1 1 1] );
+      [500 30 30 20],'BackgroundColor',[1 1 1] );
   ts_plot   % select a point then plot
 end
 

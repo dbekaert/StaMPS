@@ -19,7 +19,7 @@
 
 mEditBox=findobj('Background',[1 1 1]); % get the handle of editable textbox
 %radiusfactor=str2num(get(mEditBox,'String')) % get radius factor from editbox
-radiusfactor=str2num(char(get(mEditBox,'String')));					% added by david this is also not a single value but a vector
+radiusfactor = str2num(char(get(mEditBox,'String')));					% added by david this is also not a single value but a vector
 radiusfactor = radiusfactor(1);								% select only the first value, i checked it for a couple of values and radius is correct
 
 if radiusfactor > 100
@@ -64,7 +64,7 @@ n_pts_near=sum(in);  % how many ps found
 
 if sum(in) == 0
     disp(['No points found in radius of ', num2str(r) ] )
-    disp('Please make new selection...')
+    disp('Please make new selection increasing radius factor...')
     break     % no pts selecte
 end
 
@@ -99,41 +99,38 @@ G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
 x_hat=G\double(ts');
 
 offset=pi*1000*lambda/(4*pi);
-x1_hat=[x_hat(1)+offset; x_hat(2)];
-x2_hat=[x_hat(1)-offset; x_hat(2)];
 
 ts_hat=G*x_hat;
-tsup_hat=G*x1_hat;
-tslo_hat=G*x2_hat;
-% whos ts G x_hat ts_hat
+tsup_hat=ts_hat+offset;
+tslo_hat=ts_hat-offset;
 
-% % typical TS plot
+
+%%% Typical TS plot - no auxilary entiries
 % figure
 %     set(gcf,'name',[ ' Times series plot for #point(s): ',...
 %         num2str(n_pts_near), ' ', momfig_name])
-%     plot(day./10^5,ts,'--*'); hold on
-%     plot(day./10^5,ts_hat,'-*r','LineSmoothing','on');
-%     plot(day./10^5,tsup_hat,'-.g');
-%     plot(day./10^5,tslo_hat,'-.g');
-%     hold off  % this is crucial for datetick 
+%     plot(day,ts,'--*'); hold on
+%     plot(day,ts_hat,'-*r');
+%     plot(day,tsup_hat,'-.g');
+%     plot(day,tslo_hat,'-.g');
+%     hold off 
 %     grid on
 %     ylabel('mm');
 %     xlabel('Time [mmmyy]')
-%     format long g
 %     %datetick('x','mmmyy')  % keepticksdoc 
-%     %set(gca, 'XTick',day./10^5);
+%     %set(gca, 'XTick',day);
 %     set(gca, 'XTickLabel', datestr(day,'mmmyy'));
 
-% enhanced TS plot
+%%% enhanced TS plot
  figure % main figure
-   %orient landscape
+   orient landscape
+   % Bperp
    subplot(10,1,1)     % Bperp
      bperp(find(bperp==0))=[]; % drop master.
      bar(bperp)
      ylabel('Bperp [m]')
    grid on
-   
-   %title(['Average coherence of ' num2str( n_ps ) ' PSs with coherence window ' num2str( win_size(1) ) 'x' num2str( win_size(2) ) ' arranged in BDop']);
+   % TS
    subplot(10,10,[11 87]) % subplot(10,1,2:9)
        set(gcf,'name',[ ' Times series plot for #point(s): ',...
         num2str(n_pts_near), ' ', momfig_name])
@@ -148,17 +145,15 @@ tslo_hat=G*x2_hat;
     xlabel('Time [mmmyy]')
     %format long g
     datetick('x','mmmyy')  % keepticksdoc 
-
+% annotate slope 
     %set(gca, 'XTick',day./10^5);
     %set(gca, 'XTickLabel', datestr(day,'mmmyy'));
     
+   % IFG Dates - excluding master 
    subplot(10,10,[18 90]) % subplot for rectangle
       putdates(0.05,1,datestr(day,'yyyy-mm-dd'),0.035,9) % putdates(xstart, ystart, labels, labeloffset, fontsize)
    %subplot(10,1,10)
-   %bar(Bperp(ind_Bdfdc))
+   %bar(Bdop)
     
-
-    
-% annotate slope    
-    
+       
 %EOF
