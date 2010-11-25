@@ -1,8 +1,12 @@
 #!/bin/csh -f
 
+set firstdate = `ls -1d [0-9]??????? | head -n1`
+
 make_orbits
 make_coarse
 make_coreg_simple
 make_resample
 make_dems
 make_ifgs
+cd $firstdate; pwd
+step_geo
