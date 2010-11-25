@@ -96,7 +96,7 @@ slc_osf=load(slc_osfname);
 if isempty(slc_osf)
     error([slc_osfname, ' is empty'])
 end
-setparm('slc_osf',slc_osfname,1);
+setparm('slc_osf',slc_osf,1);
 
 if ~exist(calname,'file')
     calname= ['../',calname];
