@@ -43,12 +43,12 @@ for k = 1:length(varargin(:))
     %disp([arglist{k}, num2cell(val)]);                % debug
 end
 
-if plot_flag > 1
+if plot_flag > 1 && ts_flag==1
     disp('TS plot is possible with backgrounds options 0 or 1')
     plot_flag=1
 end
 
-if plot_flag < 0
+if plot_flag < 0 && ts_flag==1
     disp('No time series plotting is possible with backgrounds option -1')
     break
 end
