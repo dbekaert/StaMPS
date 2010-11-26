@@ -115,7 +115,7 @@ function []=ps_plot(value_type,varargin)
 %   11/2010 DB: Changing position of colorbar for ts plot
 %   ======================================================================
 
-stdargin = nargin ;
+stdargin = nargin ; 
 
 parseplotprm  % check if 'ts' is specified
 

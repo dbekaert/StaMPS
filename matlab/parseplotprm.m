@@ -19,6 +19,7 @@ arglist={'plot_flag','lims','ref_ifg','ifg_list','n_x','cbar_flag',...
 Noptargin = length(varargin(:));  % treat extra options as varargin, 
                % for ps_plotTS('v-d',4,'ts') is 3
 ts_flag=0;
+plot_flag=1; % default, later below update with user input.
 
 % search for char parameter like 'ts'
 prmsrch=[];
