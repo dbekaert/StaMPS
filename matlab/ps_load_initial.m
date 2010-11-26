@@ -37,7 +37,7 @@ lambdaname=['lambda.1.in'];         % wavelength
 calname=['calamp.out'];             % amplitide calibrations
 widthname=['width.txt'];            % width of interferograms
 lenname=['len.txt'];                % length of interferograms
-slc_osfname=['slc_osfactor.1.in']    % oversampling factor  value 1 for no oversampling
+slc_osfname=['slc_osfactor.1.in'];    % oversampling factor  value 1 for no oversampling
 
 psver=1;
 
