@@ -17,21 +17,35 @@ AWK=`which awk`
 ## Functions 
 goodERS(){
 
+  ERS=1; # default sensor for CEOS files
+
   [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
+
 
   for f in $(ls -1d ${DATADIR}/*); do
     echo info: $f
-    date=$( ${AWK} '/ORBIT/{print substr($5,1,8)}' ${f}/L* )
+    # solve case issue
+    LEA=`ls -1 ${f}/L* 2>/dev/null || ls -1 ${f}/l* 2>/dev/null`   #  find LEADER if LEA* or lea*
+    DAT=`ls -1 ${f}/D* 2>/dev/null || ls -1 ${f}/d* 2>/dev/null`
+    VOL=`ls -1 ${f}/V* 2>/dev/null || ls -1 ${f}/v* 2>/dev/null`
+    NUL=`ls -1 ${f}/N* 2>/dev/null || ls -1 ${f}/n* 2>/dev/null`
+
+    date=$( ${AWK} '/ORBIT/{print substr($5,1,8)}' ${LEA} )   # ERS
+    [ $(($date+1)) == "1" ] && date=$( ${AWK} '/ORBIT/{print substr($4,1,8)}' ${LEA} ) && ERS=0  # RSAT: if date fails then RSAT-1, ch coln to get date.
+
     cd $CWD/SLC
     mkdir ${date}
     cd  ${date}
-    ln -s ${f}/L*
-    ln -s ${f}/D*
-    ln -s ${f}/V*
-    ln -s ${f}/N*
+    ln -s $LEA `basename $LEA | tr [:lower:] [:upper:]`     # if lower case filenames --> link as upper case
+    ln -s $DAT `basename $DAT | tr [:lower:] [:upper:]`
+    ln -s $VOL `basename $VOL | tr [:lower:] [:upper:]`
+    ln -s $NUL `basename $NUL | tr [:lower:] [:upper:]`
     ln -s D* image.slc
-    
-    ${AWK} '/ORBIT/{print  "HEADING   "$22 }' LEA_01.001 > image.slc.rsc # ERS
+   
+    # get heading 
+    [ "$ERS" == "1" ] && HEADING=$(${AWK} '/ORBIT/{print  $22 }' LEA_01.001) || \
+      HEADING=$(${AWK} '/ORBIT/{print  "HEADING   "$29 }' LEA_01.001) # RSAT
+    echo "HEADING   $HEADING" > image.slc.rsc 
     cd ..
   done
 }
