@@ -1,0 +1,4 @@
+#!/bin/tcsh -f
+
+rm -f */dem_radar.raw
+rm -f */refdem_1l.raw

@@ -3,3 +3,4 @@
 make_clean_ifgs
 make_clean_resample
 make_clean_raw
+make_clean_dems
