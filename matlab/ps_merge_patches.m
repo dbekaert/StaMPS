@@ -16,6 +16,7 @@ function []=ps_merge_patches(psver)
 %   10/2010 DB: Fix when patch_noover does not have PS (resampling)
 %   10/2010 DB: Fix when PS all rejected when sum weight<min_weight (resampling)
 %   06/2010 AH: Move mean amplitude merging to ps_load_mean_amp.m 
+%   12/2010 AH: Set grid size of next steps not less than merge grid size 
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
@@ -55,6 +56,17 @@ if exist('./patch.list','file')
     fclose(fid);
 else
     dirname=dir('PATCH_*');
+end
+
+if grid_size>0
+   unwrap_grid_size=getparm('unwrap_grid_size');
+   if unwrap_grid_size<grid_size
+      setparm('unwrap_grid_size',grid_size)
+   end
+   plot_scatterer_size=getparm('plot_scatterer_size');
+   if plot_scatterer_size<grid_size
+      setparm('plot_scatterer_size',grid_size)
+   end
 end
 
 n_patch=length(dirname);
