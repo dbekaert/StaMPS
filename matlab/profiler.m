@@ -9,7 +9,7 @@ function [] = profiler(data,lonlat,point1,point2,bins,R,units)
 % by default a 15 bins and a radius of 100m is used.
 % for debug figures set debugflag to 1
 
-debugflag=1;
+debugflag=0;
 
 
 if nargin<7
@@ -120,6 +120,7 @@ end
 ix = find(isnan(bins_xy)==1);
 if isempty(ix)==0
     bins_xy(ix)=[];
+    data_binned_mean(ix)=[];
 end
 
 
