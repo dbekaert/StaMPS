@@ -113,6 +113,7 @@ function []=ps_plot(value_type,varargin)
 %   11/2010 AH: Add u-dmos
 %   11/2010 MMC & MA: plotting time series using 'ts' option 
 %   11/2010 DB: Changing position of colorbar for ts plot
+%   12/2010 KS: Added check to see if orbital ramp is calculated in -o
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -206,6 +207,7 @@ ref_ps=0;
 
 drop_ifg_index=getparm('drop_ifg_index');
 small_baseline_flag=getparm('small_baseline_flag');
+scla_deramp = getparm('scla_deramp');
 
 if strcmpi(small_baseline_flag,'y')
     unwrap_ifg_index_sb=setdiff([1:ps.n_ifg],drop_ifg_index);
@@ -288,6 +290,10 @@ switch(group_type)
      case {'w-o'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         if ~strcmpi(small_baseline_flag,'y')
             scla=load(sclaname);
         else
@@ -302,6 +308,10 @@ switch(group_type)
      case {'w-do'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         if ~strcmpi(small_baseline_flag,'y')
             scla=load(sclasmoothname);
         else
@@ -332,6 +342,10 @@ switch(group_type)
      case {'w-dmo'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         if ~strcmpi(small_baseline_flag,'y')
             scla=load(sclasmoothname);
         else
@@ -454,6 +468,10 @@ switch(group_type)
     case {'u-dmo'}
         uw=load(phuwname);
         scla=load(sclaname);
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         ph_all=uw.ph_uw; 
         ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp;
         ph_all(:,master_ix)=0;
@@ -473,6 +491,10 @@ switch(group_type)
     case {'u-dmos'}
         uw=load(phuwname);
         scn=load(scnname);
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         scla=load(sclaname);
         ph_all=uw.ph_uw - scn.ph_scn_slave - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp;
         clear uw scn scla
@@ -498,6 +520,10 @@ switch(group_type)
     case {'u-o'}
         uw=load(phuwname);
         scla=load(sclaname);
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         ph_all=uw.ph_uw - scla.ph_ramp;
         clear uw scla
         ref_ps=ps_setref;
@@ -505,6 +531,10 @@ switch(group_type)
     case {'u-do'}
         uw=load(phuwname);
         scla=load(sclaname);
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp;
         clear uw scla
         ref_ps=ps_setref;
@@ -549,6 +579,10 @@ switch(group_type)
         units='rad/m';
         fig_name = 'd';
     case {'o'}
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
         scla=load(sclaname);
         ph_all=scla.ph_ramp;
         clear scla
@@ -568,11 +602,19 @@ switch(group_type)
             clear scla
             fig_name = 'v-d';
         case {'v-o'}
+            if strcmp('n',scla_deramp)
+                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+                return;
+            end
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_ramp;
             clear scla
             fig_name = 'v-o';
         case {'v-do'}
+            if strcmp('n',scla_deramp)
+                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+                return;
+            end
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla;
             clear scla
