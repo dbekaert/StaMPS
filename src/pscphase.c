@@ -47,7 +47,7 @@ try {
      cout << "  parmfile   (input)  width of interferogram files (range bins)" << endl;
      cout << "                      list of interferogram files (complex float)" << endl;
      cout << "  pscands.1.ij (input)  location of permanent scatterer candidiates" << endl;
-     cout << "  pscands.1.ph (output) phase of permanent scatterer candidiates" << endl << endl;
+     cout << "  pscands.1.ph (output) phase of permanent scatterer candidates" << endl << endl;
      throw "";
   }   
      

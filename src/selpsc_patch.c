@@ -259,8 +259,9 @@ try {
            sumamp+=amp;
            sumampsq+=amp*amp;
         }
-	
-        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeofelement);	
+        
+        //meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeofelement);	
+        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeof(float));  // datatypes should be always the same	
 
         if (maskline[x]==0 && sumamp > 0)
         { 
