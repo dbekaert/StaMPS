@@ -15,6 +15,7 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   02/2010 AH: option to threshold on max arc noise in any ifg
 %   02/2010 AH: Speed up of noise weeding
 %   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
+%   01/2011 AH: Correct arc DEM error estimation for small baselines
 %   ===================================================================
 logit;
 fprintf('Weeding selected pixels...\n')
@@ -335,7 +336,7 @@ if no_weed_noisy==0
        clear dph_noise
     else
        ifg_var=var(dph_space,0,1);
-       K=lscov(bperp(ifg_index),double(dph_noise)',1./double(ifg_var))'; % estimate arc dem error
+       K=lscov(bperp(ifg_index),double(dph_space)',1./double(ifg_var))'; % estimate arc dem error
        dph_space=dph_space-K*bperp(ifg_index)';
        edge_std=std(angle(dph_space),0,2);
        edge_max=max(abs(angle(dph_space)),[],2);
