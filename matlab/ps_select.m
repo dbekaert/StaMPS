@@ -176,7 +176,6 @@ else
          error('could not set threshold - try setting density_rand lower')
       end
   end
-  end
   min_coh=min_coh(nonnanix);
   D_A_mean=D_A_mean(nonnanix);
   if size(min_coh,1)>1
