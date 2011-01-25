@@ -1,0 +1,55 @@
+#!/bin/csh -f
+#
+# ===========================================================================
+# 09/2008 AH: Generalised for variable mutilooking in range and az
+
+set WORKDIR = ".."
+set first = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  master.res | gawk 'END {print $4}'`
+@ width = ($last - $first) + 1
+
+if ( -e ../looks.txt ) then
+   set looks = `cat ../looks.txt`
+else
+   set looks = 4
+endif
+if ( -e ../ar.txt ) then
+   set ar = `cat ../ar.txt`
+else
+   set ar = 5
+endif
+@ azlooks = $looks * $ar
+
+set master_slc = `grep -m1 'Data_output_file:' master.res | gawk '{print $2}'`
+set slave_slc = `grep 'Data_output_file:' slave.res | gawk 'END {print $2}'`
+set int = 'cint.minrefdem.raw'
+
+set master_int = 'cint.master.raw'
+set master_int_looks = 'int.master_l.raw'
+set slave_int = 'cint.slave.raw'
+set slave_int_looks = 'int.slave_l.raw'
+set int_looks = 'int.minrefdem_l.raw'
+set coh_looks = 'coh_'$looks'l.raw'
+
+cpxsum $master_slc $master_slc $master_int $width cr4 -1
+cpxfiddle -w$width -fcr4 -qreal -M$looks/$azlooks -ofloat $master_int > $master_int_looks
+\rm -f $master_int
+cpxsum $slave_slc $slave_slc $slave_int $width cr4 -1
+cpxfiddle -w$width -fcr4 -qreal -M$looks/$azlooks -ofloat $slave_int > $slave_int_looks 
+\rm -f $slave_int
+cpxfiddle -w$width -fcr4 -qmag -M$looks/$azlooks -ofloat $int > $int_looks 
+echo "fid=fopen('$int_looks');" > foo
+echo "ifg=fread(fid,[floor($width/$looks),inf],'float');" >> foo
+echo "fclose(fid);" >> foo
+echo "fid=fopen('$master_int_looks');" >> foo
+echo "master=fread(fid,[floor($width/$looks),inf],'float');" >> foo
+echo "fclose(fid);" >> foo
+echo "fid=fopen('$slave_int_looks');" >> foo
+echo "slave=fread(fid,[floor($width/$looks),inf],'float');" >> foo
+echo "fclose(fid);" >> foo
+echo "coh=ifg./sqrt(master.*slave);" >> foo
+echo "fid=fopen('$coh_looks','w');" >> foo
+echo "fwrite(fid,coh,'float');" >> foo
+echo "fclose(fid);" >> foo
+nohup matlab -nojvm -nosplash < foo > step_coh.log
+#\rm -f $master_int_looks $slave_int_looks $int_looks foo
