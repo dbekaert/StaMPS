@@ -114,6 +114,7 @@ function []=ps_plot(value_type,varargin)
 %   11/2010 MMC & MA: plotting time series using 'ts' option 
 %   11/2010 DB: Changing position of colorbar for ts plot
 %   12/2010 KS: Added check to see if orbital ramp is calculated in -o
+%   12/2010 AH: fix vdrop
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -643,11 +644,23 @@ switch(group_type)
             ph_uw=ph_uw - scla.ph_scla - aps.ph_aps_slave - scn.ph_scn_slave;
             clear scla scn
             fig_name = 'v-das';
+        case {'vdrop'}
+            fig_name = 'vdrop';
         case {'vdrop-d'}
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_scla;
             clear scla
             fig_name = 'vdrop-d';
+        case {'vdrop-o'}
+            scla=load(sclaname);
+            ph_uw=ph_uw - scla.ph_ramp;
+            clear scla
+            fig_name = 'vdrop-o';
+        case {'vdrop-do'}
+            scla=load(sclaname);
+            ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
+            clear scla
+            fig_name = 'vdrop-do';
         otherwise
             error('unknown value type')
         end
@@ -696,7 +709,7 @@ switch(group_type)
             ph_all=zeros(size(ph_uw));
             n=size(ph_uw,2);
             for i=1:n
-                m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n])',sm_cov));
+                m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n]))',sm_cov([1:i-1,i+1:end],[1:i-1,i+1:end]));
                 ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000; 
             end
         else 
@@ -740,11 +753,23 @@ switch(group_type)
             ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
             clear scla
             fig_name = 'v-do';
+        case {'vdrop'}
+            fig_name = 'vdrop';
         case {'vdrop-d'}
             scla=load(sclasbname);
             ph_uw=ph_uw - scla.ph_scla;
             clear scla
             fig_name = 'vdrop-d';
+        case {'vdrop-o'}
+            scla=load(sclasbname);
+            ph_uw=ph_uw - scla.ph_ramp;
+            clear scla
+            fig_name = 'vdrop-o';
+        case {'vdrop-do'}
+            scla=load(sclasbname);
+            ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
+            clear scla
+            fig_name = 'vdrop-do';
         otherwise
             error('unknown value type')
         end
@@ -769,7 +794,7 @@ switch(group_type)
             ph_all=zeros(size(ph_uw));
             n=size(ph_uw,2);
             for i=1:n
-                m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n])'),sb_cov);
+                m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n])'),sb_cov([1:i-1,i+1:end],[1:i-1,i+1:end]));
                 ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000; 
             end
         else
@@ -952,7 +977,7 @@ else
 end
 
 if plot_flag==-1
-    savename=['ps_plot_',value_type];
+    savename=['~/ps_plot_',value_type];
     save(savename,'ph_disp','ifg_list')
 else
   h_fig = figure;

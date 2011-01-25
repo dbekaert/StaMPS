@@ -19,6 +19,7 @@ function []=ps_select(reest_flag,plot_flag)
 %   02/2010 AH: Only bin by D_A if enough candidate pixels
 %   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
 %   09/2010 JJS+MA: To make use oversampling dataset
+%   12/2010 AH: Fix error message for density selection
 %   ======================================================================
 logit;
 fprintf('Selecting stable-phase pixels...\n')
@@ -169,7 +170,12 @@ else
   end
   nonnanix=~isnan(min_coh);
   if sum(nonnanix)<1
-    error('could not set threshold - try setting percent_rand lower')
+      if strcmpi(select_method,'PERCENT')
+         error('could not set threshold - try setting percent_rand lower')
+      else
+         error('could not set threshold - try setting density_rand lower')
+      end
+  end
   end
   min_coh=min_coh(nonnanix);
   D_A_mean=D_A_mean(nonnanix);

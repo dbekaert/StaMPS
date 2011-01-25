@@ -11,9 +11,9 @@
 
 set WORKDIR=".."
 
-#if (! -e $WORKDIR/coreg_simple.dorisin) then     # see make_coreg_simple
-#    cp $DORIS_SCR/coreg_simple.dorisin $WORKDIR
-#endif
+if (! -e $WORKDIR/coreg_simple.dorisin) then     
+    cp $DORIS_SCR/coreg_simple.dorisin $WORKDIR
+endif
 
 sed -n '1,/* End_coarse_correl:/p' coreg.out > tmp_coreg.$$
 echo "*******************************************************************" >> tmp_coreg.$$

@@ -63,8 +63,8 @@ echo "*****************************************************" >> fake_dem.out
 echo "* End_comp_refdem:_NORMAL" >> fake_dem.out
 echo "*****************************************************" >> fake_dem.out
 cat coreg.out fake_dem.out > interferogram.out
-\rm -f fake_dem.out
-\rm -f cint.minrefdem*
+\rm -f fake_dem.out >& /dev/null
+\rm -f cint.minrefdem* >& /dev/null
 doris $WORKDIR/interferogram.dorisin >> step_ifg.log
 
 set endras = l.ras
