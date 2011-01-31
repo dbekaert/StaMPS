@@ -7,12 +7,19 @@
 #
 # ===================================================================
 # 02/2010 AH: Name changed from step_coreg and matlab call removed
+# 01/2011 MA: Check for SLC sampling and get proper input file
 # ===================================================================
 
 set WORKDIR=".."
 
-if (! -e $WORKDIR/coreg_simple.dorisin) then     
-    cp $DORIS_SCR/coreg_simple.dorisin $WORKDIR
+set SLC_OSF = `check_slc_sampling master.res`
+
+if (! -e coreg.dorisin) then
+    if ( $SLC_OSF > 1 ) then
+      cp $DORIS_SCR/coreg_simple_ovs.dorisin coreg_simple.dorisin
+    else
+      cp $DORIS_SCR/coreg_simple.dorisin .
+    endif
 endif
 
 sed -n '1,/* End_coarse_correl:/p' coreg.out > tmp_coreg.$$
