@@ -2,6 +2,10 @@
 #
 # ===========================================================================
 # 09/2008 AH: Generalised for variable mutilooking in range and az
+# 01/2011 AH: Allow for short integer SLCs
+# 01/2011 AH: Allow interferogram other than minrefdem
+# ===========================================================================
+
 
 set WORKDIR = ".."
 set first = `grep 'First_pixel ' master.res | gawk 'END {print $4}'`
@@ -13,22 +17,44 @@ if ( -e ../looks.txt ) then
 else
    set looks = 4
 endif
+
+if ($#argv > 0) then
+    set int_looks = $argv[1]
+else
+    set int_looks = 'cint.minrefdem_'$looks'l.raw'
+endif
+
 if ( -e ../ar.txt ) then
    set ar = `cat ../ar.txt`
 else
    set ar = 5
 endif
 @ azlooks = $looks * $ar
+@ width_looked = $width / $looks
 
 set master_slc = `grep -m1 'Data_output_file:' master.res | gawk '{print $2}'`
+if (`grep Data_output_format master.res | gawk 'END {print $2}'` == "complex_short") then
+  if (! -e $master_slc.cr4) then
+    echo "converting $master_slc to float"
+    cpxfiddle -w $width -fci2 -ofloat -qnormal $master_slc  > $master_slc.cr4
+  endif
+  set master_slc = $master_slc.cr4
+endif
 set slave_slc = `grep 'Data_output_file:' slave.res | gawk 'END {print $2}'`
-set int = 'cint.minrefdem.raw'
+if (`grep Data_output_format slave.res | gawk 'END {print $2}'` == "complex_short") then
+  if (! -e $slave_slc.cr4) then
+    echo "converting $slave_slc to float"
+    cpxfiddle -w $width -fci2 -ofloat -qnormal $slave_slc  > $slave_slc.cr4
+  endif
+  set slave_slc = $slave_slc.cr4
+  echo $slave_slc
+endif
 
 set master_int = 'cint.master.raw'
 set master_int_looks = 'int.master_l.raw'
 set slave_int = 'cint.slave.raw'
 set slave_int_looks = 'int.slave_l.raw'
-set int_looks = 'int.minrefdem_l.raw'
+#set int_looks = 'int.minrefdem_l.raw'
 set coh_looks = 'coh_'$looks'l.raw'
 
 cpxsum $master_slc $master_slc $master_int $width cr4 -1
@@ -37,10 +63,11 @@ cpxfiddle -w$width -fcr4 -qreal -M$looks/$azlooks -ofloat $master_int > $master_
 cpxsum $slave_slc $slave_slc $slave_int $width cr4 -1
 cpxfiddle -w$width -fcr4 -qreal -M$looks/$azlooks -ofloat $slave_int > $slave_int_looks 
 \rm -f $slave_int
-cpxfiddle -w$width -fcr4 -qmag -M$looks/$azlooks -ofloat $int > $int_looks 
+#cpxfiddle -w$width -fcr4 -qmag -M$looks/$azlooks -ofloat $int > $int_looks 
 echo "fid=fopen('$int_looks');" > foo
-echo "ifg=fread(fid,[floor($width/$looks),inf],'float');" >> foo
+echo "ifg=fread(fid,[floor($width/$looks)*2,inf],'float');" >> foo
 echo "fclose(fid);" >> foo
+echo "ifg=abs(complex(ifg(1:2:end,:),ifg(2:2:end,:)));" >> foo
 echo "fid=fopen('$master_int_looks');" >> foo
 echo "master=fread(fid,[floor($width/$looks),inf],'float');" >> foo
 echo "fclose(fid);" >> foo
@@ -52,4 +79,5 @@ echo "fid=fopen('$coh_looks','w');" >> foo
 echo "fwrite(fid,coh,'float');" >> foo
 echo "fclose(fid);" >> foo
 nohup matlab -nojvm -nosplash < foo > step_coh.log
-#\rm -f $master_int_looks $slave_int_looks $int_looks foo
+\rm -f $master_int_looks $slave_int_looks foo
+cpxfiddle -w $width_looked -q normal -o sunraster  -c gray  -r 0.0/1.0  -f r4 -l1 $coh_looks > coherence.ras

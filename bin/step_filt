@@ -1,0 +1,46 @@
+#!/bin/tcsh -f
+#
+# Andy Hooper, 2011
+# ===========================================================================
+# ===========================================================================
+
+set WORKDIR = ".." 
+
+if ( -e $WORKDIR/looks.txt) then 
+    set looks = `cat $WORKDIR/looks.txt` 
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then 
+    set ar = `cat $WORKDIR/ar.txt` 
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+set first = `get_slc_lp $WORKDIR/master.res | awk '{print $3}'`  # Pixel
+set last  = `get_slc_lp $WORKDIR/master.res | awk '{print $4}'`
+
+@ width = ($last - $first) + 1
+
+set first_l = `get_slc_lp $WORKDIR/master.res | awk '{print $1}'` # Line
+set last_l  = `get_slc_lp $WORKDIR/master.res | awk '{print $2}'`
+
+@ numlines = ($last_l - $first_l) + 1
+
+if (! -e $WORKDIR/filtphase.dorisin) then
+    cp $DORIS_SCR/filtphase.dorisin $WORKDIR
+endif
+                                                                                           
+cp -f interferogram.out  filtphase.out
+doris $WORKDIR/filtphase.dorisin >> step_filt.log
+
+set endras = l.ras
+set endraw = l.raw
+cpxfiddle -w$width -fcr4 -qmixed -M$looks/$azlooks -osunraster -e0.2 -s1.8 cint.filt.raw > cint.filt_$looks$endras
+
+cpxfiddle -w$width -fcr4 -qnormal -M$looks/$azlooks -ofloat cint.filt.raw > cint.filt_$looks$endraw
+
+\rm -f cint.minrefdem.filt

@@ -6,7 +6,8 @@ c **********************************************************************
  comment  ___general options___
  c
 c SCREEN          debug                           // level of output to standard out
-SCREEN          info                           // level of output to standard out
+c SCREEN          info                           // level of output to standard out
+SCREEN          error                           // level of output to standard out
 MEMORY          1000                             // MB
 OVERWRITE                                       // overwrite existing files
 BATCH                                           // non-interactive
@@ -20,15 +21,14 @@ c                                              //
 LOGFILE         log.out                         // log file
 M_RESFILE       master.res  // parameter file
 S_RESFILE       slave.res                       // parameter file
-I_RESFILE       interferogram.out               // parameter file
+I_RESFILE       filtphase.out               // parameter file
  c                                              //
  c                                              //
  comment PHASEFILT
  c
 PF_METHOD      goldstein
-PF_IN_FILE     cint.minrefdem.raw
-PF_OUT_FILE    cint.minrefdem.filt
-PF_ALPHA       0.2
-PF_BLOCKSIZE   128
-PF_OVERLAP     11
+PF_OUT_FILE    cint.filt.raw
+PF_ALPHA       0.8
+PF_BLOCKSIZE   64
+PF_OVERLAP     16
 STOP
