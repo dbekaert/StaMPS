@@ -10,6 +10,7 @@ function []=ps_scn_filt()
 %   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
 %   02/2010 AH: Bug fixed that could cause a slave scn to be set to zero
 %   11/2010 AH: If ramps estimated in step 7, subtract before scn estimation 
+%   02/2011 DB: Decreased time required for spatial filtering by factor 10
 %   =======================================================================
 logit;
 fprintf('Estimating other spatially-correlated noise...\n')
@@ -183,12 +184,14 @@ for i=1:n_ps
     dist_sq=dist_sq(in_range_ix); 
     weight_factor=exp(-dist_sq/sigma_sq_times_2);
     weight_factor=weight_factor/sum(weight_factor); % normalize
-    ph_scn(i,:)=sum(ph_hpt(xy_near(:,1),:).*repmat(weight_factor,1,n_ifg),1);
+    
+    %ph_scn(i,:)=sum(ph_hpt(xy_near(:,1),:).*repmat(weight_factor,1,n_ifg),1); 		% slow method
+    ph_scn(i,:)=weight_factor'*ph_hpt(xy_near(:,1),:);  				% speed increased by a factor 10
 
     if i/1000==floor(i/1000)
         disp([num2str(i),' PS processed'])
-    end % end-if
-end % i++
+    end
+end
 
 ph_scn=ph_scn-repmat(ph_scn(1,:),n_ps,1); % re-ref to 1st PS
 ph_scn_slave=zeros(size(uw.ph_uw));
