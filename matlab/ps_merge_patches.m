@@ -17,6 +17,7 @@ function []=ps_merge_patches(psver)
 %   10/2010 DB: Fix when PS all rejected when sum weight<min_weight (resampling)
 %   06/2010 AH: Move mean amplitude merging to ps_load_mean_amp.m 
 %   12/2010 AH: Set grid size of next steps not less than merge grid size 
+%   02/2011 DB: Fix dimension for min computation of ps.xy 
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
@@ -124,7 +125,7 @@ for i=1:n_patch
       ix(ix_ex)=1; % keep those in patch proper + those outside not already kept
     elseif grid_size ~=0 && ix_no_ps~=1
       clear g_ij
-      xy_min=min(ps.xy(ix,:));
+      xy_min=min(ps.xy(ix,:),1);
       g_ij(:,1)=ceil((ps.xy(ix,3)-xy_min(3)+1e-9)/grid_size);
       g_ij(:,2)=ceil((ps.xy(ix,2)-xy_min(2)+1e-9)/grid_size);
       n_i=max(g_ij(:,1));
