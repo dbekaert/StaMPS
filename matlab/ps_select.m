@@ -20,6 +20,7 @@ function []=ps_select(reest_flag,plot_flag)
 %   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
 %   09/2010 JJS+MA: To make use oversampling dataset
 %   12/2010 AH: Fix error message for density selection
+%   02/2011 DB: Fix error with keep_ix
 %   ======================================================================
 logit;
 fprintf('Selecting stable-phase pixels...\n')
@@ -369,6 +370,7 @@ if reest_flag~=1
     min_coh=min_coh(nonnanix);
     D_A_mean=D_A_mean(nonnanix);
     if length(min_coh)>1
+	keyboard
         coh_thresh_coeffs=polyfit(D_A_mean,min_coh,1);  % fit polynomial to the curve
         if coh_thresh_coeffs(1)>0 % positive slope (as expected)
             coh_thresh=polyval(coh_thresh_coeffs,D_A(ix));
