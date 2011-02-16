@@ -977,7 +977,8 @@ else
 end
 
 if plot_flag==-1
-    savename=['~/ps_plot_',value_type];
+    %savename=['~/ps_plot_',value_type]
+    savename=['ps_plot_',value_type]
     save(savename,'ph_disp','ifg_list')
 else
   h_fig = figure;
