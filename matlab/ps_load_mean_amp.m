@@ -6,6 +6,7 @@ function [saveampname]=ps_load_mean_amp()
 %   ======================================================================
 %   02/2010 AH: Reduce memory needs by reading in chunks
 %   11/2010 AH: Do amplitude merge here instead of ps_merge_patches.m 
+%   11/2010 MA: Fix when length(amp_bit) returns zero at the end
 %   ======================================================================
 
 if exist('patch.in','file')
@@ -73,12 +74,10 @@ end
 amp_high=[];
 fid=fopen(ampname,'r');
 while ~feof(fid) % first read through
-%whos
   amp_bit=fread(fid,[width,1000],'float');
   amp_bit(isnan(amp_bit))=1;
   amp_bit=sort(amp_bit(:));
-length(amp_bit)
-  if length(amp_bit)==0  % MA fix for Joana
+  if length(amp_bit)==0  % MA fix
     break                % length(amp_bit) returns zero at the end
   end
   amp_high=[amp_high;amp_bit(round(length(amp_bit)*0.99):end)];
@@ -99,7 +98,7 @@ while ~feof(fid) % second read through
   amp_bit(amp_bit>amp_max)=amp_max;
   amp_bit=uint8(amp_bit*255/amp_max);
   amp_mean=[amp_mean;amp_bit];
-  if length(amp_bit)==0  % MA fix for Joana
+  if length(amp_bit)==0  % MA fix
   break
   end
 end
