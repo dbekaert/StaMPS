@@ -3,6 +3,7 @@
 # 
 # K.H. Spaans, September 2010
 # ===========================================================================
+# MA  Small fix for master doppler
 # ===========================================================================
 #
 # Use:
@@ -44,6 +45,7 @@ echo "   Dcrit:	"$Dcrit" Hertz"
 echo " "
 
 set masterdate = `pwd | gawk 'n=split($1,master,"_") {print master[n]}'`
+set masterdopp = `grep f_DC_con master.res | gawk '{print $5}'`
 
 ##mv coreg/slave.res coreg/slaveBU.res 2>& /dev/null #Preventing slave.res in INSAR_masterdate to get into doppler baselines
 #mv coreg/slave.res coreg/slaveBU.res  > & /dev/null # MA
@@ -60,7 +62,8 @@ sed '$a '$masterdate'' Date.temp > Date.txt
 rm -f Date.temp
 sed '$a '0'' Bperp.temp > Bperp.txt
 rm -f Bperp.temp
-sed '$a '0'' Dopp.temp > Dopp.txt
+#sed '$a '0'' Dopp.temp > Dopp.txt # values are not relative
+sed '$a '$masterdopp'' Dopp.temp > Dopp.txt
 rm -f Dopp.temp
 
 echo "masterchoice $Tcrit $Bcrit $Dcrit" >matbgparms.txt
