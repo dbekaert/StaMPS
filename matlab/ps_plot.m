@@ -115,6 +115,7 @@ function []=ps_plot(value_type,varargin)
 %   11/2010 DB: Changing position of colorbar for ts plot
 %   12/2010 KS: Added check to see if orbital ramp is calculated in -o
 %   12/2010 AH: fix vdrop
+%   03/2011 AH: Change ts plot radius to m
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -1072,10 +1073,10 @@ if ts_flag == 1
   %mButtonposition=get(mButton,'Position')
  
   % Radius Text boxes
-  mTextBox=uicontrol('Style', 'edit','String','radius = 2.778e-4 deg. x', 'Position',...
-      [260 30 150 20] );
+  mTextBox=uicontrol('Style', 'edit','String','radius (m) ', 'Position',...
+      [320 30 90 20] );
 
-  mEditBox=uicontrol('Style', 'edit','String','2', 'Position',...
+  mEditBox=uicontrol('Style', 'edit','String','100', 'Position',...
       [410 30 30 20],'BackgroundColor',[1 1 1] );
   ts_plot   % select a point then plot
 end

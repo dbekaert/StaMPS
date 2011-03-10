@@ -9,6 +9,7 @@ function []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation)
 %   05/2009 AH: Drop pixels with duplicate lon/lat coordinates
 %   08/2009 AH: Multilook lon/lat as read in to save memory 
 %   08/2009 AH: Allow single master series  
+%   03/2011 AH: Compatibility changes for matlab R2010b
 %   =============================================================
 
 if nargin<1
@@ -209,7 +210,7 @@ tr=mean(sort_x(end-n_pc:end,:)); % top right corner
 br=mean(sort_y(1:n_pc,:)); % bottom right  corner
 tl=mean(sort_y(end-n_pc:end,:)); % top left corner
 
-load(headingname)
+heading=load(headingname);
 theta=(180-heading)*pi/180;
 if theta>pi
     theta=theta-2*pi;
@@ -235,7 +236,7 @@ ix=ix(sort_ix);
 ij=[[1:n_ps]',I(sort_ix)*looks*ar-round(looks*ar/2),J(sort_ix)*looks-round(looks/2)];
 
 
-dirs=ls(['-1 */cint.minrefdem_',num2str(looks),'l.raw']);
+dirs=ls('-1',['*/cint.minrefdem_',num2str(looks),'l.raw']);
 dirs=strread(dirs,'%s');
 n_ifg=length(dirs);
 ph=zeros(n_ps,n_ifg,'single');

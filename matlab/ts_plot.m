@@ -6,6 +6,7 @@
 %
 %   ======================================================================
 %   11/2010 MMC & MA: plotting time series using 'ts' option 
+%   03/2011 AH convert radius to m, remove line fitting and add mean
 %   ======================================================================
 
 % Place button for new TS plots
@@ -16,10 +17,10 @@ mEditBox=findobj('Background',[1 1 1]); % get the handle of editable textbox
 radiusfactor = str2num(char(get(mEditBox,'String')));					% added by david this is also not a single value but a vector
 radiusfactor = radiusfactor(1);								% select only the first value, i checked it for a couple of values and radius is correct
 
-if radiusfactor > 3600
-    disp('radius factor should be <= 3600')
-    break
-end
+%if radiusfactor > 3600
+%    disp('radius factor should be <= 3600')
+%    break
+%end
 
 momfig_name=['(', get(gcf,'name'), ')']; % inherent fig_name from the velocity plot
 
@@ -44,16 +45,14 @@ end
 % MAKE A CIRCLE AROUND SELECTED POINT (lon0,lat0)
 t = linspace(0,2*pi,114); % 114 pts
 h=lon0; k=lat0;  % center cn for the circle
-%r=1/3600*2;        % 1 arcsec: 1/3600 radius --> 0.000277777777777778 ~ 30 m at the equator    
-r=1/3600*radiusfactor;
+r=radiusfactor;
                    % change radius if you want to include more points
-x = r*cos(t)+h;
-y = r*sin(t)+k;
-% for inpolygon repeat first cn at the end
-xv = [x x(1)]; yv = [y y(1)];
+x = r*cos(t);
+y = r*sin(t);
 
 % SELECT POINTS based on LONLAT
-in = inpolygon(lonlat(:,1),lonlat(:,2),xv,yv);
+xy=llh2local(lonlat',[lon0,lat0])'*1000;
+in = inpolygon(xy(:,1),xy(:,2),x,y);
 n_pts_near=sum(in);  % how many ps found
 
 if sum(in) == 0
@@ -65,8 +64,9 @@ end
 % PLOT selection and points
 figure
     set(gcf,'name',['Found #pt(s): ', num2str(n_pts_near),...
-        '  in radius: ', num2str(r), ' deg. ', momfig_name ])
-    plot(x,y);
+        '  in radius: ', num2str(r), ' m. ', momfig_name ])
+    circlell=local2llh([x;y]/1000,[lon0,lat0]);
+    plot(circlell(1,:),circlell(2,:));
     hold on
     plot(lon0,lat0,'*')
 
@@ -88,14 +88,15 @@ figure
   
 % PLOT TS for given point(s)
 ts=-ph_uw(in,:)*lambda*1000/(4*pi);
-G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
-x_hat=G\double(ts');
+%G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
+%x_hat=G\double(ts');
 
 offset=pi*1000*lambda/(4*pi);
 
-ts_hat=G*x_hat;
-tsup_hat=ts_hat+offset;
-tslo_hat=ts_hat-offset;
+ts_hat=mean(ts,1);
+%ts_hat=G*x_hat;
+%tsup_hat=ts_hat+offset;
+%tslo_hat=ts_hat-offset;
 
 
 %%% Typical TS plot - no auxilary entiries
@@ -129,9 +130,10 @@ tslo_hat=ts_hat-offset;
         num2str(n_pts_near), ' ', momfig_name])
     h1=plot(day,ts,'--*'); hold on
     %plot(day,ts_hat,'-*r','LineSmoothing','on'); % mess up ticks
-    h2=plot(day,ts_hat,'-*r');
-    h3=plot(day,tsup_hat,'-.g');
-    h4=plot(day,tslo_hat,'-.g');
+    h2=plot(day,ts_hat,'-ok');
+    set(h2,'linewidth',2)
+    %h3=plot(day,tsup_hat,'-.g');
+    %h4=plot(day,tslo_hat,'-.g');
     hold off
     grid on
     ylabel('mm');

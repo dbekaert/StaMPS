@@ -7,6 +7,7 @@ function putdates(xstart, ystart, labels, labeloffset, fontsize)
 %
 %   ======================================================================
 %   11/2010 MA: initial version for StAMPS time series 
+%   03/2011 AH: fix bug
 %   ======================================================================
      axis off
      rectangle('Facecolor','w')
@@ -16,7 +17,7 @@ function putdates(xstart, ystart, labels, labeloffset, fontsize)
      %labeloffset= 0.035;  % 0.025 decrease this to fit more labels % label line offset
                            % text font 8   labelloffset: 0.03 or 0.025
                            %           9                 0.035
-     for i=1:length(labels)
+     for i=1:size(labels,1)
          posy= posy - labeloffset;
          if posy < 0.01
              posy = 1 - labeloffset;  % initialize again for next label coln
