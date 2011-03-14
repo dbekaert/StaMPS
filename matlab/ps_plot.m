@@ -116,6 +116,7 @@ function []=ps_plot(value_type,varargin)
 %   12/2010 KS: Added check to see if orbital ramp is calculated in -o
 %   12/2010 AH: fix vdrop
 %   03/2011 AH: Change ts plot radius to m
+%   03/2011 DB: Remove raster lines when plotting time series
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -997,7 +998,10 @@ else
   for i=ifg_list
     i_im=i_im+1;
     if n_ifg_plot>1
-        axes('position',[imX(i_im),imY(i_im),h_x,h_y])
+        h_axes = axes('position',[imX(i_im),imY(i_im),h_x,h_y]);
+	set(h_axes,'Xcolor',[1 1 1]);			% [DB] remove the contours of the axes figure
+	set(h_axes,'Ycolor',[1 1 1]);
+	clear h_axes
     end
     ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg);
     %plot_phase(ph_tc(:,i)*conj(ph_tc(ref_ix,i)));
