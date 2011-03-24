@@ -9,6 +9,7 @@
 // ==============================================
 // 01/2009 MA Deprication Fix
 // 03/2009 MA Fix for gcc 4.3.x
+// 01/2011 MCC neglecting pixel with  zero amplitude
 // ==============================================
 
 #include <iostream>  
@@ -78,7 +79,7 @@ try {
   
   ampfiles >> ampfilename;
   
-  while (! ampfiles.eof() ) 
+  while (! ampfiles.eof() ) // loop over SLC names
   {
     float calib_factor=0;
     cout << "opening " << ampfilename << "...\n";
@@ -92,25 +93,46 @@ try {
 
     int i=0; 
     double sumamp=0; 
+    double amp_pixel=0;
+    long unsigned int nof_pixels=0;
+    long unsigned int nof_zero_pixels=0;
     ampfile.read (reinterpret_cast<char*>(buffer), linebytes);
-    while (! ampfile.eof() ) 
+    while (! ampfile.eof() ) // loop to read all file using buffers
     {
-      i++;
-      for (int j=0; j<width; j++) 
-      {
-         sumamp+=abs(buffer[j]);
+      //i++;
+      for (int j=0; j<width; j++) // loop over each read pixel pf the buffer
+      { 
+         amp_pixel=abs(buffer[j]);
+         if (amp_pixel >0.001)       //rejects pixels with low amplitude ~0
+         {
+          sumamp+=abs(buffer[j]);
+          nof_pixels++;
+         }else nof_zero_pixels++;
+
+ 
       }
       ampfile.read (reinterpret_cast<char*>(buffer), linebytes);
     }		
-    
-    calib_factor = sumamp/i/width;
+    if ( nof_pixels != 0) 
+    { 
+     //calib_factor = sumamp/i/width;
+      calib_factor= sumamp/nof_pixels;
+    }
+    else
+    { 
+     cout << "WARNING : SLC " << ampfilename << "has ZERO mean amplitude \n";
+     calib_factor =0;
+    }
 
     ampfile.close(); 
 
     parmfile << ampfilename << " " << calib_factor << "\n";
     cout << "Mean amplitude = " << calib_factor << endl;
-  
-    ampfiles >> ampfilename;  
+    cout << "Number of pixels with zero amplitude = " <<  nof_zero_pixels   << "\n";
+    cout << "Number of pixels with amplitude different than zero = " <<  nof_pixels   << "\n";
+    
+    ampfiles >> ampfilename; 
+     
   }
   
   ampfiles.close();

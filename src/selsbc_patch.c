@@ -9,6 +9,7 @@
 // Change History
 // ==============================================
 // 03/2009 MA Fix for gcc 4.3.x
+// 01/2010 MCC Drop low amplitudes
 // ==============================================
 
 #include <iostream>  
@@ -227,11 +228,17 @@ try {
         float sumamp = 0;
         float sumampdiffsq = 0;
         int i;
-
+        int amp0=0;
         for (i=0; i<num_files/2; i++)        // for each amp file
 	{
            float amp1=abs(buffer[(i*2)*width+x])/calib_factor[i*2]; // get amp value
            float amp2=abs(buffer[(i*2+1)*width+x])/calib_factor[i*2+1]; // get amp value
+            
+           if (amp2 < 0.00001 || amp1 < 0.00001)
+           {
+              amp0=1;
+             continue;
+           }
            //cout << "amp1=" << amp1 << " amp2=" << amp2 << "\n";
            sumamp+=amp1;
            sumamp+=amp2;
@@ -246,14 +253,16 @@ try {
 	    float D_a=sqrt(sumampdiffsq/(num_files/2))/(sumamp/num_files); 
             if (pick_higher==0 && D_a<D_thresh ||                 \
                 pick_higher==1 && D_a>=D_thresh) 
-	    {
+	    {        
+             if (amp0 !=1)
+              {
                ++pscid;
 
                ijfile << pscid << " " << y << " " << x << "\n"; 
 
                daoutfile << D_a << "\n";
                //cout << "Da=" << D_a << "\n";
-
+              }
             } // endif
          } // endif
        } // x++           

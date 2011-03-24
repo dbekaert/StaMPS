@@ -11,7 +11,11 @@
 // 03/2009 MA Fix for gcc 4.3.x
 // 07/2010 A0 Update Need for Speed on patches
 // 08/2010 MA Code optimization
+// 01/2010 MCC Drop low amplitudes
 // ==============================================
+
+#include <string.h> 
+using namespace std;
 
 #include <iostream>  
 using namespace std;
@@ -69,7 +73,12 @@ try {
   if (argc < 4) 
      ijname="pscands.1.ij";
   else ijname = argv[3];   
-     
+  //MCC
+  char ijname0[256]; //used to store PS with at least one amplitude =0. This can happen if frames do not fully overlap
+                  
+  strcpy (ijname0,ijname);
+  strcat (ijname0,"0");
+  cout << "file name for zero amplitude PS" << ijname0;
 //  char *ampoutname;
 //  if (argc < 4) 
 //     ampoutname="pscands.1.amp";
@@ -100,7 +109,7 @@ try {
       cout << "Error opening file " << argv[1] << "\n"; 
       throw "";
   }    
-  
+   
       
   char line[256];
   int num_files = 0;
@@ -203,6 +212,7 @@ try {
   }    
   
   ofstream ijfile(ijname,ios::out);
+  ofstream ijfile0(ijname0,ios::out);
   ofstream daoutfile(daoutname,ios::out);
   ofstream meanoutfile(meanoutname,ios::out);
  
@@ -251,35 +261,56 @@ try {
      
         register float sumamp = 0;
         register float sumampsq = 0;
-
+        int amp_0 =0;
         for (register int i=0; i<num_files; i++)        // for each amp file
-	{
+	      {
            //float amp=abs(buffer[i*width+x])/calib_factor[i]; // get amp value
            register float amp=abs(buffer[i*patch_width+x])/calib_factor[i]; // get amp value
+           if (amp <=0.00005) // do not use amp = 0 values for calculating the AD and set flag to 1
+           {
+            amp_0=1;
+            sumamp=0;
+            //cout << "coord amp zero : az  " << (az_start-1)+y << ", rng  " << (rg_start-1)+x << "\n";  
+            //cout << "  amp : " << amp << " \n" ;
+            continue  ; 
+           }else
+           {
            sumamp+=amp;
            sumampsq+=amp*amp;
-        }
-        
-        //meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeofelement);	
-        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeof(float));  // datatypes should be always the same	
-
+           }
+         }
+	
+        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeofelement);	
+ //       cout << "amp0: " << amp_0  << "sumamp " << sumamp <<" \n" ;
         if (maskline[x]==0 && sumamp > 0)
-        { 
+        {
+      //Amplitude disperion^2 
 	    register float D_sq=num_files*sumampsq/(sumamp*sumamp) - 1; // var/mean^2
-            if (pick_higher==0 && D_sq<D_thresh_sq ||                 \
-                pick_higher==1 && D_sq>=D_thresh_sq) 
-	    {
+        if (pick_higher==0 && D_sq<D_thresh_sq  ||                 \
+            pick_higher==1 && D_sq>=D_thresh_sq) 
+	      {
+            if (amp_0 != 1)
+             {
+             // cout << "selected! \n";
+             // cout << "amp0: " << amp_0  << ", sumamp: " << sumamp <<" \n" ;
+
                ++pscid;
 
                ijfile << pscid << " " << (az_start-1)+y << " " << (rg_start-1)+x << "\n"; 
 
 	       register float D_a = sqrt(D_sq);
                daoutfile << D_a << "\n";
-
-            } // endif
-         } // endif
-       } // x++           
-     } // endif y
+             }
+            else //Keeping track of PS with zero amplitude values
+             {
+              ijfile0 << pscid << " " << (az_start-1)+y << " " << (rg_start-1)+x << "\n";
+             } // end if amp_0
+             
+            
+         } // endif pick_highe
+         } // endif maskline
+       } //for loop x++           
+     } // endif y >=0
 
      y++;
 
@@ -293,8 +324,11 @@ try {
      
      if (y/100.0 == rint(y/100.0))
         cout << y << " lines processed\n";
+        //cout << pscid  << " selected PS \n";
+        //cout << D_thresh_sq << "D_thresh_sq \n";
   }  
   ijfile.close();
+  ijfile0.close();
   //ampoutfile.close();
   daoutfile.close();
   meanoutfile.close();
