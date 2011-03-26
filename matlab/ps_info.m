@@ -7,11 +7,13 @@ function []=ps_info()
 %
 %   ======================================================================
 %   01/2010 AH: Give single master info for small baselines too
+%   10/2010 MA: added noise estimates 
 %   ======================================================================
 
 
 load psver
 psname=['ps',num2str(psver)];
+ifgstdname=['ifgstd',num2str(psver)];
 
 ps=load(psname);
 
@@ -28,9 +30,17 @@ else
     bperp=ps.bperp;
 end
 
+if ~exist([ifgstdname,'.mat'],'file')
+    ps_calc_ifg_std
+end
+stdin=load(ifgstdname);
+ifg_std=stdin.ifg_std;
+clear stdin
+
 for i=1:size(ps.day,1)
     aa=[datestr(ps.day(i))];
-    fprintf('%3s  %s %5s m\n',num2str(i),aa,num2str(round(bperp(i))));
+    % fprintf('%3s  %s %5s m\n',num2str(i),aa,num2str(round(bperp(i))));
+    fprintf('%3s  %s %5s m   %.3f deg\n',num2str(i),aa,num2str(round(bperp(i))), ifg_std(i));
 end
 fprintf('Number of stable-phase pixels: %d\n',ps.n_ps);
 
