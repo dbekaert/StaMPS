@@ -16,7 +16,6 @@ function []=ps_merge_patches(psver)
 %   10/2010 DB: Fix when patch_noover does not have PS (resampling)
 %   10/2010 DB: Fix when PS all rejected when sum weight<min_weight (resampling)
 %   06/2010 AH: Move mean amplitude merging to ps_load_mean_amp.m 
-%   12/2010 AH: Set grid size of next steps not less than merge grid size 
 %   02/2011 DB: Fix dimension for min computation of ps.xy 
 %   ======================================================================
 logit;
@@ -59,17 +58,6 @@ else
     dirname=dir('PATCH_*');
 end
 
-if grid_size>0
-   unwrap_grid_size=getparm('unwrap_grid_size');
-   if unwrap_grid_size<grid_size
-      setparm('unwrap_grid_size',grid_size)
-   end
-   plot_scatterer_size=getparm('plot_scatterer_size');
-   if plot_scatterer_size<grid_size
-      setparm('plot_scatterer_size',grid_size)
-   end
-end
-
 n_patch=length(dirname);
 remove_ix=logical([]);
 ij=zeros(0,2);
@@ -96,7 +84,6 @@ la=zeros(0,0);
 hgt=zeros(0,0);
 amp=zeros(0,0,'single');
 
-
 for i=1:n_patch
     fprintf('   Processing %s\n',dirname(i).name)
     cd(dirname(i).name);
@@ -109,7 +96,7 @@ for i=1:n_patch
     end
     
     patch.ij=load('patch_noover.in');
-    ix=ps.ij(:,2)>=patch.ij(3)-1 & ps.ij(:,2)<=patch.ij(4)-1 & ps.ij(:,3)>=patch.ij(1)-1 & ps.ij(:,3)<=patch.ij(2)-1;
+    ix=(ps.ij(:,2)>=patch.ij(3)-1 & ps.ij(:,2)<=patch.ij(4)-1 & ps.ij(:,3)>=patch.ij(1)-1 & ps.ij(:,3)<=patch.ij(2)-1);
     if sum(ix)==0
    	ix_no_ps =1;	% no PS left afer removing overlapping patches
     else
