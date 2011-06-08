@@ -116,6 +116,7 @@ function []=ps_plot(value_type,varargin)
 %   12/2010 KS: Added check to see if orbital ramp is calculated in -o
 %   12/2010 AH: fix vdrop
 %   03/2011 AH: Change ts plot radius to m
+%   03/2011 AH: Save files to home directory if read only directory
 %   03/2011 DB: Remove raster lines when plotting time series
 %   ======================================================================
 
@@ -722,7 +723,8 @@ switch(group_type)
         try
             save mean_v m
         catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
+            save ~/mean_v m
+            fprintf('Warning: Read access only, velocities saved in home directory\n')
         end
         textsize=0;
         units='mm/yr';
@@ -806,7 +808,8 @@ switch(group_type)
         try
             save mean_v m
         catch
-            fprintf('Warning: Read access only, velocities were not saved\n')
+            save ~/mean_v m
+            fprintf('Warning: Read access only, velocities saved in home directory\n')
         end
         textsize=0;
         units='mm/yr';
@@ -981,7 +984,12 @@ end
 if plot_flag==-1
     %savename=['~/ps_plot_',value_type]
     savename=['ps_plot_',value_type]
-    save(savename,'ph_disp','ifg_list')
+    try
+       save(savename,'ph_disp','ifg_list')
+    catch
+       save(['~/',savename],'ph_disp','ifg_list')
+       fprintf('Warning: Read access only, values in home directory instead\n')
+    end
 else
   h_fig = figure;
   set(gcf,'renderer','zbuffer','name',fig_name)

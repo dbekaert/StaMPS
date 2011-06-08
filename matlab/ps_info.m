@@ -8,6 +8,7 @@ function []=ps_info()
 %   ======================================================================
 %   01/2010 AH: Give single master info for small baselines too
 %   10/2010 MA: added noise estimates 
+%   06/2011 AH: remove noise estimates for small baselines
 %   ======================================================================
 
 
@@ -30,12 +31,13 @@ else
     bperp=ps.bperp;
 end
 
-if ~exist([ifgstdname,'.mat'],'file')
-    ps_calc_ifg_std
+if exist([ifgstdname,'.mat'],'file')
+    stdin=load(ifgstdname);
+    ifg_std=stdin.ifg_std;
+    clear stdin
+else
+    ifg_std=zeros(size(ps.day,1),1);
 end
-stdin=load(ifgstdname);
-ifg_std=stdin.ifg_std;
-clear stdin
 
 for i=1:size(ps.day,1)
     aa=[datestr(ps.day(i))];
