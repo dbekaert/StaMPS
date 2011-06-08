@@ -169,14 +169,16 @@ else
         end
     end
   end
+  
   nonnanix=~isnan(min_coh);
   if sum(nonnanix)<1
       if strcmpi(select_method,'PERCENT')
-         error('could not set threshold - try setting percent_rand lower')
+         warning('could not set threshold - try setting percent_rand lower')
       else
-         error('could not set threshold - try setting density_rand lower')
+         warning('could not set threshold - try setting density_rand lower')
       end
-  end
+      coh_thresh=0.3;
+  else 
   min_coh=min_coh(nonnanix);
   D_A_mean=D_A_mean(nonnanix);
   if size(min_coh,1)>1
@@ -191,6 +193,7 @@ else
     coh_thresh=min_coh;
     coh_thresh_coeffs=[];
   end
+ end
 end
 
 fprintf('Initial gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f\n',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A))
