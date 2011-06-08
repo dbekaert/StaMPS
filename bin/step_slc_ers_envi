@@ -1,0 +1,23 @@
+#!/bin/tcsh -f
+
+set WORKDIR = '..'
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+
+if (! -e $WORKDIR/roi.proc) then
+    cp $MY_SCR/roi.proc $WORKDIR
+endif
+
+\rm -f $dir.raw
+\rm -f $dir.raw.rsc
+\rm -f $dir.slc
+\rm -f $dir.slc.rsc
+
+set dir = `\pwd | gawk 'BEGIN {FS="/"} {print $(NF)}'`
+
+set sarlead = `ls *.E? | head -n1`
+#set sarlead = `ls SARLEADER* | head --lines=1`
+make_raw_ers.pl ODR $sarlead $dir > step_slc.log
+#$MY_SCR/roi_prep_ers.pl $dir ODR >> step_slc.log
+$MY_SCR/roi_prep.pl $dir ODR >> step_slc.log
+roi.pl $dir no 1 no >> step_slc.log
+roipac2doris $dir s >> step_slc.log
