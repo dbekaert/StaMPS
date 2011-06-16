@@ -16,6 +16,7 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   02/2010 AH: Speed up of noise weeding
 %   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
 %   01/2011 AH: Correct arc DEM error estimation for small baselines
+%   06/2011 AH: Add weed_neighbours parm (default still 'y')
 %   ===================================================================
 logit;
 fprintf('Weeding selected pixels...\n')
@@ -29,11 +30,16 @@ time_win=getparm('weed_time_win',1);
 weed_standard_dev=getparm('weed_standard_dev',1);
 weed_max_noise=getparm('weed_max_noise',1);
 weed_zero_elevation=getparm('weed_zero_elevation',1);
+weed_neighbours=getparm('weed_neighbours',1);
 drop_ifg_index=getparm('drop_ifg_index');
 small_baseline_flag=getparm('small_baseline_flag',1);
 
 if nargin<2
-    no_weed_adjacent=0;
+    if strcmpi(weed_neighbours,'y')
+        no_weed_adjacent=0;
+    else
+        no_weed_adjacent=1;
+    end
 end
 if nargin<3
     if weed_standard_dev>=pi && weed_max_noise>=pi

@@ -26,6 +26,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg)
 %   02/2010 AH: Add options for dem posting and scatterer size
 %   02/2010 AH: Plot reference centre if circular
 %   09/2010 AH: Add back option to plot scatterer as multiple pixels
+%   06/2011 AH: Fix bug so only patch amplitudes plotted for PATCH dirs
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -37,6 +38,7 @@ lonlat_offset=getparm('lonlat_offset');
 heading=getparm('heading');
 ref_radius=getparm('ref_radius');
 ref_centre=getparm('ref_centre_lonlat');
+small_baseline_flag=getparm('small_baseline_flag');
 
 if nargin < 1
     error('PS_PLOT_IFG(PHASE,BACKGROUND,LIMS)')
@@ -146,7 +148,7 @@ hold on
 if bg_flag==4 % plot on amplitude image
 
     ampfile='./amp_mean.mat';
-    if ~exist(ampfile,'file')
+    if ~exist(ampfile,'file') & strcmpi(small_baseline_flag,'y')
         ampile='../amp_mean.mat';
     end
     if ~exist(ampfile,'file')
@@ -195,7 +197,7 @@ if bg_flag==4 % plot on amplitude image
 elseif bg_flag==5 % plot on amplitude image, let amp show through color
     
     ampfile='./amp_mean.mat';
-    if ~exist(ampfile,'file')
+    if ~exist(ampfile,'file') & strcmpi(small_baseline_flag,'y')
         ampfile='../amp_mean.mat';
     end
     if ~exist(ampfile,'file')

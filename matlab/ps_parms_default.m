@@ -23,6 +23,7 @@ function ps_parms_default()
 %   09/2010 MA: oversampling factor
 %   09/2010 AH: plot_pixels_scatterer added
 %   11/2010 AH: (sb_)recalc_index replaced by (sb_)scla_drop_index
+%   06/2011 AH: add weed_neighbours 
 %   ======================================================================
 
 
@@ -129,6 +130,10 @@ end
 
 if ~isfield(parms,'weed_zero_elevation')
     parms.weed_zero_elevation='n';
+end
+
+if ~isfield(parms,'weed_neighbours')
+    parms.weed_neighbours='y';
 end
 
 if ~isfield(parms,'unwrap_method')

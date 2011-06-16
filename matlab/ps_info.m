@@ -11,10 +11,11 @@ function []=ps_info()
 %   06/2011 AH: remove noise estimates for small baselines
 %   ======================================================================
 
-
 load psver
 psname=['ps',num2str(psver)];
 ifgstdname=['ifgstd',num2str(psver)];
+
+small_baselines_flag=getparm('small_baselines_flag');
 
 ps=load(psname);
 
@@ -29,6 +30,10 @@ if isfield(ps,'ifgday')
     bperp=[bperp(1:ps.master_ix-1);0;bperp(ps.master_ix:end)];
 else
     bperp=ps.bperp;
+end
+
+if ~exist([ifgstdname,'.mat'],'file') & ~strcmpi(small_baselines_flag,'y')
+    ps_calc_ifg_std
 end
 
 if exist([ifgstdname,'.mat'],'file')

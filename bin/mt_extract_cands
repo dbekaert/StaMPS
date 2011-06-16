@@ -4,17 +4,47 @@
 # candidiate pixels 
 #
 # Andy Hooper, Jan 2007
-
+# ===========================================================================
+# 06/2011 AH: Option to select processing
+# ===========================================================================
+# 
+# mt_extract_cands dophase dolonlat dodem docands
+#    Arguments are optional: 1 (do) or 0 (don't do)
+#    Default for each argument is 0 unless no arguments are input 
+#    when default for becomes 1
+#
 ### Initial welcome
 set PRG = `basename "$0"`
 set AUT = "Andy Hooper, Jan 2007"
 echo "$PRG $AUT"
 echo " "
 
-if ($#argv > 0) then
-    set phase_only = $argv[1]
+
+if ($#argv > 1) then
+    set dolonlat = $argv[2]
 else 
-    set phase_only = 0
+    set dolonlat = 0
+endif
+
+if ($#argv > 2) then
+    set dodem = $argv[3]
+else 
+    set dodem = 0
+endif
+
+if ($#argv > 3) then
+    set docands = $argv[4]
+else 
+    set docands = 0
+endif
+
+if ($#argv > 0) then
+    set dophase = $argv[1]
+else 
+    set dophase = 1
+    set dolonlat = 1
+    set dodem = 1
+    set docands = 1
 endif
 
 set WORKDIR = $cwd
@@ -25,24 +55,29 @@ foreach patch(`\cat patch.list`)
     cd $patch
     echo "Patch:" $patch
 
-    if ($phase_only == 0) then
+    if ($docands == 1) then
         # Select PS candidates 
         if ($dirname == "SMALL_BASELINES") then
             selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da 
         else
             selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da 
         endif
+    endif
 
+    if ($dolonlat == 1) then
         # Retrieve lon/lat for PS candidates
         psclonlat $WORKDIR/psclonlat.in pscands.1.ij pscands.1.ll
+    endif
 
+    if ($dodem == 1) then
         # Retrieve hgt for PS candidates
         pscdem $WORKDIR/pscdem.in pscands.1.ij pscands.1.hgt
     endif
 
-    # Retrieve phase for PS candidates
-    pscphase $WORKDIR/pscphase.in pscands.1.ij pscands.1.ph
-
+    if ($dophase == 1) then
+        # Retrieve phase for PS candidates
+        pscphase $WORKDIR/pscphase.in pscands.1.ij pscands.1.ph
+    endif
 
     cd $WORKDIR
 end

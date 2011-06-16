@@ -8,6 +8,7 @@
 # 04/2009 AH: Deal with extra first/last line/pixels in master.res
 # 10/2009 AH: Fix bug that drops master from calibration
 # 10/2009 MA: Oversampling support
+# 06/2011 AH: Change azimuth overlap default to 50
 # ===========================================================================
 
 ### Initial welcome
@@ -23,7 +24,7 @@ if ($#argv == 0) then
     echo "    rg_patches (default 1)   = number of patches in range"
     echo "    az_patches (default 1)   = number of patches in azimuth"
     echo "    rg_overlap (default 50)  = overlapping pixels between patches in range"
-    echo "    az_overlap (default 200) = overlapping pixels between patches in azimuth"
+    echo "    az_overlap (default 50) = overlapping pixels between patches in azimuth"
     echo ""
     exit(4)
 endif
@@ -55,7 +56,7 @@ endif
 if ($#argv > 4) then
     set overlap_az = $argv[5]
 else 
-    set overlap_az = 200
+    set overlap_az = 50
 endif
 
 echo "Amplitude Dispersion Threshold:" $da_thresh
