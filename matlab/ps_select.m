@@ -388,7 +388,6 @@ if reest_flag~=1
 
     fprintf('Reestimation gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f\n',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A))
 
-    whos coh_ps2 % MA
     bperp_range=max(bperp)-min(bperp);
     keep_ix=coh_ps2>coh_thresh & abs(pm.K_ps(ix)-K_ps2)<2*pi/bperp_range;
     clear pm
