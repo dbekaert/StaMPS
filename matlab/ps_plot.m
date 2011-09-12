@@ -1079,7 +1079,7 @@ if ts_flag == 1
   %  pos_new = [pos(1) pos(2)+0.1 pos(3) pos(4)-0.1]
   
   % new TS plot button
-  mButton=uicontrol('Style', 'pushbutton', 'Callback', 'ts_plot',...
+  mButton=uicontrol('Style', 'pushbutton', 'Callback', 'clear ph_uw; ts_plot',...
     'String','new TS plot', 'Position', [150 30 90 20] ); % if exist don't create
   %                                      left bottom width height
   %mButtonposition=get(mButton,'Position')
@@ -1090,7 +1090,7 @@ if ts_flag == 1
 
   mEditBox=uicontrol('Style', 'edit','String','100', 'Position',...
       [410 30 30 20],'BackgroundColor',[1 1 1] );
-  ts_plot   % select a point then plot
+  ts_plot   % select a point then plot, for the first time.
 end
 
 
