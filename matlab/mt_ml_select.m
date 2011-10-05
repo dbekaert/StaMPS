@@ -373,13 +373,14 @@ for i=setdiff([1:n_image],master_ix);
     %bperp_mat(:,i)=bp0_ps+(bp1000_ps-bp0_ps).*hgt/1000;
     bperp_mat(:,i)=bp0_ps;
 end
-%bperp_mat=[bperp_mat(:,1:master_ix-1),zeros(n_ps,1),bperp_mat(:,master_ix:end)]; % insert master-master bperp (zero)
-%if single_master_flag==0
     bperp_mat=bperp_mat(:,ifgday_ix(:,2))-bperp_mat(:,ifgday_ix(:,1));
-%end
+
+save('bp2','bperp_mat')
 
 bperp=mean(bperp_mat)';
-save('bp2','bperp_mat')
+if ~single_master_flag==0
+    bperp=[bperp(:,1:master_ix-1);0;bperp(:,master_ix:end)]; % insert master-master bperp (zero)
+end
 
 if single_master_flag==0
     sb_parms_initial

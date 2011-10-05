@@ -6,6 +6,7 @@ function []=ps_output()
 %   =======================================================================
 %   09/2009 AH: Correct processing for small baselines output
 %   03/2010 AH: Add velocity standard deviation 
+%   09/2011 AH: Remove code that reduces extreme values
 %   =======================================================================
 
 fprintf('Writing output files...\n')
@@ -91,11 +92,11 @@ ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),ps.n_ps,1);
 meanv=load(meanvname);
 lambda=getparm('lambda');
 mean_v=-meanv.m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
-v_sort=sort(mean_v);
-min_v=v_sort(ceil(length(v_sort)*0.001));
-max_v=v_sort(floor(length(v_sort)*0.999));
-mean_v(mean_v<min_v)=min_v;
-mean_v(mean_v>max_v)=max_v;
+%v_sort=sort(mean_v);
+%min_v=v_sort(ceil(length(v_sort)*0.001));
+%max_v=v_sort(floor(length(v_sort)*0.999));
+%mean_v(mean_v<min_v)=min_v;
+%mean_v(mean_v>max_v)=max_v;
 
 
 mean_v_name=['ps_mean_v.xy'];

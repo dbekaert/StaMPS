@@ -323,6 +323,10 @@ elseif floor(bg_flag)==2
     xy_ratio=llh2local([dem_lon+lon_range;dem_lat+lat_range;0],[dem_lon;dem_lat;0]);
     aspect_ratio=[xy_ratio(1)/xy_ratio(2),1,1];
     set(gca,'plotboxaspectratio',aspect_ratio)
+    if ref_radius<inf
+        p=plot(ref_centre(1),ref_centre(2),'k*');
+        set(p,'markersize',10,'linewidth',1)
+    end
 
     
 elseif bg_flag==3    % plot on 3D DEM

@@ -3,6 +3,9 @@
 # Can be run in place of make_ifgs when a DEM need not be subtracted
 #
 # Andy Hooper, Feb 2010
+# ===========================================================================
+# 06/2011 AH: Create dummy heights file for geocoding
+# ===========================================================================
 
 set WORKDIR = ".." 
 
@@ -46,6 +49,12 @@ sed -n '/LOGFILE/,$p' $WORKDIR/interferogram.dorisin >> tmp.dorisin
 \rm -f cint.minrefdem* >& /dev/null
 doris $WORKDIR/interferogram_nodem.dorisin >> step_ifg.log
 \mv -f cint.minrefpha.raw cint.minrefdem.raw
+
+if (! -e $WORKDIR/dummy_dem_radar.raw) then
+    @ numbytes = $width * 4 
+    dd if=/dev/zero of=$WORKDIR/dummy_dem_radar.raw count=$numlines bs=$numbytes
+endif
+ln -sf $WORKDIR/dummy_dem_radar.raw dem_radar.raw
 
 set endras = l.ras
 set endraw = l.raw

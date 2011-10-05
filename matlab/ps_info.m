@@ -9,17 +9,20 @@ function []=ps_info()
 %   01/2010 AH: Give single master info for small baselines too
 %   10/2010 MA: added noise estimates 
 %   06/2011 AH: remove noise estimates for small baselines
+%   10/2011 AH: check for small baselines before inverting for bperp
 %   ======================================================================
 
 load psver
 psname=['ps',num2str(psver)];
 ifgstdname=['ifgstd',num2str(psver)];
+rcname=['rc',num2str(psver)];
+pmname=['pm',num2str(psver)];
 
 small_baselines_flag=getparm('small_baselines_flag');
 
 ps=load(psname);
 
-if isfield(ps,'ifgday')
+if strcmpi(small_baselines_flag,'y')
     G=zeros(ps.n_ifg,ps.n_image);
     for i=1:ps.n_ifg
          G(i,ps.ifgday_ix(i,1))=-1;
@@ -32,7 +35,7 @@ else
     bperp=ps.bperp;
 end
 
-if ~exist([ifgstdname,'.mat'],'file') & ~strcmpi(small_baselines_flag,'y')
+if ~exist([ifgstdname,'.mat'],'file') & ~strcmpi(small_baselines_flag,'y') & exist([rcname,'.mat'],'file') & exist([pmname,'.mat'],'file')
     ps_calc_ifg_std
 end
 
@@ -46,8 +49,11 @@ end
 
 for i=1:size(ps.day,1)
     aa=[datestr(ps.day(i))];
-    % fprintf('%3s  %s %5s m\n',num2str(i),aa,num2str(round(bperp(i))));
-    fprintf('%3s  %s %5s m   %.3f deg\n',num2str(i),aa,num2str(round(bperp(i))), ifg_std(i));
+    if ifg_std(i)==0
+      fprintf('%3s  %s %5s m\n',num2str(i),aa,num2str(round(bperp(i))));
+    else
+      fprintf('%3s  %s %5s m   %.3f deg\n',num2str(i),aa,num2str(round(bperp(i))), ifg_std(i));
+    end 
 end
 fprintf('Number of stable-phase pixels: %d\n',ps.n_ps);
 

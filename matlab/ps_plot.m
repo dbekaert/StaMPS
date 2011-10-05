@@ -118,6 +118,7 @@ function []=ps_plot(value_type,varargin)
 %   03/2011 AH: Change ts plot radius to m
 %   03/2011 AH: Save files to home directory if read only directory
 %   03/2011 DB: Remove raster lines when plotting time series
+%   10/2011 AH: Check that pm file exists before attempting to load
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -377,8 +378,12 @@ switch(group_type)
         textsize=0;
         fig_name = 'usb';
     case {'dsb'}
-        scla=load(sclasbname);
+        scla=load(sclasbname,'K_ps_uw');
         ph_all=scla.K_ps_uw;
+        if exist([pmname,'.mat'],'file')
+            pm=load(pmname,'K_ps');
+            ph_all=ph_all+pm.K_ps;
+        end
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
@@ -576,8 +581,12 @@ switch(group_type)
         ref_ps=ps_setref;
         fig_name = 'm';
     case {'d'}
-        scla=load(sclaname);
+        scla=load(sclaname,'K_ps_uw');
         ph_all=scla.K_ps_uw;
+        if exist([pmname,'.mat'],'file')
+            pm=load(pmname,'K_ps');
+            ph_all=ph_all+pm.K_ps;
+        end
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
