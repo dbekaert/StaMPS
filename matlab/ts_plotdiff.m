@@ -40,22 +40,29 @@ end
 %
  disp('Please select a point on the figure to plot time series (TS)')
  [lon0,lat0] = ginput(1); % turn on when final
- disp(['Selected point coordinates (lon,lat):' num2str(lon0),', ', num2str(lat0) ])
-
+ disp(['Selected 1st point coordinates (lon,lat):' num2str(lon0),', ', num2str(lat0) ])
+ [lon11,lat11] = ginput(1); % turn on when final
+ disp(['Selected 2nd point coordinates (lon,lat):' num2str(lon11),', ', num2str(lat11) ])
+ 
 % MAKE A CIRCLE AROUND SELECTED POINT (lon0,lat0)
 t = linspace(0,2*pi,114); % 114 pts
-h=lon0; k=lat0;  % center cn for the circle
+%h=lon0; k=lat0;  % center cn for the circle
 r=radiusfactor;
                    % change radius if you want to include more points
 x = r*cos(t);
-y = r*sin(t);
+y = r*sin(t); % the same for both
 
 % SELECT POINTS based on LONLAT
 xy=llh2local(lonlat',[lon0,lat0])'*1000;
 in = inpolygon(xy(:,1),xy(:,2),x,y);
 n_pts_near=sum(in);  % how many ps found
 
-if sum(in) == 0
+xy11=llh2local(lonlat',[lon11,lat11])'*1000;
+in11= inpolygon(xy11(:,1),xy11(:,2),x,y);
+n_pts_near11=sum(in11);  % how many ps found
+
+
+if sum(in) == 0 || sum(in11) == 0
     disp(['No points found in radius of ', num2str(r) ] )
     disp('Please make new selection increasing radius factor...')
     break     % no pts selecte
@@ -63,6 +70,7 @@ end
 
 % PLOT selection and points
 figure
+    subplot(2,2,[1 3])
     set(gcf,'name',['Found #pt(s): ', num2str(n_pts_near),...
         '  in radius: ', num2str(r), ' m. ', momfig_name ])
     circlell=local2llh([x;y]/1000,[lon0,lat0]);
@@ -74,6 +82,21 @@ figure
     lat2=lonlat(in,2);
     plot(lon2,lat2,'dr')               
     axis image; hold off
+    title('Pt 1')
+
+    subplot(2,2,[2 4])
+    set(gcf,'name',['Found #pt(s): ', num2str(n_pts_near),...
+        '  in radius: ', num2str(r), ' m. ', momfig_name ])
+    circlell=local2llh([x;y]/1000,[lon11,lat11]);
+    plot(circlell(1,:),circlell(2,:));
+    hold on
+    plot(lon11,lat11,'o')
+
+    lon2=lonlat(in11,1);
+    lat2=lonlat(in11,2);
+    plot(lon2,lat2,'dr')               
+    axis image; hold off    
+    title('Pt 2')    
     
 % if ps>1 than average
 % [dist,az] = distance(lat0,lon0,lat2,lon2); % or use llh2local
@@ -88,12 +111,15 @@ figure
   
 % PLOT TS for given point(s)
 ts=-ph_uw(in,:)*lambda*1000/(4*pi);
+ts11=-ph_uw(in11,:)*lambda*1000/(4*pi);
 %G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
 %x_hat=G\double(ts');
 
 offset=pi*1000*lambda/(4*pi);
 
 ts_hat=nanmean(ts,1);
+ts_hat11=nanmean(ts11,1);
+ts_hatdiff=ts_hat-ts_hat11;
 %ts_hat=G*x_hat;
 %tsup_hat=ts_hat+offset;
 %tslo_hat=ts_hat-offset;
@@ -125,20 +151,24 @@ ts_hat=nanmean(ts,1);
      ylabel('Bperp [m]')
    grid on
    % TS
-   subplot(10,10,[11 87]) % subplot(10,1,2:9)
+   %subplot(10,10,[11 87]) % subplot(10,1,2:9)
+   subplot(10,10,[11 47]) % subplot(10,1,2:9)
        set(gcf,'name',[ ' Times series plot for #point(s): ',...
         num2str(n_pts_near), ' ', momfig_name])
-    h1=plot(day,ts,'--*'); hold on
+    h1=plot(day,ts,'--*b'); hold on  % PTS 1
     %plot(day,ts_hat,'-*r','LineSmoothing','on'); % mess up ticks
-    h2=plot(day,ts_hat,'-ok');
-    set(h2,'linewidth',2)
+   %h2=plot(day,ts_hat,'-ok'); % ts_hat diff
+   % set(h2,'linewidth',2)
     %h3=plot(day,tsup_hat,'-.g');
     %h4=plot(day,tslo_hat,'-.g');
+      h3=plot(day,ts_hat,'-*b','linewidth',2);
+      h4=plot(day,ts_hat11,'-*r','linewidth',2);
+    h5=plot(day,ts11,'--or'); % PTS 2
     hold off
     grid on
-    ylabel('mm');
-    xlabel('Time [mmmyy]')
-    %datetick('x','mmmyy')  % keepticks or see below
+    ylabel('[mm]');
+    %xlabel('Time [mmmyy]')
+    %%%datetick('x','mmmyy')  % keepticks or see below
    
     ts_years=unique(datenum(datestr(day,'yyyy'),'yyyy'));
     ts_dates=[ts_years(1):365.25:ceil(ts_years(end)+365.25)];
@@ -146,7 +176,17 @@ ts_hat=nanmean(ts,1);
     set(gca, 'XTick',ts_dates);
     set(gca, 'XTickLabel', datestr(ts_dates,'mmmyy'));
     % annotate velocit slope in ts plot  
-     
+   subplot(10,10,[51 87])
+      hold on
+      h2=plot(day,ts_hatdiff,'-ok'); % ts_hat diff
+      set(h2,'linewidth',2)
+      hold off
+      grid on
+    ylabel('TS Difference [mm]');
+    xlabel('Time [mmmyy]')
+    set(gca, 'XTick',ts_dates);
+    set(gca, 'XTickLabel', datestr(ts_dates,'mmmyy'));
+    
    % IFG Dates - excluding master 
    subplot(10,10,[18 90]) % subplot for rectangle
       putdates(0.05,1,datestr(day,'yyyy-mm-dd'),0.035,9) % putdates(xstart, ystart, labels, labeloffset, fontsize)

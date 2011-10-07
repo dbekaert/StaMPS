@@ -632,6 +632,16 @@ switch(group_type)
             ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla;
             clear scla
             fig_name = 'v-do';
+         case {'v-dos'}
+             if strcmp('n',scla_deramp)
+             disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+             return;
+             end
+             scla=load(sclaname);
+             scn=load(scnname);
+             ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - scn.ph_scn_slave;
+             clear scla scn
+             fig_name = 'v-dos';
         case {'v-a'}
             aps=load(apsname);
             ph_uw=ph_uw - aps.ph_aps_slave;
@@ -689,7 +699,8 @@ switch(group_type)
         ph_uw=ph_uw(:,unwrap_ifg_index);
         day=day(unwrap_ifg_index);
         
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),n_ps,1);
+        %ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),n_ps,1);
+        ph_uw=ph_uw-repmat(nanmean(ph_uw(ref_ps,:),1),n_ps,1);
         % Each ifg has master APS - slave APS, including master 
         % (where slave APS = master APS) so OK to include master in inversion
         if strcmpi(small_baseline_flag,'y')
@@ -1089,17 +1100,21 @@ if ts_flag == 1
   
   % new TS plot button
   mButton=uicontrol('Style', 'pushbutton', 'Callback', 'clear ph_uw; ts_plot',...
-    'String','new TS plot', 'Position', [150 30 90 20] ); % if exist don't create
+    'String','TS plot', 'Position', [150 30 90 20] ); % if exist don't create
   %                                      left bottom width height
   %mButtonposition=get(mButton,'Position')
  
+  % new TS plot button for selecting two points and difference
+  mButton=uicontrol('Style', 'pushbutton', 'Callback', 'clear ph_uw; ts_plotdiff',...
+    'String','TS double diff.', 'Position', [470 30 90 20] ); % 
+  
   % Radius Text boxes
   mTextBox=uicontrol('Style', 'edit','String','radius (m) ', 'Position',...
       [320 30 90 20] );
 
   mEditBox=uicontrol('Style', 'edit','String','100', 'Position',...
       [410 30 30 20],'BackgroundColor',[1 1 1] );
-  ts_plot   % select a point then plot, for the first time.
+%  ts_plot   % select a point then plot, for the first time.
 end
 
 
