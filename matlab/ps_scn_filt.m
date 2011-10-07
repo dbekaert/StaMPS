@@ -11,6 +11,7 @@ function []=ps_scn_filt()
 %   02/2010 AH: Bug fixed that could cause a slave scn to be set to zero
 %   11/2010 AH: If ramps estimated in step 7, subtract before scn estimation 
 %   02/2011 DB: Decreased time required for spatial filtering by factor 10
+%   10/2011 MCC: Quadratic and seasonal defo removed before scn estimation (design matrix, A_temp, is hardcoded) 
 %   =======================================================================
 logit;
 fprintf('Estimating other spatially-correlated noise...\n')
@@ -109,12 +110,39 @@ end
 isnanix=isnan(uw.ph_uw);
 uw.ph_uw(isnanix)=0;
 dph=ph_all(edges_nz(:,3),:)-ph_all(edges_nz(:,2),:);
+
+%MCC
+%with respect to an arbitrary date doesnt matter which
+years=(day- datenum('01-01-2000'))/365.25 ;
+%mean_years=mean(years);
+
+%years=years/mean_years;
+%MCC
+%         quad                seasonal                          Const
+A_time=[ years.^2 years sin(2*pi*years) cos(2*pi*years)-1 ones(size(years))];
+
+AA=A_time'*A_time;
+dph_orig=dph;
+modeled_defo_edges=repmat(single(NaN),size(A_time));
+%keyboard
+for n=1:size(dph,1)
+   y=dph(n,:)';
+   xhat=AA\A_time'*y;
+
+   ehat=y-A_time*xhat;
+   modeled_defo_edges(n,:)=xhat;
+   dph(n,:)=ehat;
+  
+end
+
 dph_lpt=zeros(size(dph));
 n_edges=size(dph,1);
+save('modeled_defo_edges.mat','modeled_defo_edges','A_time');
 
 fprintf('   low-pass filtering pixel-pairs in time...\n')
 
 for i1=1:n_ifg
+    
     time_diff_sq=(day(i1)-day)'.^2;
     weight_factor=exp(-time_diff_sq/2/time_win^2);
     weight_factor(master_ix)=0; % leave out master
