@@ -11,7 +11,13 @@ function []=ps_scn_filt()
 %   02/2010 AH: Bug fixed that could cause a slave scn to be set to zero
 %   11/2010 AH: If ramps estimated in step 7, subtract before scn estimation 
 %   02/2011 DB: Decreased time required for spatial filtering by factor 10
-%   10/2011 MCC: Quadratic and seasonal defo removed before scn estimation (design matrix, A_temp, is hardcoded) 
+%   10/2011 MCC: Quadratic and seasonal defo is estimated per arc (edge) and then removed
+%                before scn estimation (design matrix, A_temp, is hardcoded). 
+%                If eruption or earthquake a break point model is advicesable, but A_temp should be manually changed. 
+%               
+%   10/2011 MCC: Code to estimate scn_time_win and apply krigging for spatial estimation of APS 
+%   10/2011 MCC: Detects phase unwrapping errors per arc based on model and filtered defo. 
+%                Results are saved in unwrapping_errors_edges.mat 
 %   =======================================================================
 logit;
 fprintf('Estimating other spatially-correlated noise...\n')
@@ -29,6 +35,7 @@ phuwname=['phuw',num2str(psver)];
 sclaname=['scla',num2str(psver)];
 apsname=['aps',num2str(psver)];
 scnname=['scn',num2str(psver)]; % spatially-correlated noise
+pmname=['pm',num2str(psver)];
 
 ps=load(psname);
 uw=load(phuwname);
@@ -110,45 +117,174 @@ end
 isnanix=isnan(uw.ph_uw);
 uw.ph_uw(isnanix)=0;
 dph=ph_all(edges_nz(:,3),:)-ph_all(edges_nz(:,2),:);
+x_edges=(ps.xy(edges_nz(:,3),2)+ps.xy(edges_nz(:,2),2))*0.5;
+y_edges=(ps.xy(edges_nz(:,3),3)+ps.xy(edges_nz(:,2),3))*0.5;
 
-%MCC
+
+%%%%%%%%%%%%%%%%
+%MCC starts here
 %with respect to an arbitrary date doesnt matter which
 years=(day- datenum('01-01-2000'))/365.25 ;
 %mean_years=mean(years);
 
-%years=years/mean_years;
+%thie is used to remove deformation before filtering
 %MCC
 %         quad                seasonal                          Const
 A_time=[ years.^2 years sin(2*pi*years) cos(2*pi*years)-1 ones(size(years))];
 
 AA=A_time'*A_time;
+
 dph_orig=dph;
+
 modeled_defo_edges=repmat(single(NaN),size(A_time));
-%keyboard
-for n=1:size(dph,1)
+
+%%%%%%%%%%%%%%%%%
+%This is used to calculate temporal variagrams
+a=repmat(single(NaN),size(dph,1),1);
+c1=repmat(single(NaN),size(dph,1),1);
+c2=repmat(single(NaN),size(dph,1),1);
+%inital values
+a0=0.25;%range years
+b0=1;%not used
+c10=1;%noise variance rad
+c20=2;%sill rad
+cv_model=2;%2 exp; 3 gaussian
+Nlags=30;%number of lags used for estimating variogram from histogram
+plot_vario='n';%to do plots set to y
+decor_dist=a0*6;%max time distance to include for variagram estimation in years
+max_ob_vario=11000;
+%%%%%%%%%%%%%%%%%%
+
+rand_int=unique(randi([1,size(dph,1)],1,max_ob_vario));
+%this loop calculate defo from temporal model and at the same time the varaiogram per edge (arc)
+tic
+parfor n=1:size(dph,1)
    y=dph(n,:)';
+
+   %parameters of modeld defo
    xhat=AA\A_time'*y;
-
+   %residuals
    ehat=y-A_time*xhat;
+   
    modeled_defo_edges(n,:)=xhat;
+   
    dph(n,:)=ehat;
-  
+   %keyboard
+   %fit a varigram per edge
+   if ~isempty(find(rand_int==n))
+   [a(n) b c1(n) c2(n) emp_vario_defo_ps ] = ps_fit_vario( years,zeros(size(years)),dph(n,:),cv_model,a0,b0,c10,c20,decor_dist,plot_vario,Nlags); 
+   end
 end
+disp('Temporal variogram estimation:')
 
-dph_lpt=zeros(size(dph));
-n_edges=size(dph,1);
+toc
 save('modeled_defo_edges.mat','modeled_defo_edges','A_time');
 
 fprintf('   low-pass filtering pixel-pairs in time...\n')
 
-for i1=1:n_ifg
+mean_x=nanmean(x_edges);
+mean_y=nanmean(y_edges);
+mean_std=nanmean(nanstd(dph));
+
+%for some edges the estimation is not reliable
+%We select only those estimated variagrams that are resaonable
+ind_in=a<nanmean(years)*2 & c1<4*mean_std & c2<4*mean_std & ~isnan(a);
+%keyboard
+%if the number of remaninig edges is high enough (e.g. 100) we continue here otherwise filtering using the input window
+
+dph_lpt=zeros(size(dph));
+n_edges=size(dph,1);
+
+unwrapping_errors=repmat(int8(0),size(dph));
+if length(find(ind_in))>50
+
+  %We assume that the variagram coefficients (range, noise var and sill ) are spatially correlated and the spatial correlation can be described 
+  %with a second deg polynomial (designe matrix is A_vario.
+	A_vario=[(x_edges(ind_in)/mean_x).^2  (y_edges(ind_in)/mean_y).^2  x_edges(ind_in)/mean_x  y_edges(ind_in)/mean_y  ones(size(x_edges(ind_in),1),1)  ];
+	AA_vario=A_vario'*A_vario;
+
+  %this are the coefficients describing range, noise var and sill spatially
+  %this means that given an edge location, we are able to estimate its temporal varigram( range, noise var and sill)
+	ahat=double(AA_vario)\A_vario'*a(ind_in);%range
+	c1hat=double(AA_vario)\A_vario'*c1(ind_in);%noise var
+	c2hat=double(AA_vario)\A_vario'*c2(ind_in);%sill
+
+	kriging_method=2;
+	Nmax=ceil(mean(years)+2*std(years));
+
+corrected_dph=repmat(single(NaN),size(dph));
+tic
+	parfor n=1:n_edges
+
+    %design matrix defining the temporal variao from edge position
+   	A_vario=[(x_edges(n)/mean_x).^2  (y_edges(n)/mean_y).^2  x_edges(n)/mean_x  y_edges(n)/mean_y  1 ];
+    
+    %cv_model_current_edge
+    cv_model_all=[1 NaN A_vario*c2hat;cv_model A_vario*ahat A_vario*c1hat];
+
+    %max decorelation distance depends on range (cv_model_all(2,2)) in years
+    dx_max=cv_model_all(2,2)*4; 
+
+    temp_krigged=repmat(NaN,size(years));
+    %kriging the random function (defo) from the varigram given by cv_model_all
+    
+    %we first check for unwrapping errors
+    %we krigged at a given time wiuthout the obervation at this time
+    for nn=1:length(years) 
+       %ps_kriging expect the location of a observation given by 2 coordinates. This case the location is given by its time position therefore only once coordinate
+       %the other coordinate (y) must set to zero
+       [temp_krigged(nn) var_dph_lt  min_dist_year mean_dist_year ]=...
+        ps_kriging([years(nn~=1:length(years)) zeros(size(years(nn~=1:length(years)))) dph(n,nn~=1:length(years))' ] , [years(nn) 0 ] , Nmax,dx_max,kriging_method,cv_model_all);
+
+    end%nn=1:length(years)
+
+    
+    %2*pi differences between current and predicted valua are assumed to be caused by unwrapping error
+    unwrapping_errors(n,:)=round( (temp_krigged'-dph(n,:))/2/pi);
+
+    %Trusting very much your temporal model and temporal filter
+    %we correct unwrapping erros
+    
+    corrected_dph(n,:)= dph(n,:)+single(unwrapping_errors(n,:))*2*pi;
+
+    temp_krigged=repmat(NaN,size(years));
+
+    for nn=1:length(years)
+       %ps_kriging expect the location of a observation given by 2 coordinates. This case the location is given by its time position therefore only once coordinate
+       %the other coordinate (y) must set to zero
+       [temp_krigged(nn) var_dph_lt  min_dist_year mean_dist_year ]=...
+        ps_kriging([years zeros(size(years)) corrected_dph(n,:)' ] , [years(nn) 0 ] , Nmax,dx_max,kriging_method,cv_model_all);
+
+    end%nn=1:length(years)
+
+   dph_lpt(n,:)=temp_krigged;
+
+	end%end n=1:n_edges
+
+save('unwrapping_errors_edges.mat','x_edges','unwrapping_errors','y_edges');
+save('temp_vario.mat','ind_in','a','c1','c2','years','dph_lpt','dph','corrected_dph');
+
+disp('Time filtering :')
+toc
+dph=corrected_dph;
+%MCC time filter ends 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+else%if not enought data
+
+	if isempty(time_win)%if time_win is empty we try to estimate it anyway
+		time_win=2*nanmean(a(ind_in))*365.25;%a is in years and the filter is in days
+	end
+
+	for i1=1:n_ifg
     
     time_diff_sq=(day(i1)-day)'.^2;
     weight_factor=exp(-time_diff_sq/2/time_win^2);
     weight_factor(master_ix)=0; % leave out master
     weight_factor=weight_factor/sum(weight_factor);
     dph_lpt(:,i1)=sum(dph.*repmat(weight_factor,n_edges,1),2);
-end
+	end
+end%if length(find(ind_in))>50
 
 
 dph_hpt=dph-dph_lpt;  % leaves master APS - slave APS - slave noise (+ residue master noise)
@@ -158,7 +294,7 @@ ref_ix=1;
 
 A=sparse([[1:n_edges]';[1:n_edges]'],[edges_nz(:,2);edges_nz(:,3)],[-ones(n_edges,1);ones(n_edges,1)]);
 A=double(A(:,[1:ref_ix-1,ref_ix+1:n_ps]));
-
+%keyboard
 fprintf('   solving for high-frequency (in time) pixel phase...\n')
 
 for i=1:n_ifg
@@ -167,13 +303,78 @@ end
 
 ph_hpt=[ph_hpt(1:ref_ix-1,:);zeros(1,n_ifg);ph_hpt(ref_ix:end,:)]; % add back ref point
 
+ph_scn=nan(n_ps,n_ifg);
+
+
+ph_hpt=single(ph_hpt);
+
+krig_atmo=true;
+%%%%%%%%%%%%%%%%
+%MCC starts atmo
+
+if krig_atmo
+coh_ps=getfield(load(pmname),'coh_ps');
+fprintf('   Kriging APS ...\n')
+
+	a0=15000;%init range meters
+	b0=1;%not used
+	c10=1;%noise variance rad
+	c20=1;%sill rad
+	cv_model=2;%2 exp; 3 gaussian
+	Nlags=30;%number of lags used for estimating variogram from histogram
+	plot_vario='n';%to do plots set to y
+	decor_dist=a0*2;%max tim
+  Nmax=50;
+  init_Nmax=Nmax*10;
+  mean_x_ps=mean(ps.xy(:,2));
+  mean_y_ps=mean(ps.xy(:,3));
+
+  %we cannot use all PS to estimate the variogram due to computer load
+  %we select 3000 Ps closest to the middle. Arbitrary decision but it should not matter
+   dist_to_mid=sqrt(( ps.xy(:,2)-mean_x_ps).^2 + ( ps.xy(:,3)-mean_y_ps).^2);
+   [sorted_dist ind_sort]=sort(dist_to_mid,'ascend');
+
+  ind_vario=ind_sort(1:min(length(sorted_dist),5000));
+
+	parfor n=1:n_ifg
+    
+  
+   [a b c1 c2 emp_vario_defo_ps ] = ps_fit_vario( ps.xy(ind_vario,2),  ps.xy(ind_vario,3),ph_hpt(ind_vario,n),cv_model,a0,b0,c10,c20,decor_dist,'n',Nlags);
+
+   cv_model_all=[1 NaN c2;cv_model a c1];
+
+    %max decorelation distance depends on range (cv_model_all(2,2)) in meters
+    dx_max=cv_model_all(2,2)*4;
+    aps=repmat(single(NaN),n_ps,1);
+    
+    for nn=1:n_ps
+
+       %dist=single(sqrt((ps.xy(:,2)-ps.xy(nn,2)).^2 + (ps.xy(:,3)-ps.xy(nn,3)).^2));
+       %[sorted_dist ind_sort_dist]=sort(dist,'ascend');
+       %max_dist=sorted_dist(init_Nmax);
+       %min_coh=nanmean(coh_ps(ind_sort_dist(1:init_Nmax)));
+       %ind_coh=dist<max_dist & coh_ps>min_coh;
+
+       ind_coh=':';
+       [aps(nn) var_dph_lt  min_dist_year mean_dist_year ]=...
+        ps_kriging([ ps.xy(ind_coh,2) ps.xy(ind_coh,3) ph_hpt(ind_coh,n)], [ps.xy(nn,2) ps.xy(nn,3)] , Nmax,dx_max,kriging_method,cv_model_all);
+
+    end%nn=1:length(years)
+     
+   ph_scn(:,n)=aps;
+
+	end
+
+%MCC APS ends
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+else
 
 ph_hpt(:,deramp_ix)=ph_hpt(:,deramp_ix)+ph_ramp;
 
 ph_hpt=single(ph_hpt);
 
 sigma_sq_times_2=2*scn_wavelength.^2;
-ph_scn=nan(n_ps,n_ifg);
 patch_dist=scn_wavelength*4;
 patch_dist_sq=patch_dist*patch_dist;
 ix_range=ceil(n_ps/(max(ps.xy(:,3))-min(ps.xy(:,3)))*patch_dist*0.2);
@@ -184,6 +385,7 @@ ps.xy(:,1)=[1:n_ps]';
 fprintf('   low-pass filtering in space...\n')
 
 for i=1:n_ps
+    
     x_min=ps.xy(i,2)-patch_dist;
     x_max=ps.xy(i,2)+patch_dist;
     y_min=ps.xy(i,3)-patch_dist;
@@ -220,10 +422,16 @@ for i=1:n_ps
         disp([num2str(i),' PS processed'])
     end
 end
+end % end krig_atmo
 
 ph_scn=ph_scn-repmat(ph_scn(1,:),n_ps,1); % re-ref to 1st PS
 ph_scn_slave=zeros(size(uw.ph_uw));
 ph_scn_slave(:,unwrap_ifg_index)=ph_scn;
+
+if  krig_atmo
+  ph_scn_slave(:,deramp_ix)=ph_scn_slave(:,deramp_ix)+ph_ramp;
+  ph_scn_slave=ph_scn_slave-repmat(ph_scn_slave(1,:),n_ps,1);
+end
 ph_scn_slave(:,master_ix)=0;
 
 save(scnname,'ph_scn_slave','ph_hpt','ph_ramp')    
