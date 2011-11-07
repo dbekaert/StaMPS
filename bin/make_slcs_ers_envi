@@ -1,0 +1,8 @@
+#!/bin/tcsh -f
+
+foreach dir(`cat make_slcs.list`)
+   cd $dir 
+   step_slc_ers_envi
+   cd .. 
+end
+
