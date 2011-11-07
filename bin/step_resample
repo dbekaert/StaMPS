@@ -34,7 +34,7 @@ set last_p = `get_slc_lp master.res  | awk '{print $4}'`
 set first_l = `get_slc_lp master.res | awk '{print $1}'`
 set last_l = `get_slc_lp master.res  | awk '{print $2}'`
 
-sed -n '1,/RS_OUT_FORMAT/p' $WORKDIR/resample.dorisin > $WORKDIR/tmp_resample.$$
+sed -n '1,/^RS_OUT_FORMAT/p' $WORKDIR/resample.dorisin > $WORKDIR/tmp_resample.$$
 mv $WORKDIR/tmp_resample.$$ $WORKDIR/resample.dorisin
 echo "RS_DBOW $first_l $last_l $first_p $last_p" >> $WORKDIR/resample.dorisin
 echo "STOP" >>  $WORKDIR/resample.dorisin 
