@@ -30,6 +30,10 @@ endif
 
 set slave_slc = $cwd/"slave_crop_ovs.slc"
 
+if (! -e $WORKDIR/cropfiles.dorisin) then
+    cp -f $DORIS_SCR/ovsfiles.dorisin $WORKDIR/
+endif
+
 #slave dorisin part
 sed -n '1,/S_OVS_OUT_FORMAT/p' $WORKDIR/ovsfiles.dorisin > tmp_ovsfiles.$$
 echo "S_OVS_OUT  $slave_slc"  >> tmp_ovsfiles.$$
