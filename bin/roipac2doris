@@ -18,6 +18,7 @@
 # 07/2008 AH: Set LINES from FILE_LENGTH instead of YMAX-YMIN
 # 05/2009 AH: Set azimuth bandwidth to Doppler bandwidth
 # 10/2009 AH: Add extra processes to process control
+# 10/2011 MA: Updated line and pixel convetion for Doris
 # ===========================================================
 
 
@@ -160,6 +161,11 @@ else
         set PRODUCT = $ERS 
     endif
 endif
+
+### Update radar coordinates for Doris line and pixel convention
+@ LINE_F = $LINE_F + 1  # very first line should be 1
+@ PIX_F  = $PIX_F  + 1
+
 ### Derive other parameters
 #@ LINES    = ( $LINE_L - $LINE_F ) + 1
 @ LINESp1  = $LINES + 1
@@ -305,7 +311,7 @@ Xtrack_f_DC_quadratic (Hz/s/s, early edge):     $FDHZSS
 Range_time_to_first_pixel (2way) (ms): 		$RAN_T1
 Range_sampling_rate (computed, MHz): 		$RSR_OUT
 Total_range_band_width (MHz):                   $RBW
-Datafile: 					$DUMMY
+Datafile: 					ROIPACSLC     
 Number_of_lines_original: 			$LINES
 Number_of_pixels_original: 			$NPIX
 *******************************************************************
