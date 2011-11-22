@@ -1,0 +1,89 @@
+#!/bin/csh -f
+#
+# Andy Hooper, 10-Jun-2011
+#
+# ===========================================================================
+# ===========================================================================
+### Initial welcome
+set PRG = `basename "$0"`
+set AUT = "Andy Hooper, (c)2011"
+echo "$PRG $AUT"
+echo " "
+
+### Handle wrong input
+set usage = "1"
+if ( $#argv >= 1 ) set usage = "0"
+if ( "$usage" == "1" ) then
+  echo "  $PRG imports gamma resampled SLCs to Doris/StaMPS"
+  echo " "
+  echo "  Current directory should contain master and resampled slave slcs "
+  echo "  in format YYYYMMDD.slc or YYYYMMDD.rslc "
+  echo " "
+  echo "  A new INSAR_YYYYMMDD directory will be setup in current directory."
+  echo "  into which the SLCs will be moved"
+  echo " "
+  echo "  USAGE:  $PRG  YYYYMMDD"
+  echo "          where YYYYMMDD is the master date"
+  echo " "
+  exit 1
+endif
+unset usage
+
+
+set masterdate = $1 
+set CURRDIR = `echo $cwd` 
+set WORKDIR = "." 
+set INSARDIR = "INSAR_$masterdate"
+
+if (! -e $INSARDIR) then
+    mkdir $INSARDIR
+endif
+cd $INSARDIR
+set INSARDIR = $cwd
+cd $CURRDIR
+
+if ( -e $masterdate.slc | -e $masterdate.rslc) then
+  mv $masterdate.*slc $INSARDIR/$masterdate\_crop.slc
+  mv $masterdate.*par $INSARDIR/$masterdate\_crop.slc.par
+  cd $INSARDIR
+  set slc = `\ls *slc`
+  byteswap $slc tmp.$$ -w 2
+  \mv -f tmp.$$ $slc
+  gamma2doris $masterdate\_crop
+  set HEADING = `grep heading $slc.par | gawk '{print $2}'`
+  echo "HEADING " $HEADING > $slc.rsc
+endif
+
+set prod = `grep 'Product type specifier:' master.res | gawk '{print $4}'`
+echo $prod
+if ($prod == 'ALOS') then
+    echo 5 > looks.txt
+    echo 3 > ar.txt
+else
+if ($prod == 'RADARSAT-2') then
+    echo 10 > looks.txt
+    echo 1 > ar.txt
+else
+    echo 4 > looks.txt
+    echo 5 > ar.txt
+endif
+endif
+
+cd $CURRDIR
+\ls -d [1,2]*slc.par | sed "/$masterdate/ d" > make_slcs.list 
+foreach par(`cat make_slcs.list`)
+   set slavedate = `echo $par | gawk 'BEGIN {FS="."} {print $1}'`
+   echo $slavedate
+   mkdir $INSARDIR/$slavedate >& /dev/null
+   mv $slavedate.*slc $INSARDIR/$slavedate/slave_res.slc
+   mv $slavedate.*par $INSARDIR/$slavedate/slave_res.slc.par
+   cd $INSARDIR/$slavedate
+   set slc = `\ls *slc`
+   byteswap slave_res.slc tmp.$$ -w 2
+   set width = `grep range_samples slave_res.slc.par | gawk '{print $2}'` 
+   cpxfiddle -w $width -fci2 -ofloat -qnormal tmp.$$  > slave_res.slc
+   gamma2doris slave_res s
+   cp ../master.res .
+   step_coarseorb
+   cd $CURRDIR
+end

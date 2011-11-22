@@ -1,0 +1,350 @@
+#!/bin/csh -f
+# 
+# gamma2doris [dir/]date [s]
+# 
+# Creates a doris_resultfile for further processing with doris.
+# processing order:
+#  1. Run Gamma to create SLCs 
+#  2. this script		(create result input file for doris)
+#  3. doris [porbits/...]	(further processing)
+# 
+# 
+# Andy Hooper, 10-Jun-2011
+#
+# ===========================================================
+# ===========================================================
+
+
+
+### Initial welcome
+set PRG = `basename "$0"`
+set AUT = "Andy Hooper, (c)2011"
+echo "$PRG $AUT"
+echo " "
+
+### Handle wrong input
+set usage = "1"
+if ( $#argv == 1 ) set usage = "0"
+if ( $#argv == 2 && "$2" == "s" ) set usage = "0"
+if ( "$usage" == "1" ) then
+  echo "  $PRG  [DIR/]DATE [s]"
+  echo "    Create a Doris_resultfile based on "
+  echo "    the .(r)slc and .(r)slc.par files of Gamma"
+  echo " "
+  echo "  USAGE:      $PRG  DATE [s]"
+  echo "  INPUT:      DATE (and optionally a slave identifier)"
+  echo "  OUTPUT:     Doris resultfile: master.res or slave.res"
+  echo " "
+  exit 1
+endif
+unset usage
+
+
+### Handle input
+set IN  = $1
+set OUT = "master.res"
+if ( "$2" == "s" ) set OUT = "slave.res"
+set OWD = `pwd`
+set OUT = $OWD/$OUT
+
+### Check if $IN has a directory in front of it.
+# Check first component is directory.
+set NEWDIR = $IN:h
+if ( ! -d $NEWDIR ) set NEWDIR = "."
+# Remove first component to obtain orbit number.
+set IN = $IN:t
+cd $NEWDIR
+
+set RSC = $IN.*slc.par
+if ( ! -e $RSC ) then
+  echo "Inputfile $RSC does not exist."
+  echo "Please enter correct name"
+  set RSC = $<
+  if ( ! -e $RSC ) then
+    echo "File $RSC does not exist either, exiting"
+    exit 2
+  else
+    echo "continuing"
+  endif
+endif
+
+set SLCfile = $IN.*slc
+if ( ! -e $SLCfile ) then
+  echo "Inputfile $SLCfile does not exist."
+  echo "Please enter correct name"
+  set SLCfile = $<
+  if ( ! -e $SLCfile ) then
+    echo "File $SLCfile does not exist either, exiting"
+    exit 2
+  else
+    echo "continuing"
+  endif
+endif
+
+
+
+### Get parameters from RSC and ROIOUT
+echo " Start reading $RSC"
+set DUMMY   = "dummyvariable"
+set UNKNOWN = "9999"
+set SOL     = "299792458"		# speed of light in m/s
+set PI     = "3.141592654"		
+set LINES   = `awk '/azimuth_lines/      	{print $2}' 	< $RSC`
+#set LINE_L  = `awk '/YMAX/      	{print $2}' 	< $RSC`
+set LINE_F  = "1" 
+set NPIX    = `awk '/range_samples/     	{print $2}' 	< $RSC`
+set PIX_F   = "1" 
+set XSHIFT  = "0"
+#
+set ERS     = `awk '/^sensor/   	{print $2}'	< $RSC`
+set YEAR    = `awk '/date/ 	{print $2}'	< $RSC`
+set MONTH   = `awk '/date/ 	{print $3}'	< $RSC`
+set DAY     = `awk '/date/ 	{print $4}'	< $RSC`
+set AZIT1   = `awk '/start_time/	{print $2}'     < $RSC`
+set AZITN   = `awk '/end_time/	{print $2}'     < $RSC`
+set AZ_PIX  = `awk '/azimuth_pixel_spacing/ {print $2}'     < $RSC`
+set PRF_PRM = `awk '/prf/		{print $2}'	< $RSC`
+set RSR     = `awk '/adc_sampling_rate/ {print $2}' < $RSC`
+set RFREQ  = `awk '/radar_frequency/	{print $2}'	< $RSC`
+set NEARR_SLC   = `awk '/near_range_slc/	{print $2}'	< $RSC`
+set RE      = `awk '/earth_radius_below_sensor/	{print $2}'	< $RSC`
+set HEIGHT0      = `awk '/sar_to_earth_center/	{print $2}'	< $RSC`
+set HEADING      = `awk '/heading/	{print $2}'	< $RSC`
+#set FD1     = `awk '/DOPPLER_RANGE0/    {print $2}'	< $RSC`
+#set FDD1    = `awk '/DOPPLER_RANGE1/    {print $2}'	< $RSC`
+#set FDDD1   = `awk '/DOPPLER_RANGE2/    {print $2}'	< $RSC`
+set FD1 = `gawk '/doppler_polynomial/ {print $2}' < $RSC`
+set FDD1 = `gawk '/doppler_polynomial/ {print $3}' < $RSC`
+set FDDD1 = `gawk '/doppler_polynomial/ {print $4}' < $RSC`
+set CHIRP   = `awk '/CHIRP_SLOPE/	{printf "%12.10f", $2/1e11}' < $RSC`
+set PULSE   = `awk '/PULSE_LENGTH/	        {printf "%12.10f", $2/1e-5}' < $RSC`
+set LAT   = `awk '/center_latitude/    	{print $2}'     < $RSC`
+set LON   = `awk '/center_longitude/	        {print $2}'     < $RSC`
+set ORB   = ""
+set ABW   = `awk '/azimuth_proc_bandwidth/	        {print $2}'     < $RSC`
+set RBW   = `awk '/chirp_bandwidth/	        {print $2}'     < $RSC`
+set NUMSTATE   = `awk '/number_of_state_vectors/	        {print $2}'     < $RSC`
+set STATEFT   = `awk '/time_of_first_state_vector/	        {print $2}'     < $RSC`
+set STATEINT   = `awk '/state_vector_interval/	        {print $2}'     < $RSC`
+
+if ($ERS == "ERS1" | $ERS == "ERS2") then
+    set PRODUCT = `echo ERS $ERS SLC ORB: $ORB`
+    echo $PRODUCT
+else
+    if ($ERS == "Envisat") then
+        set PRODUCT = "ASAR"
+    else
+        set PRODUCT = $ERS 
+    endif
+endif
+### Derive other parameters
+
+set LAMBDA = `echo $RFREQ $SOL | awk '{printf "%12.10f", $2/$1}'`
+
+#@ LINES    = ( $LINE_L - $LINE_F ) + 1
+@ LINESp1  = $LINES + 1
+@ LINE_L   = ( $LINES + $LINE_F ) - 1
+@ PIX_L    = ( $NPIX  + $PIX_F )  - 1
+set FDHZS = `echo $FDD1 $RSR | awk '{print $1*$2}'`
+set FDHZSS = `echo $FDDD1 $RSR | awk '{print $1*$2*$2}'`
+set RSR_OUT = `echo $RSR | awk '{printf "%12.10f", $1/1e6}'`
+
+echo "First line:                $LINE_F"
+echo "Last line:                 $LINE_L"
+echo "Number of lines:           $LINES"
+echo "First range pixel:         $PIX_F"
+echo "Last range pixel:          $PIX_L"
+echo "Number of range pixels:    $NPIX"
+echo "Nominal PRF from rsc file: $PRF_PRM [Hz] (used in Doris)"
+set DR        = `echo $SOL $RSR_OUT | awk '{printf"%12.10f",($1/2000000.)/$2}'`
+echo "Slant range resolution:    $DR [m]"
+echo "Near range in SLC image:   $NEARR_SLC [m]"
+set RAN_T1    = `echo $NEARR_SLC $SOL | awk '{printf"%12.10f",$1/($2/2000)}'`
+echo "Range time to first pixel: $RAN_T1 [ms]"
+set RBW    = `echo $RBW | awk '{printf"%12.10f",$1/1e6}'`
+echo "Lat of mid pixel: $LAT"
+echo "Lon of mid pixel: $LON"
+set HEIGHT = `echo $HEIGHT0 $RE | awk '{printf "%12.10f", $1-$2}'`
+echo "Height of satellite: $HEIGHT"
+
+set MONTH = `echo $MONTH | gawk '{printf"%02i",$1}'`
+set DAY = `echo $DAY | gawk '{printf"%02i",$1}'`
+set AZIT1_WS =  `echo $AZIT1 | awk '{printf"%12i",$1}'`
+#set AZIT1_DS = `echo "$AZIT1 -$AZIT1_WS" | bc -l`
+set AZIT1_DS = `(echo "$AZIT1 -$AZIT1_WS"; echo '') | bc -l`
+#set UTC1 =  `date --date="$YEAR$MONTH$DAY 0:0:$AZIT1_WS" +"%d-%b-%Y %H:%M:%S"`$AZIT1_DS 
+set UTC1 =  `date --date="$YEAR$MONTH$DAY $AZIT1_WS seconds" +"%d-%b-%Y %H:%M:%S"`$AZIT1_DS 
+
+#set SLCfile = $IN.slc
+set OFORMAT = 'complex_short'
+if ( ${#SLCfile} != 1 ) then
+  echo " SLC file: $SLCfile not found, please correct output file $OUT"
+else
+  # check with filesize
+  #not ok for some large ones...set SLCsize=`ls -l $SLCfile | cut -c35-46`
+  set SLCsize = `\ls -og $SLCfile | awk '{print $3}'`
+  @ shortsize = ( ( $LINES * $NPIX ) * 4 )
+  @ floatsize = ( ( $LINES * $NPIX ) * 8 )
+  if ( "$shortsize" != "$SLCsize" ) then
+    echo "Setting file format to: complex_real4, based on file size."
+    set OFORMAT = 'complex_real4'
+    if ( "$floatsize" != "$SLCsize" ) then
+      echo "***WARNING***"
+      echo "could not figure out format of SLC file $SLCfile"
+      echo "set to: $OFORMAT"
+      echo "Please check this."
+    endif
+  endif
+  echo "file size of SLC image: $SLCfile = $SLCsize"
+  echo "file format (computed): $OFORMAT"
+endif
+
+### Create a new resultfile with name $OUT
+set DATE = `date`
+echo $DATE
+cat << ___EOFHEREDOC___ >! $OUT
+ TU DELFT - DEOS
+=====================================================
+___EOFHEREDOC___
+
+if ( "$2" != "s" ) then
+  echo "MASTER RESULTFILE: 	$OUT" >> $OUT
+else
+  echo "SLAVE RESULTFILE: 	$OUT" >> $OUT
+endif
+
+cat << ___EOFHEREDOC___ >> $OUT
+
+This file has been created with $PRG at $DATE
+InSAR PROCESSOR: 	Doris
+Version of software: 	Version ??
+Compiled at: 		??
+Creation of this file: 	??
+=====================================================
+
+
+Start_process_control
+readfiles:		1
+precise_orbits:		0
+crop:			1
+sim_amplitude:		0
+master_timing:		0
+oversample:             0
+resample:               0
+filt_azi:		0
+filt_range:		0
+___EOFHEREDOC___
+
+if ( "$2" == "s" ) echo "resample:               1" >> $OUT
+
+cat << ___EOFHEREDOC___ >> $OUT
+End_process_control
+
+*******************************************************************
+*_Start_readfiles:
+*******************************************************************
+Volume file: 					$DUMMY
+Volume_ID: 					$$               
+Volume_identifier: 				$$
+Volume_set_identifier: 				$$
+(Check)Number of records in ref. file: 		$LINESp1
+Product type specifier: 		 	$PRODUCT
+Location and date/time of product creation: 	GENERATED AT $DUMMY at $DUMMY
+Scene identification: 				$DUMMY
+Scene location: 				$DUMMY
+Leader file: 					$DUMMY
+Scene_centre_latitude: 				$LAT
+Scene_centre_longitude: 			$LON
+Radar_wavelength (m): 				$LAMBDA
+First_pixel_azimuth_time (UTC): 		$UTC1
+Pulse_Repetition_Frequency (nominal, Hz): 	$PRF_PRM
+Total_azimuth_band_width (Hz):                  $ABW
+Xtrack_f_DC_constant (Hz, early edge):          $FD1
+Xtrack_f_DC_linear (Hz/s, early edge):          $FDHZS
+Xtrack_f_DC_quadratic (Hz/s/s, early edge):     $FDHZSS
+Range_time_to_first_pixel (2way) (ms): 		$RAN_T1
+Range_sampling_rate (computed, MHz): 		$RSR_OUT
+Total_range_band_width (MHz):                   $RBW
+Datafile: 					$DUMMY
+Number_of_lines_original: 			$LINES
+Number_of_pixels_original: 			$NPIX
+*******************************************************************
+* End_readfiles:_NORMAL
+*******************************************************************
+
+
+*******************************************************************
+*_Start_precise_orbits:
+*******************************************************************
+        t(s)    X(m)    Y(m)    Z(m)
+NUMBER_OF_DATAPOINTS:                   $NUMSTATE
+___EOFHEREDOC___
+
+set STATEVECS1   = `awk '/state_vector_position_/ {print $2}'     < $RSC`
+set STATEVECS2   = `awk '/state_vector_position_/ {print $3}'     < $RSC`
+set STATEVECS3   = `awk '/state_vector_position_/ {print $4}'     < $RSC`
+set INDEX = 1
+while ($INDEX <= $NUMSTATE)
+set STATET = `echo $STATEFT $STATEINT $INDEX | awk '{printf "%12.10f", $1+$2*($3-1)}'`
+set STATEVEC1 = $STATEVECS1[$INDEX]
+set STATEVEC2 = $STATEVECS2[$INDEX]
+set STATEVEC3 = $STATEVECS3[$INDEX]
+echo "$STATET  $STATEVEC1  $STATEVEC2  $STATEVEC3" >> $OUT
+@ INDEX++
+end
+
+cat << ___EOFHEREDOC___ >> $OUT
+*******************************************************************
+* End_precise_orbits:_NORMAL
+*******************************************************************
+
+
+*******************************************************************
+___EOFHEREDOC___
+ 
+if ( "$2" != "s" ) then
+  echo '*_Start_crop:                                   master' >> $OUT
+else
+  echo '*_Start_crop:                                   slave' >> $OUT
+endif
+
+cat << ___EOFHEREDOC___ >> $OUT
+*******************************************************************
+Data_output_file:                               $cwd/$SLCfile
+Data_output_format:                             $OFORMAT
+First_line (w.r.t. original_image):             $LINE_F
+Last_line (w.r.t. original_image):              $LINE_L
+First_pixel (w.r.t. original_image):            $PIX_F
+Last_pixel (w.r.t. original_image):             $PIX_L
+*******************************************************************
+* End_crop:_NORMAL
+*******************************************************************
+
+___EOFHEREDOC___
+
+if ( "$2" == "s" ) then
+  cat << ___EOFHEREDOC___ >> $OUT
+ 
+*******************************************************************
+*_Start_resample:
+*******************************************************************
+Shifted azimuth spectrum:                       1
+Data_output_file:                               $cwd/$SLCfile
+Data_output_format:                             $OFORMAT
+Interpolation kernel:                           unknown 
+First_line (w.r.t. original_master):            $LINE_F
+Last_line (w.r.t. original_master):             $LINE_L
+First_pixel (w.r.t. original_master):           $PIX_F
+Last_pixel (w.r.t. original_master):            $PIX_L
+*******************************************************************
+* End_resample:_NORMAL
+*******************************************************************
+
+___EOFHEREDOC___
+
+endif
+
+### Tidy up
+echo " "
+echo "   Finished $0."
+echo "   Output: Parameter pool for Doris: $OUT"

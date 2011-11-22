@@ -1,0 +1,10 @@
+#!/bin/tcsh -f
+
+set WORKDIR = ".." 
+
+if (! -e $WORKDIR/coarseorb.dorisin) then
+    cp $DORIS_SCR/coarseorb.dorisin $WORKDIR
+endif
+
+rm -f coreg.out
+doris $WORKDIR/coarseorb.dorisin > step_coarse.log
