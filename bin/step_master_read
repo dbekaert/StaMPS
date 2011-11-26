@@ -42,10 +42,10 @@ set last_l = `grep last_l master_crop.in | gawk '{print $NF}'`
 set first_p = `grep first_p master_crop.in | gawk '{print $NF}'`
 set last_p = `grep last_p master_crop.in | gawk '{print $NF}'`
 
-@ first_l = $first_l - 1
-@ last_l = $last_l - 1
-@ first_p = $first_p - 1
-@ last_p = $last_p - 1
+#@ first_l = $first_l - 1    # MA 
+#@ last_l = $last_l - 1
+#@ first_p = $first_p - 1
+#@ last_p = $last_p - 1
 
 sed -n '1,/M_CROP_OUT/p' $WORKDIR/master_readfiles.dorisin > tmp_master_readfiles.$$
 echo "M_DBOW  $first_l $last_l $first_p $last_p // line low/hi pixel low/hi" >> tmp_master_readfiles.$$

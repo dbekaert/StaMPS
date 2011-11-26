@@ -39,10 +39,10 @@ foreach k (`cat $WORKDIR/make_slcs_ws.list`)
 	set first_p = `grep first_p master_crop.in | gawk '{print $NF}'`
 	set last_p = `grep last_p master_crop.in | gawk '{print $NF}'`
 
-	@ first_l = $first_l - 1
-	@ last_l = $last_l - 1
-	@ first_p = $first_p - 1
-	@ last_p = $last_p - 1
+	#@ first_l = $first_l - 1    # MA
+	#@ last_l = $last_l - 1
+	#@ first_p = $first_p - 1
+	#@ last_p = $last_p - 1
 
 	set master_slc = $masterdate"_crop.slc"
 
