@@ -21,8 +21,10 @@
 
 if [ $# != 2  ];then
 
-echo USAGE:
-echo $0 FULL_PATH_to_data  FULL_PATH_to_processing_directory
+echo -e "USAGE  : \t `basename $0` FULL_PATH_to_data  FULL_PATH_to_processing_directory"
+echo
+echo -e "Example: \t `basename $0`  /data_ESA/track394_is6/ \`pwd\`/"
+echo
 
 exit 127
 fi

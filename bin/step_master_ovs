@@ -89,6 +89,7 @@ if (! -e $INSARDIR) then
 endif
 
 cp -f master.res $INSARDIR
+set master_slc = `basename $master_slc`  # drop path, get filename
 mv $master_slc $INSARDIR
 ln -s $INSARDIR/$master_slc # MA
 

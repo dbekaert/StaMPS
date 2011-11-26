@@ -113,6 +113,7 @@ if (-e image.slc.rsc) then
     cp -f image.slc.rsc $INSARDIR/$masterdate.slc.rsc # MA
 endif
 cp -f master.res $INSARDIR
+set master_slc = `basename $master_slc`  # drop path, get filename
 mv $master_slc $INSARDIR
 ln -s $INSARDIR/$master_slc # MA
 
