@@ -878,6 +878,7 @@ switch(group_type)
     end
 else
 	ph_all = value_type;
+    ref_ps=ps_setref;
 	fig_name = 'data';
 end
 
