@@ -77,9 +77,11 @@ if plotflag=='y'
     ylabel('Wrapped Phase')
     xlabel('B_{\perp} (m)')
     subplot(2,1,1)
-    plot(pi/4/bperp_range/4/pi*0.05656*trial_mult,coh_trial,'g')
+    %plot(pi/4/bperp_range/4/pi*0.05656*trial_mult,coh_trial,'g')
+    plot(pi/4/bperp_range*trial_mult,coh_trial,'g')
     ylabel('\gamma_x')
-    xlabel('\Delta \theta^{nc}_x (radians)')
+    %xlabel('\Delta \theta^{nc}_x (radians)')
+    xlabel('Spatially uncorrelated look angle error (radians/m)')
     set(gca,'fontsize',12,'fontweight','bold')
     axis tight
     set(gca,'ylim',[0,1])

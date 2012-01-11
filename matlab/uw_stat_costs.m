@@ -7,6 +7,7 @@ function []=uw_stat_costs(unwrap_method,subset_ifg_index);
 %   01/2009 AH: Remove variation due to estimated defo from cost function
 %   03/2009 AH: Calculate phase jumps per IFG
 %   11/2009 AH: Fix 2D processing
+%   01/2012 AH: Create snaphu.conf file internally
 %   ======================================================================
 
 
@@ -88,6 +89,16 @@ ph_uw=zeros(uw.n_ps,uw.n_ifg,'single');
 ifguw=zeros(nrow,ncol);
 msd=zeros(uw.n_ifg,1);
 
+fid=fopen('snaphu.conf','w');
+fprintf(fid,'INFILE  snaphu.in\n');
+fprintf(fid,'OUTFILE snaphu.out\n');
+fprintf(fid,'COSTINFILE snaphu.costinfile\n');
+fprintf(fid,'STATCOSTMODE  DEFO\n');
+fprintf(fid,'INFILEFORMAT  COMPLEX_DATA\n');
+fprintf(fid,'OUTFILEFORMAT FLOAT_DATA\n');
+fclose(fid);
+
+
 for i1=subset_ifg_index
     fprintf('\nProcessing IFG %d of %d\n',i1,length(subset_ifg_index));
 
@@ -104,7 +115,7 @@ for i1=subset_ifg_index
     fclose(fid);
     ifgw=reshape(uw.ph(Z,i1),nrow,ncol);
     writecpx('snaphu.in',ifgw)
-    cmdstr=['!snaphu -d -f $STAMPS/snaphu.conf ',num2str(ncol),' >> snaphu.log'];
+    cmdstr=['!snaphu -d -f snaphu.conf ',num2str(ncol),' >> snaphu.log'];
     eval(cmdstr)
     fid=fopen('snaphu.out');
     ifguw=fread(fid,[ncol,inf],'float');

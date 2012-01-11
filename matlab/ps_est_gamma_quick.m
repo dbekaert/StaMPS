@@ -16,7 +16,7 @@ function []=PS_est_gamma_quick(restart_flag)
 %   12/2008 AH: avoid divide by zero for zero phase values
 %   ==========================================================
 logit;
-fprintf('Estimating gamma for candidate pixels...\n')
+logit('Estimating gamma for candidate pixels')
 
 
 if nargin<1
@@ -113,12 +113,13 @@ end
 
 max_K=max_topo_err/(lambda*rho*sin(inc_mean)/4/pi);
 bperp_range=max(bperp)-min(bperp);
-n_trial_wraps=(bperp_range*max_K/(2*pi))
+n_trial_wraps=(bperp_range*max_K/(2*pi));
+logit(sprintf('n_trial_wraps=%f',n_trial_wraps))
 
 
 if restart_flag > 0
     %disp(['Restarting: iteration #',num2str(i_loop),' step_number=',num2str(step_number)])
-    fprintf('Restarting previous run...\n')
+    logit('Restarting previous run...')
     load(pmname)
     weighting_save=weighting;
     if ~exist('gamma_change_save','var')
@@ -127,7 +128,7 @@ if restart_flag > 0
 
 
 else
-    fprintf('Initialising random distribution...\n')
+    logit('Initialising random distribution...')
     rand('state',2005)
     % determine distribution for random phase
 
@@ -178,15 +179,15 @@ n_i=max(grid_ij(:,1));
 n_j=max(grid_ij(:,2));
 
 
-fprintf('%d PS candidates to process\n',n_ps)
+logit(sprintf('%d PS candidates to process',n_ps))
 xy(:,1)=[1:n_ps]'; % assumption that already sorted in ascending column 3 (y-axis) order
 loop_end_sw=0;
 n_high_save=0;
 
 while loop_end_sw==0
   %if step_number==1     % check in case restarting and step 1 already completed
-    fprintf('\niteration #%d\n',i_loop)
-    fprintf('Calculating patch phases...\n')
+    logit(sprintf('iteration #%d',i_loop))
+    logit('Calculating patch phases...')
 
     ph_grid=zeros(n_i,n_j,n_ifg,'single');
     ph_filt=ph_grid;
@@ -212,7 +213,7 @@ while loop_end_sw==0
 %%%%%%%%%%%%% Now estimate topo error %%%%%%%%%%%%%%%%%%%%%
     if restart_flag<2
     
-        fprintf('Estimating topo error...\n')
+        logit('Estimating topo error...')
         step_number=2;
 
         for i=1:n_ps
@@ -229,7 +230,7 @@ while loop_end_sw==0
                 coh_ps(i)=0;
             end
             if i/100000==floor(i/100000)
-                fprintf('%d PS processed\n',i)
+                logit(sprintf('%d PS processed',i))
             end
         end
         
@@ -275,7 +276,8 @@ while loop_end_sw==0
         %end
 
         gamma_change_rms=sqrt(sum((coh_ps-coh_ps_save).^2)/n_ps);
-        gamma_change_change=gamma_change_rms-gamma_change_save
+        gamma_change_change=gamma_change_rms-gamma_change_save;
+        logit(sprintf('gamma_change_change=%f',gamma_change_change));
         gamma_change_save=gamma_change_rms;
         coh_ps_save=coh_ps;
 

@@ -6,10 +6,11 @@ function []=ps_smooth_scla(use_small_baselines)
 %   ======================================================================
 %   03/2009 AH: save in scla_smooth mat files
 %   06/2009 AH: orbital ramps added 
+%   01/2012 AH: Filtering strategy changed to just remove outliers
 %   ======================================================================
 %
 logit;
-fprintf('Smoothing spatially-correlated look angle error...\n')
+logit('Smoothing spatially-correlated look angle error...',2)
 
 if nargin<1
     use_small_baselines=0;
@@ -31,64 +32,63 @@ end
 
 ps=load(psname);
 scla=load(sclaname);
+K_ps_uw=scla.K_ps_uw;
+C_ps_uw=scla.C_ps_uw;
+ph_ramp=scla.ph_ramp;
+clear scla
 
 n_ps=ps.n_ps;
 n_ifg=ps.n_ifg;
 
-disp(sprintf('   Number of points per ifg: %d',n_ps))
+logit(sprintf('   Number of points per ifg: %d',n_ps))
 
-sigma_sq_times_2=2*scn_wavelength.^2;
-patch_dist=scn_wavelength*4;
-patch_dist_sq=patch_dist*patch_dist;
-ix_range=ceil(n_ps/(max(ps.xy(:,3))-min(ps.xy(:,3)))*patch_dist*0.2);
-ix1=1;
-ix2=ix_range;
-ps.xy(:,1)=[1:n_ps]';
-K_ps_uw_smooth=zeros(size(scla.K_ps_uw));
-C_ps_uw_smooth=K_ps_uw_smooth;
+nodename=['scla.1.node'];
+fid=fopen(nodename,'w');
+fprintf(fid,'%d 2 0 0\n',n_ps);
+ps.xy(:,1)=1:n_ps;
+fprintf(fid,'%d %f %f\n',ps.xy');
+fclose(fid);
 
-for i=1:n_ps
-    x_min=ps.xy(i,2)-patch_dist;
-    x_max=ps.xy(i,2)+patch_dist;
-    y_min=ps.xy(i,3)-patch_dist;
-    y_max=ps.xy(i,3)+patch_dist;
+!triangle -e scla.1.node
 
-    ix1=ix1+ix_range;
-    ix1(ix1>n_ps)=n_ps;
-    while ix1>1 & ps.xy(ix1-1,3)>=y_min
-        ix1=ix1-ix_range;
-    end
+fid=fopen('scla.2.edge','r');
+header=str2num(fgetl(fid));
+N=header(1);
+edges=zeros(N,4);
+edges=fscanf(fid,'%d %d %d %d\n',[4,N])';
+fclose(fid);
+n_edge=size(edges,1);
+if n_edge~=N
+    error('missing lines in scla.2.edge')
+end
+  
+logit(sprintf('Number of arcs per ifg=%d',n_edge))
 
-    ix2=ix2-ix_range;
-    ix2(ix2<1)=1;
-        while ix2<n_ps & ps.xy(ix2+1,3)<=y_max
-        ix2=ix2+ix_range;
-    end
+Kneigh_min=inf(n_ps,1,'single');
+Kneigh_max=-inf(n_ps,1,'single');
+Cneigh_min=inf(n_ps,1,'single');
+Cneigh_max=-inf(n_ps,1,'single');
 
-    ix1(ix1<1)=1;
-    ix2(ix2>n_ps)=n_ps;
-
-    xy_near=ps.xy(ix1:ix2,:);
-    xy_near=xy_near(xy_near(:,2)>=x_min & xy_near(:,2)<=x_max & xy_near(:,3)>=y_min & xy_near(:,3)<=y_max,:);
-    dist_sq=(xy_near(:,2)-ps.xy(i,2)).^2+(xy_near(:,3)-ps.xy(i,3)).^2;
-    in_range_ix=dist_sq<patch_dist_sq; % exclude those out of range
-    xy_near=xy_near(in_range_ix);
-    dist_sq=dist_sq(in_range_ix); 
-    weight_factor=exp(-dist_sq/sigma_sq_times_2);
-    weight_factor=weight_factor/sum(weight_factor); % normalize
-    K_ps_uw_smooth(i)=sum(scla.K_ps_uw(xy_near(:,1)).*weight_factor);
-    C_ps_uw_smooth(i)=sum(scla.C_ps_uw(xy_near(:,1)).*weight_factor);
-
-    if i/10000==floor(i/10000)
-        fprintf('   %d PS processed\n',i)
+for i=1:n_edge % find min and max neighbour for each ps
+    ix=edges(i,2:3);
+    Kneigh_min(ix)=min([Kneigh_min(ix),K_ps_uw(fliplr(ix))],[],2);
+    Kneigh_max(ix)=max([Kneigh_max(ix),K_ps_uw(fliplr(ix))],[],2);
+    Cneigh_min(ix)=min([Cneigh_min(ix),C_ps_uw(fliplr(ix))],[],2);
+    Cneigh_max(ix)=max([Cneigh_max(ix),C_ps_uw(fliplr(ix))],[],2);
+    if i/100000==floor(i/100000)
+        logit(sprintf('%d arcs processed',i),2)
     end % end-if
-end % i++
-
-K_ps_uw=K_ps_uw_smooth;
-C_ps_uw=C_ps_uw_smooth;
-ph_ramp=scla.ph_ramp;
-
-clear scla
+end
+    
+ix1=K_ps_uw>Kneigh_max;
+ix2=K_ps_uw<Kneigh_min;
+K_ps_uw(ix1)=Kneigh_max(ix1); % reduce positive outliers
+K_ps_uw(ix2)=Kneigh_min(ix2); % increase negative outliers
+   
+ix1=C_ps_uw>Cneigh_max;
+ix2=C_ps_uw<Cneigh_min;
+C_ps_uw(ix1)=Cneigh_max(ix1); % reduce positive outliers
+C_ps_uw(ix2)=Cneigh_min(ix2); % increase negative outliers
 
 bp=load(bpname);
 if use_small_baselines==0

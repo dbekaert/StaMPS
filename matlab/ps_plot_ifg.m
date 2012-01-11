@@ -67,7 +67,7 @@ else
 end
 
 marker_size=8; 
-
+cla
 
 
 load psver

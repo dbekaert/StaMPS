@@ -119,6 +119,7 @@ function []=ps_plot(value_type,varargin)
 %   03/2011 AH: Save files to home directory if read only directory
 %   03/2011 DB: Remove raster lines when plotting time series
 %   10/2011 AH: Check that pm file exists before attempting to load
+%   01/2012 AH: Subtract master AOE for 'ts' plot
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -611,7 +612,7 @@ switch(group_type)
             fig_name = 'v';
         case {'v-d'}
             scla=load(sclaname);
-            ph_uw=ph_uw - scla.ph_scla;
+            ph_uw=ph_uw - scla.ph_scla - repmat(scla.C_ps_uw,1,size(ph_uw,2)); % master phase doesn't effect plot, but better for ts plot
             clear scla
             fig_name = 'v-d';
         case {'v-o'}
@@ -686,6 +687,13 @@ switch(group_type)
         otherwise
             error('unknown value type')
         end
+
+        if ts_flag==1 % master AOE doesn't effect v plot, but better for ts plot
+            scla=load(sclaname,'C_ps_uw');
+            ph_uw=ph_uw - repmat(scla.C_ps_uw,1,size(ph_uw,2));
+            clear scla
+        end
+
         ph_all=zeros(n_ps,1);
         ref_ps=ps_setref;
         

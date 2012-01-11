@@ -6,6 +6,10 @@ function [value,parmname]=getparm(parmname,printflag)
 %   Andy Hooper, July 2006
 %
 %   10/2007 AH Parameters displayed in alphabetical order
+%
+%   =======================================================================
+%   11/2011 AH: Log messages to STAMPS.log
+%   =======================================================================
 
 ps_parms_default
 
@@ -55,11 +59,11 @@ else
     end
     if printflag~=0
         if isnumeric(value)
-            fprintf(['   PARM: %s=',repmat('%g ',1,200)],parmname,value)
-            fprintf('\n')
+            msg=sprintf(['%s=',repmat('%g ',1,200)],parmname,value);
         else
-            fprintf('   PARM: %s=''%s''\n',parmname,value)
+            msg=sprintf('%s=''%s''',parmname,value);
         end
+        logit(msg)
     end
 end
 
