@@ -3,7 +3,9 @@ function []=uw_interp();
 %
 %   Andy Hooper May 2007
 %
-
+%   ============================================================================
+%   01/2012 AH: Speed up read/write for trianlgle 
+%   ============================================================================
 
 fprintf('Interpolating grid...\n')
 
@@ -18,13 +20,9 @@ nodename=['unwrap.1.node'];
 fid=fopen(nodename,'w');
 fprintf(fid,'%d 2 0 0\n',n_ps);
 
-
 [y,x]=find(uw.nzix);
-
-for i=1:n_ps
-    fprintf(fid,'%d %d %d\n',i,x(i),y(i));
-end
-
+xy=[[1:n_ps]',x,y];
+fprintf(fid,'%d %d %d\n',xy');
 fclose(fid);
 
 !triangle -e unwrap.1.node
@@ -32,24 +30,25 @@ fclose(fid);
 fid=fopen('unwrap.2.edge','r');
 header=str2num(fgetl(fid));
 N=header(1);
-edges=zeros(N,4);
-for i=1:N
-    edges(i,:)=str2num(fgetl(fid));
-end
+edges=fscanf(fid,'%d %d %d %d\n',[4,N])';
 fclose(fid);
+n_edge=size(edges,1);
+if n_edge~=N
+    error('missing lines in unwrap.2.edge')
+end
 
 fid=fopen('unwrap.2.ele','r');
 header=str2num(fgetl(fid));
 N=header(1);
-ele=zeros(N,4);
-for i=1:N
-    ele(i,:)=str2num(fgetl(fid));
-end
+ele=fscanf(fid,'%d %d %d %d\n',[4,N])';
 fclose(fid);
+n_ele=size(ele,1);
+if n_ele~=N
+    error('missing lines in unwrap.2.ele')
+end
 
 z=[1:n_ps];
 [nrow,ncol]=size(uw.nzix);
-
 
 [X,Y]=meshgrid(1:ncol,1:nrow);
 Z=dsearch(x,y,ele(:,2:4),X,Y); %index from grid to pixel node

@@ -9,6 +9,7 @@ function []=ps_unwrap()
 %   06/2009 AH: Orbital ramps option added 
 %   08/2009 AH: Goldstein alpha value added to options
 %   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
+%   01/2012 AH: Add bperp for new method 3D_NEW
 %   ======================================================================
 logit;
 fprintf('Phase-unwrapping...\n')
@@ -122,6 +123,7 @@ options.prefilt_win=getparm('unwrap_gold_n_win',1);
 options.goldfilt_flag=getparm('unwrap_prefilter_flag',1);
 options.gold_alpha=getparm('unwrap_gold_alpha',1);
 
+
 if strcmpi(small_baseline_flag,'y')
     %options.lowfilt_flag='y';
     options.lowfilt_flag='n';
@@ -135,7 +137,7 @@ else
     day=ps.day(unwrap_ifg_index)-ps.master_day;
 end
 
-[ph_uw_some,msd_some]=uw_3d(ph_w(:,unwrap_ifg_index),ps.xy,day,ifgday_ix,options);
+[ph_uw_some,msd_some]=uw_3d(ph_w(:,unwrap_ifg_index),ps.xy,day,ifgday_ix,ps.bperp(unwrap_ifg_index),options);
 
 ph_uw=zeros(ps.n_ps,ps.n_ifg,'single');
 msd=zeros(ps.n_ifg,1,'single');

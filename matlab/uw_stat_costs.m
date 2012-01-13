@@ -8,6 +8,7 @@ function []=uw_stat_costs(unwrap_method,subset_ifg_index);
 %   03/2009 AH: Calculate phase jumps per IFG
 %   11/2009 AH: Fix 2D processing
 %   01/2012 AH: Create snaphu.conf file internally
+%   01/2012 AH: Change noise estimation for 2D method
 %   ======================================================================
 
 
@@ -46,7 +47,9 @@ grid_edges=[colix(abs(colix)>0);rowix(abs(rowix)>0)];
 n_edges=hist(abs(grid_edges),[1:ui.n_edge])';
 
 if strcmpi(unwrap_method,'2D')
-    sigsq_noise=ones(ui.n_edge,1);
+    edge_length=sqrt(diff(x(ui.edges(:,2:3)),[],2).^2+diff(y(ui.edges(:,2:3)),[],2).^2);
+    %sigsq_noise=ones(ui.n_edge,1);
+    sigsq_noise=(1-exp(-edge_length*uw.pix_size/20000)); % cov of dph=C11+C22-2*C12 (assume APS only contributor)
     dph_smooth=angle(ut.dph_space);
 else
     sigsq_noise=(std(ut.dph_noise,0,2)/2/pi).^2;
