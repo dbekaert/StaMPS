@@ -18,6 +18,8 @@ function []=ps_scn_filt()
 %   10/2011 MCC: Code to estimate scn_time_win and apply krigging for spatial estimation of APS
 %   10/2011 MCC: Detects phase unwrapping errors per arc based on model and filtered defo.
 %                Results are saved in unwrapping_errors_edges.mat
+%   11/2011 MCC: Bug fixed the (probable) detected unwrapping errors are not removed from the original time series
+%                Only saved for information
 %   =======================================================================
 logit;
 fprintf('Estimating other spatially-correlated noise...\n')
@@ -154,7 +156,7 @@ cv_model=2;%2 exp; 3 gaussian
 Nlags=25;%number of lags used for estimating variogram from histogram
 plot_vario='n';%to do plots set to y
 decor_dist=a0*6;%max time distance to include for variagram estimation in years
-max_ob_vario=11000;
+max_ob_vario=15000;
 %%%%%%%%%%%%%%%%%%
 
 rand_int=unique(randi([1,size(dph,1)],1,max_ob_vario));
@@ -194,8 +196,9 @@ mean_std=nanmean(nanstd(dph));
 
 %for some edges the estimation is not reliable
 %We select only those estimated variagrams that are resaonable
-ind_in=a<nanmean(years)*2 & c1<4*mean_std & c2<4*mean_std & ~isnan(a);
+ind_in=a<nanmean(years)*3 & a>nanmean(years)/50 & c1>mean_std/50  & c1<4*mean_std & c2>mean_std/50 &c2<4*mean_std & ~isnan(a);
 save('modeled_defo_edges.mat','modeled_defo_edges','A_time','a','c1','c2','years','mean_std');
+
 
 %keyboard
 %if the number of remaninig edges is high enough (e.g. 100) we continue here otherwise filtering using the input window
@@ -227,8 +230,21 @@ if length(find(ind_in))>50
         %design matrix defining the temporal variao from edge position
         A_vario=[(x_edges(n)/mean_x).^2  (y_edges(n)/mean_y).^2  x_edges(n)/mean_x  y_edges(n)/mean_y  1 ];
         
+        current_ahat=A_vario*ahat;
+        current_c2hat=A_vario*c2hat;
+        current_c1hat=A_vario*c1hat;
         %cv_model_current_edge
-        cv_model_all=[1 NaN A_vario*c2hat;cv_model A_vario*ahat A_vario*c1hat];
+
+        if current_ahat<=nanmean(years)/50
+          current_ahat=nanmean(a(ind_in));
+        end
+        if current_c2hat<=mean_std/50
+          current_c2hat=nanmean(c2(ind_in));
+        end
+        if current_c1hat<=mean_std/50
+          current_c1hat=nanmean(c1(ind_in));
+        end
+        cv_model_all=[1 NaN current_c2hat;cv_model current_ahat current_c1hat];
         
         %max decorelation distance depends on range (cv_model_all(2,2)) in years
         dx_max=cv_model_all(2,2)*4;
@@ -246,7 +262,7 @@ if length(find(ind_in))>50
         end%nn=1:length(years)
                 
         %2*pi differences between current and predicted valua are assumed to be caused by unwrapping error
-        unwrapping_errors(n,:)=round( (temp_krigged'-dph(n,:))/2/pi);
+        unwrapping_errors(n,:)=round( (temp_krigged'-dph(n,:))/2.01/pi);
        
         corrected_dph(n,:)= dph(n,:)+single(unwrapping_errors(n,:))*2*pi;
         
@@ -270,7 +286,7 @@ if length(find(ind_in))>50
     
     disp('Time filtering :')
     toc
-    dph=corrected_dph;
+    %dph=corrected_dph;
     %MCC time filter ends
     %%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -334,15 +350,19 @@ if krig_atmo
     %we select 10000 randomly distributed PS. Arbitrary decision but it should not matter
     % dist_to_mid=sqrt(( ps.xy(:,2)-mean_x_ps).^2 + ( ps.xy(:,3)-mean_y_ps).^2);
     % [sorted_dist ind_sort]=sort(dist_to_mid,'ascend');
-    
-    ind_vario= unique(randi(n_ps,min([10000,n_ps]),1,'uint32'));
-    
-    
+    ind_vario= unique(randi(n_ps,min([max_ob_vario,n_ps]),1,'uint32'));
+    if length(ind_vario)<4000 
+				    ind_vario= unique(randi(n_ps,min([max_ob_vario,n_ps]),1,'uint32'));
+
+    end
     %  ind_nearby_all=repmat(uint32(0),n_ps,Nmax+1);
+%    orig_ind_vario=ind_vario;
     for n=1:n_ifg
+ %       indnan=find(isnan(ph_hpt(ind_vario,n)));
         mean_x=nanmean(ps.xy(ind_vario,2));
         mean_y=nanmean(ps.xy(ind_vario,3));
         A_vario_ifg=[(ps.xy(ind_vario,2)/mean_x).^2  ps.xy(ind_vario,2)/mean_x  (ps.xy(ind_vario,3)/mean_y).^2 ps.xy(ind_vario,3)/mean_y ones(size(ps.xy(ind_vario,2)))];
+        
         AA=double(A_vario_ifg'*A_vario_ifg);
         xhat=AA\A_vario_ifg'*ph_hpt(ind_vario,n);
         A_all=[(ps.xy(:,2)/mean_x).^2  ps.xy(:,2)/mean_x  (ps.xy(:,3)/mean_y).^2 ps.xy(:,3)/mean_y ones(size(ps.xy(:,2)))];
