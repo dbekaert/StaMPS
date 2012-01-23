@@ -30,6 +30,7 @@ if nargin<5 & strcmpi(unwrap_method,'3D_NEW');
     error('perpendicular baselines must be passed for method 3D_NEW')
 end
 
+
 fprintf('Unwrapping in space-time...\n')
 
 uw=load('uw_grid');
@@ -105,7 +106,10 @@ else
 
     dph_close_master=mean(dph_smooth_uw(:,close_master_ix),2);
     dph_smooth_uw=dph_smooth_uw-repmat(dph_close_master-angle(exp(j*dph_close_master)),1,uw.n_ifg);
-    dph_space_uw=dph_smooth_uw+(dph_noise)+K*bperp';
+    dph_space_uw=dph_smooth_uw+(dph_noise);
+    if strcmpi(unwrap_method,'3D_NEW')
+        dph_space_uw=dph_space_uw+K*bperp';
+    end
 
 
     fprintf('\n   ESTIMATES OF DIFF PHASE NOISE STD DEV\n')
