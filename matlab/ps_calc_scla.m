@@ -17,9 +17,10 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   08/2010 AH: use recalc_index correctly in small baseline case
 %   08/2010 AH: use mean bperp value
 %   11/2010 AH: replace recalc_index with scla_drop_index
+%   01/2012 AH: use short time sep ifgs for single master SCLA calc
 %   ================================================================
 logit;
-fprintf('Estimating spatially-correlated look angle error...\n')
+logit(sprintf('Estimating spatially-correlated look angle error...'),2)
 
 if nargin<1
     use_small_baselines=0;
@@ -125,10 +126,10 @@ if use_small_baselines==0
              G(i,ps.ifgday_ix(i,2))=1;
         end
         if isfield(uw,'unwrap_ifg_index_sm')
-            unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,ps.master_ix)
-            unwrap_ifg_index=setdiff(unwrap_ifg_index,scla_drop_index);
+            %unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,ps.master_ix)
+            unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,scla_drop_index);
         else
-            unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix)
+            %unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix)
         end
         G=G(:,unwrap_ifg_index);
         bperp_some=[G\double(bp.bperp_mat')]';
@@ -137,36 +138,39 @@ if use_small_baselines==0
     else
 
         bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
-        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
+        %unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
     end
-    day=ps.day-ps.master_day;
-
+    day=diff(ps.day(unwrap_ifg_index));
+    ph=double(diff(uw.ph_uw(:,unwrap_ifg_index),[],2)); % sequential dph, to reduce influence of defo
+    bperp=diff(bperp_mat(:,unwrap_ifg_index),[],2);
 else
     bperp_mat=bp.bperp_mat;
-    day=ps.ifgday(:,2)-ps.ifgday(:,1);
+    bperp=bperp_mat(:,unwrap_ifg_index);
+    day=ps.ifgday(unwrap_ifg_index,2)-ps.ifgday(unwrap_ifg_index,1);
+    ph=double(uw.ph_uw(:,unwrap_ifg_index));
 end
+clear bp
 
-bperp=mean(bperp_mat);
-fprintf('\n%d ifgs used in estimation:\n',length(unwrap_ifg_index))
-for i=1:length(unwrap_ifg_index)
+bprint=mean(bperp);
+logit(sprintf('%d ifgs used in estimation:',size(ph,2)))
+
+for i=1:size(ph,2)
     if use_small_baselines~=0
-        fprintf('   %s to %s %5d days %5d m\n',datestr(ps.ifgday(unwrap_ifg_index(i),1)),datestr(ps.ifgday(unwrap_ifg_index(i),2)),day(unwrap_ifg_index(i)),round(bperp(unwrap_ifg_index(i))))
+        logit(sprintf('   %s to %s %5d days %5d m',datestr(ps.ifgday(unwrap_ifg_index(i),1)),datestr(ps.ifgday(unwrap_ifg_index(i),2)),day(i),round(bprint(i))))
     else
-        fprintf('   %s %5d days %5d m\n',datestr(ps.day(unwrap_ifg_index(i))),day(unwrap_ifg_index(i)),round(bperp(unwrap_ifg_index(i))))
+        logit(sprintf('   %s to %s %5d days %5d m',datestr(ps.day(unwrap_ifg_index(i))),datestr(ps.day(unwrap_ifg_index(i+1))),day(i),round(bprint(i))))
     end
 end
-fprintf('\n')
 
 K_ps_uw=zeros(ps.n_ps,1);
-C_ps_uw=zeros(ps.n_ps,1);
 
 if coest_mean_vel==0 | length(unwrap_ifg_index)<4
-    G=[ones(length(unwrap_ifg_index),1),double(mean(bperp_mat(:,unwrap_ifg_index))')];
+    G=[ones(size(ph,2),1),double(mean(bperp)')];
 else
-    G=[ones(length(unwrap_ifg_index),1),double(mean(bperp_mat(:,unwrap_ifg_index))'),double(day(unwrap_ifg_index))];
+    G=[ones(size(ph,2),1),double(mean(bperp)'),double(day)];
 end
 
-ifg_vcm=eye(size(uw.ph_uw,2));
+ifg_vcm=eye(ps.n_ifg);
     
 if strcmpi(small_baseline_flag,'y')
     if use_small_baselines==0 
@@ -183,32 +187,53 @@ if strcmpi(small_baseline_flag,'y')
 else
     if exist([ifgstdname,'.mat'])
         ifgstd=load(ifgstdname);
-        ifg_vcm=diag((ifgstd.ifg_std*pi/180).^2);
+        ifg_vcm=double(diag((ifgstd.ifg_std*pi/180).^2));
         clear ifgstd
     end
 end
 
+if use_small_baselines==0 
+    ifg_vcm_use=eye(size(ph,2)); % don't know true var/cov because of non-lin motion and APS
+%    n_vcm=length(ifg_vcm_use)-1;
+%    A=[eye(n_vcm),zeros(n_vcm,1)]+[zeros(n_vcm,1),-eye(n_vcm)];
+%    ifg_vcm_use=A*ifg_vcm_use*A';
+else
+    ifg_vcm_use=ifg_vcm(unwrap_ifg_index,unwrap_ifg_index);
+end
+
+
+m=lscov(G,ph',ifg_vcm_use); % L2-norm
+K_ps_uw=m(2,:)';
+if coest_mean_vel~=0
+    v_ps_uw=m(3,:)';
+end
+
 if strcmpi(scla_method,'L1')
     for i=1:ps.n_ps
-        m=fminsearch(@(x) sum(abs(d-G*x)),m); % L1-norm, less emphasis on outliers
-        K_ps_uw(i)=m(2);
-        if use_small_baselines==0
-            C_ps_uw(i)=m(1);
-        end
-        if i/100000==round(i/100000)
+        d=ph(i,:)';
+        m2=m(:,i);
+        m2=fminsearch(@(x) sum(abs(d-G*x)),m2); % L1-norm, less emphasis on outliers
+        K_ps_uw(i)=m2(2);
+        if i/10000==round(i/10000)
             fprintf('%d of %d pixels processed\n',i,ps.n_ps)
         end
-    end
-else
-    d=double(uw.ph_uw(:,unwrap_ifg_index)');
-    m=lscov(G,d,ifg_vcm(unwrap_ifg_index,unwrap_ifg_index)); % L2-norm
-    K_ps_uw=m(2,:)';
-    if use_small_baselines==0
-        C_ps_uw=m(1,:)';
     end
 end
 
 ph_scla=repmat(K_ps_uw,1,size(bperp_mat,2)).*bperp_mat;
+
+if use_small_baselines==0
+    unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
+    if coest_mean_vel==0
+        C_ps_uw=mean(uw.ph_uw(:,unwrap_ifg_index)-ph_scla(:,unwrap_ifg_index),2);
+    else
+        G=[ones(length(unwrap_ifg_index),1),ps.day(unwrap_ifg_index)-ps.day(ps.master_ix)];
+        m=lscov(G,[uw.ph_uw(:,unwrap_ifg_index)-ph_scla(:,unwrap_ifg_index)]',ifg_vcm(unwrap_ifg_index,unwrap_ifg_index));
+        C_ps_uw=m(1,:)';
+    end
+else
+    C_ps_uw=zeros(ps.n_ps,1);
+end
 
 oldscla=dir([sclaname,'.mat']);
 if ~isempty(oldscla)

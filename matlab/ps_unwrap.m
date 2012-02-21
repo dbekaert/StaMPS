@@ -10,6 +10,7 @@ function []=ps_unwrap()
 %   08/2009 AH: Goldstein alpha value added to options
 %   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
 %   01/2012 AH: Add bperp for new method 3D_NEW
+%   01/2012 AH: Add back SULA error before unwrapping
 %   ======================================================================
 logit;
 fprintf('Phase-unwrapping...\n')
@@ -38,23 +39,6 @@ ps=load(psname);
 drop_ifg_index=getparm('drop_ifg_index',1);
 unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 
-if strcmpi(unwrap_patch_phase,'y')
-    pm=load(pmname);
-    ph_w=pm.ph_patch./abs(pm.ph_patch);
-    clear pm
-    if ~strcmpi(small_baseline_flag,'y')
-        ph_w=[ph_w(:,1:ps.master_ix-1),zeros(ps.n_ps,1),ph_w(:,ps.master_ix:end)];
-    end
-else
-    rc=load(rcname);
-    ph_w=rc.ph_rc;
-    clear rc;
-end
-
-ix=ph_w~=0;
-ph_w(ix)=ph_w(ix)./abs(ph_w(ix)); % normalize, to avoid high freq artifacts being introduced in adaptive filtering
-
-
 if exist(['./',bpname,'.mat'],'file')
     bp=load(bpname);
 else
@@ -65,12 +49,32 @@ else
     bp.bperp_mat=repmat(bperp',ps.n_ps,1);
 end
 
+if ~strcmpi(small_baseline_flag,'y') 
+    bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
+end
+
+if strcmpi(unwrap_patch_phase,'y')
+    pm=load(pmname);
+    ph_w=pm.ph_patch./abs(pm.ph_patch);
+    clear pm
+    if ~strcmpi(small_baseline_flag,'y')
+        ph_w=[ph_w(:,1:ps.master_ix-1),ones(ps.n_ps,1),ph_w(:,ps.master_ix:end)];
+    end
+else
+    pm=load(pmname,'K_ps');
+    rc=load(rcname);
+    ph_w=rc.ph_rc.*exp(j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat));
+    clear rc;
+end
+
+ix=ph_w~=0;
+ph_w(ix)=ph_w(ix)./abs(ph_w(ix)); % normalize, to avoid high freq artifacts being introduced in adaptive filtering
+
 scla_subtracted_sw=0;
 ramp_subtracted_sw=0;
 
 if ~strcmpi(small_baseline_flag,'y') & exist([sclaname,'.mat'],'file')
     fprintf('   subtracting scla and master aoe...\n')
-    bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
     scla=load(sclaname);
     if size(scla.K_ps_uw,1)==ps.n_ps
       scla_subtracted_sw=1;
@@ -89,7 +93,6 @@ end
 
 if strcmpi(small_baseline_flag,'y') & exist([sclaname,'.mat'],'file')
     fprintf('   subtracting scla...\n')
-    bperp_mat=bp.bperp_mat;
     scla=load(sclaname);
     if size(scla.K_ps_uw,1)==ps.n_ps
       scla_subtracted_sw=1;

@@ -12,6 +12,7 @@ function [q]=K2q(K,range_pixel,sensor)
 %   ======================================================================
 %   11/2010 DB: ALOS option added
 %   11/2011 AH: Radarsat-2 Ultrafine 18 option added
+%   01/2021 AH: Sign changed so that DEM error is +ve if reality > DEM
 %   ======================================================================
 
 if nargin<2
@@ -48,4 +49,4 @@ re=6345245;
 
 alpha=pi-acos((rho.^2+re^2-(re+h)^2)/2./rho/re);
 
-q=K*lambda.*rho.*sin(alpha)/4/pi;
+q=-K*lambda.*rho.*sin(alpha)/4/pi;

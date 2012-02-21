@@ -1,4 +1,4 @@
-function []=uw_sb_unwrap_time(day,ifgday_ix,unwrap_method,time_win)
+function []=uw_sb_unwrap_time(day,ifgday_ix,unwrap_method,time_win,bperp)
 %UW_SB_UNWRAP_SPACE_TIME smooth and unwrap phase diffs between neighboring data points in time
 %
 %   Andy Hooper, June 2007
@@ -6,6 +6,7 @@ function []=uw_sb_unwrap_time(day,ifgday_ix,unwrap_method,time_win)
 %   ======================================================================
 %   07/2008 AH: Allow isolated images, not included in any interferogram
 %   01/2010 AH: Allow for non-positive definite inverse var/covar matrix
+%   01/2012 AH: New method 3D_NEW that estimates SCLA for each arc
 %   ======================================================================
 
 tic
@@ -45,7 +46,40 @@ dph_noise_sf=((ph_noise(ui.edges(:,3),:)-(ph_noise(ui.edges(:,2),:))));
 %dph_space_nc(ix,:)=dph_space_sf(ix,:);
 %dph_noise(ix,:)=dph_noise_sf(ix,:);
 dph_space=dph_space./abs(dph_space);
+K=zeros(ui.n_edge,1);
 
+if strcmpi(unwrap_method,'3D_NEW')
+    bperp_range=max(bperp)-min(bperp);
+
+    %%%% need to pass this
+    n_trial_wraps=3
+    %%%%
+    
+    trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
+    n_trials=length(trial_mult);
+    trial_phase=bperp/bperp_range*pi/4;
+    trial_phase_mat=exp(-j*trial_phase*trial_mult);
+    coh=zeros(ui.n_edge,1);
+    for i=1:ui.n_edge
+        cpxphase=dph_space(i,:).';
+        cpxphase_mat=repmat(cpxphase,1,n_trials);
+        phaser=trial_phase_mat.*cpxphase_mat;
+        phaser_sum=sum(phaser);
+        [coh_max,coh_max_ix]=max(abs(phaser_sum));
+        K0=pi/4/bperp_range*trial_mult(coh_max_ix);
+        resphase=cpxphase.*exp(-j*(K0*bperp)); % subtract approximate fit
+        offset_phase=sum(resphase);
+        resphase=angle(resphase*conj(offset_phase)); % subtract offset, take angle (unweighted)
+        weighting=abs(cpxphase); 
+        mopt=double(weighting.*bperp)\double(weighting.*resphase);
+        K(i)=K0+mopt;
+        phase_residual=cpxphase.*exp(-j*(K0*bperp)); 
+        mean_phase_residual=sum(phase_residual); 
+        coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
+    end
+    keyboard
+    dph_space=dph_space.*exp(-j*K*bperp');
+end
 
 if strcmpi(unwrap_method,'2D')
     save('uw_space_time','dph_space');
@@ -104,7 +138,8 @@ else
 
 
     if strcmpi(unwrap_method,'3D_SMALL_DEF')|...
-       strcmpi(unwrap_method,'3D_QUICK')
+       strcmpi(unwrap_method,'3D_QUICK') |...
+       strcmpi(unwrap_method,'3D_NEW')
       %not_small_ix1=find(max(abs(angle(dph_space.*exp(-j*G*dph_space_series).')),[],2)>4)'; % inversion not trustworthy
       not_small_ix=find(std(dph_noise,0,2)>1.3)';
       %not_small_ix=unique([not_small_ix1,not_small_ix2]);

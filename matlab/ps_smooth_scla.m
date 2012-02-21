@@ -40,7 +40,7 @@ clear scla
 n_ps=ps.n_ps;
 n_ifg=ps.n_ifg;
 
-logit(sprintf('   Number of points per ifg: %d',n_ps))
+logit(sprintf('Number of points per ifg: %d',n_ps))
 
 nodename=['scla.1.node'];
 fid=fopen(nodename,'w');

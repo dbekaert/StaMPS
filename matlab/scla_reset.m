@@ -14,7 +14,7 @@ if nargin<1
     patches_flag='y';
 end
 
-fprintf('Resetting SCLA error and master atmosphere/orbit error...\n')
+logit(sprintf('Resetting SCLA error and master atmosphere/orbit error...\n'),2)
 
 i=0;
 
@@ -45,24 +45,26 @@ currdir=pwd;
 
 for i=1:length(patchdir)
     cd(patchdir(i).name)
-    pwd
+    logit([pwd,' reset'])
 
-    load psver
-    sclaname=['scla',num2str(psver),'.mat'];
-    if exist([sclaname],'file')
+    if exist('./psver.mat','file')
+      load psver
+      sclaname=['scla',num2str(psver),'.mat'];
+      if exist([sclaname],'file')
         delete(sclaname)
-    end
-    sclaname=['scla_smooth',num2str(psver),'.mat'];
-    if exist([sclaname],'file')
+      end
+      sclaname=['scla_smooth',num2str(psver),'.mat'];
+      if exist([sclaname],'file')
         delete(sclaname)
-    end
-    sclaname=['scla_sb',num2str(psver),'.mat'];
-    if exist([sclaname],'file')
+      end
+      sclaname=['scla_sb',num2str(psver),'.mat'];
+      if exist([sclaname],'file')
         delete(sclaname)
-    end
-    sclaname=['scla_smooth_sb',num2str(psver),'.mat'];
-    if exist([sclaname],'file')
+      end
+      sclaname=['scla_smooth_sb',num2str(psver),'.mat'];
+      if exist([sclaname],'file')
         delete(sclaname)
+      end
     end
 
     cd(currdir)

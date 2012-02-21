@@ -56,7 +56,7 @@ if strcmpi(unwrap_method,'3D_NEW')
     bperp_range=max(bperp_diff)-min(bperp_diff);
 
     %%%% need to pass this
-    n_trial_wraps=3
+    n_trial_wraps=6
     %%%%
     
     trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
@@ -71,7 +71,7 @@ if strcmpi(unwrap_method,'3D_NEW')
         phaser_sum=sum(phaser);
         [coh_max,coh_max_ix]=max(abs(phaser_sum));
         K0=pi/4/bperp_range*trial_mult(coh_max_ix);
-        resphase=cpxphase.*exp(-j*(K0*bperp)); % subtract approximate fit
+        resphase=cpxphase.*exp(-j*(K0*bperp_diff)); % subtract approximate fit
         offset_phase=sum(resphase);
         resphase=angle(resphase*conj(offset_phase)); % subtract offset, take angle (unweighted)
         weighting=abs(cpxphase); 
@@ -81,6 +81,7 @@ if strcmpi(unwrap_method,'3D_NEW')
         mean_phase_residual=sum(phase_residual); 
         coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
     end
+    K(coh<0.31)=0;
     dph_space=dph_space.*exp(-j*K*bperp');
 end
 

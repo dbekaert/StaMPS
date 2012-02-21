@@ -224,8 +224,8 @@ elseif bg_flag==5 % plot on amplitude image, let amp show through color
     c_base=c;
     c=zeros(n_gray*(n_color+1),3);
     for i=1:n_gray
-        i_frac=i/n_gray;
-        c((i-1)*(n_color+1)+1:i*(n_color+1),:)=[i_frac i_frac i_frac;c_base*(0.6+i_frac*0.4)];
+        i_frac=((i)/(n_gray)).^2;
+        c((i-1)*(n_color+1)+1:i*(n_color+1),:)=[i_frac i_frac i_frac;c_base*(0.4+i_frac*0.6)];
     end
     cd=ci;
     [n,m]=size(cd);

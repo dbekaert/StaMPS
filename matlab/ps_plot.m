@@ -120,6 +120,7 @@ function []=ps_plot(value_type,varargin)
 %   03/2011 DB: Remove raster lines when plotting time series
 %   10/2011 AH: Check that pm file exists before attempting to load
 %   01/2012 AH: Subtract master AOE for 'ts' plot
+%   01/2012 AH: Remove code to subtract SULA error from 'd' plots
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -381,10 +382,10 @@ switch(group_type)
     case {'dsb'}
         scla=load(sclasbname,'K_ps_uw');
         ph_all=scla.K_ps_uw;
-        if exist([pmname,'.mat'],'file')
-            pm=load(pmname,'K_ps');
-            ph_all=ph_all+pm.K_ps;
-        end
+        %if exist([pmname,'.mat'],'file')
+        %    pm=load(pmname,'K_ps');
+        %    ph_all=ph_all+pm.K_ps;
+        %end
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
@@ -584,10 +585,10 @@ switch(group_type)
     case {'d'}
         scla=load(sclaname,'K_ps_uw');
         ph_all=scla.K_ps_uw;
-        if exist([pmname,'.mat'],'file')
-            pm=load(pmname,'K_ps');
-            ph_all=ph_all+pm.K_ps;
-        end
+        %if exist([pmname,'.mat'],'file')
+        %    pm=load(pmname,'K_ps');
+        %    ph_all=ph_all+pm.K_ps;
+        %end
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
@@ -880,6 +881,7 @@ else
 	ph_all = value_type;
     ref_ps=ps_setref;
 	fig_name = 'data';
+    units='';
 end
 
 

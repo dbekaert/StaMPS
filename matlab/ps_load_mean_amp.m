@@ -72,6 +72,7 @@ if ~exist(ampname,'file')
 end
 
 amp_high=[];
+amp_low=[];
 fid=fopen(ampname,'r');
 while ~feof(fid) % first read through
   amp_bit=fread(fid,[width,1000],'float');
@@ -80,18 +81,22 @@ while ~feof(fid) % first read through
   if length(amp_bit)==0  % MA fix
     break                % length(amp_bit) returns zero at the end
   end
-  amp_high=[amp_high;amp_bit(round(length(amp_bit)*0.99):end)];
+  amp_high=[amp_high;amp_bit(round(length(amp_bit)*0.91):end)];
+  amp_low=[amp_low;amp_bit(round(length(amp_bit)*0.01):end)];
 end
 fclose(fid);
+
+amp_low=min(amp_low);
 amp_high=sort(amp_high);
-amp_max=log(amp_high(round(length(amp_high)/2)));
-clear amp_high
+amp_min=min(amp_low);
+amp_max=log(amp_high(ceil(length(amp_high)/2))-amp_min);
+clear amp_high amp_low
 
 fid=fopen(ampname,'r');
 amp_mean=[];
 while ~feof(fid) % second read through
   amp_bit=fread(fid,[width,1000],'float');
-  amp_bit=amp_bit';
+  amp_bit=amp_bit'-amp_min;
   amp_bit(amp_bit<1)=1;
   amp_bit=log(amp_bit);
   amp_bit(isnan(amp_bit))=0;

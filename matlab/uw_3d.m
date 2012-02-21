@@ -6,7 +6,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 %        where N is number of pixels and M is number of interferograms
 %   XY  = N x 2 matrix of coordinates in metres
 %        (optional extra column, in which case first column is ignored)
-%   DAY = vector of image acquisition dates in days relative to master
+%   DAY = N x 1 vector of image acquisition dates in days relative to master
 %   IFGDAY_IX = M x 2 matrix giving index to master and slave date in DAY
 %        for each interferogram (can be empty for single master time series)
 %   BPERP  = M x 1 vector giving perpendicular baselines 
@@ -52,6 +52,12 @@ else
     single_master_flag=0;
 end
 
+valid_options={'master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha'};
+invalid_options=setdiff(fieldnames(options),valid_options);
+if length(invalid_options)>0
+    error(['"',invalid_options{1}, '" is an invalid option'])
+end
+
 if ~isfield(options,'master_day')
     options.master_day=0;
 end
@@ -92,12 +98,16 @@ if size(xy,2)==2
    xy(:,2:3)=xy(:,1:2);
 end
 
+if size(day,1)==1
+    day=day';
+end
+
 uw_grid_wrapped(ph,xy,options.grid_size,options.prefilt_win,options.goldfilt_flag,options.lowfilt_flag,options.gold_alpha);
 uw_interp;
 if single_master_flag==1
     uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,bperp);
 else
-    uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win);
+    uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,bperp);
 end
 uw_stat_costs(options.unwrap_method);
 [ph_uw,msd]=uw_unwrap_from_grid(ph,xy,options.grid_size);
