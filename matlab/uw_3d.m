@@ -112,7 +112,7 @@ uw_interp;
 if single_master_flag==1
     uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,bperp,n_trial_wraps);
 else
-    uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,bperp);
+    uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,bperp,n_trial_wraps);
 end
 uw_stat_costs(options.unwrap_method);
 [ph_uw,msd]=uw_unwrap_from_grid(ph,xy,options.grid_size);

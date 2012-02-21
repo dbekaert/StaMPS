@@ -1,4 +1,4 @@
-function []=uw_sb_unwrap_time(day,ifgday_ix,unwrap_method,time_win,bperp)
+function []=uw_sb_unwrap_time(day,ifgday_ix,unwrap_method,time_win,bperp,n_trial_wraps)
 %UW_SB_UNWRAP_SPACE_TIME smooth and unwrap phase diffs between neighboring data points in time
 %
 %   Andy Hooper, June 2007
@@ -51,10 +51,6 @@ K=zeros(ui.n_edge,1);
 if strcmpi(unwrap_method,'3D_NEW')
     bperp_range=max(bperp)-min(bperp);
 
-    %%%% need to pass this
-    n_trial_wraps=3
-    %%%%
-    
     trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
     n_trials=length(trial_mult);
     trial_phase=bperp/bperp_range*pi/4;
