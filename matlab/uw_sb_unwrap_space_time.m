@@ -73,7 +73,6 @@ if strcmpi(unwrap_method,'3D_NEW')
         mean_phase_residual=sum(phase_residual); 
         coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
     end
-    keyboard
     dph_space=dph_space.*exp(-j*K*bperp');
 end
 

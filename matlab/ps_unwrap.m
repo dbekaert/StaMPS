@@ -51,6 +51,8 @@ end
 
 if ~strcmpi(small_baseline_flag,'y') 
     bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
+else
+    bperp_mat=bp.bperp_mat;
 end
 
 if strcmpi(unwrap_patch_phase,'y')
@@ -61,10 +63,13 @@ if strcmpi(unwrap_patch_phase,'y')
         ph_w=[ph_w(:,1:ps.master_ix-1),ones(ps.n_ps,1),ph_w(:,ps.master_ix:end)];
     end
 else
-    pm=load(pmname,'K_ps');
     rc=load(rcname);
-    ph_w=rc.ph_rc.*exp(j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat));
+    ph_w=rc.ph_rc;
     clear rc;
+    pm=load(pmname,'K_ps');
+    if isfield(pm,'K_ps')
+        ph_w=ph_w.*exp(j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat));
+    end
 end
 
 ix=ph_w~=0;
