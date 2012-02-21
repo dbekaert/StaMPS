@@ -6,7 +6,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 %        where N is number of pixels and M is number of interferograms
 %   XY  = N x 2 matrix of coordinates in metres
 %        (optional extra column, in which case first column is ignored)
-%   DAY = N x 1 vector of image acquisition dates in days relative to master
+%   DAY = M x 1 vector of image acquisition dates in days relative to master
 %   IFGDAY_IX = M x 2 matrix giving index to master and slave date in DAY
 %        for each interferogram (can be empty for single master time series)
 %   BPERP  = M x 1 vector giving perpendicular baselines 
@@ -19,6 +19,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 %      goldfilt_flag = Goldstein filtering, 'y' or 'n' (def='y')
 %      gold_alpha    = alpha value for Goldstein filter (def=0.8)
 %      lowfilt_flag  = Low pass filtering, 'y' or 'n' (def='n')
+%      n_trial_wraps = for '3D_NEW': num phase cycles poss over bperp range (def=3)
 %   PH_UW = unwrapped phase
 %
 %   Andy Hooper, Jun 2007
@@ -94,6 +95,10 @@ if ~isfield(options,'gold_alpha')
     options.gold_alpha=0.8;
 end
 
+if ~isfield(options,'n_trial_wraps')
+    options.n_trial_wraps=6;
+end
+
 if size(xy,2)==2
    xy(:,2:3)=xy(:,1:2);
 end
@@ -105,7 +110,7 @@ end
 uw_grid_wrapped(ph,xy,options.grid_size,options.prefilt_win,options.goldfilt_flag,options.lowfilt_flag,options.gold_alpha);
 uw_interp;
 if single_master_flag==1
-    uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,bperp);
+    uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,bperp,n_trial_wraps);
 else
     uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,bperp);
 end
