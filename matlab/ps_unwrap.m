@@ -66,9 +66,11 @@ else
     rc=load(rcname);
     ph_w=rc.ph_rc;
     clear rc;
-    pm=load(pmname,'K_ps');
-    if isfield(pm,'K_ps')
-        ph_w=ph_w.*exp(j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat));
+    if exist(['./',pmname,'.mat'],'file')
+        pm=load(pmname,'K_ps');
+        if isfield(pm,'K_ps')
+            ph_w=ph_w.*exp(j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat));
+        end
     end
 end
 
@@ -130,6 +132,7 @@ options.grid_size=getparm('unwrap_grid_size',1);
 options.prefilt_win=getparm('unwrap_gold_n_win',1);
 options.goldfilt_flag=getparm('unwrap_prefilter_flag',1);
 options.gold_alpha=getparm('unwrap_gold_alpha',1);
+options.la_flag=getparm('unwrap_la_error_flag',1);
 
 
 if strcmpi(small_baseline_flag,'y')

@@ -1,11 +1,12 @@
-function [ph_out,ph_out_low]=goldstein_filt(ph,n_win,alpha,n_pad)
-%GOLDSTEIN_FILT Goldstein adaptive phase filtering
-%   [ph_out]=goldstein_filt(ph,n_win,alpha,n_pad)
+function [ph_out,ph_out_low]=wrap_filt(ph,n_win,alpha,n_pad)
+%WRAP_FILT Goldstein adaptive and lowpass filtering
+%   [ph_out]=wrap_filt(ph,n_win,alpha,n_pad)
 %
 %   Andy Hooper, June 2006
 %   
 %   Change Log:
-%   07/2006 AH: Added zero padding   
+%   07/2006 AH: Added zero padding 
+%   02/2012 AH: Set magnitude to original values
 
 
 if nargin<4
@@ -73,4 +74,8 @@ for ix1=1:n_win_i
         ph_out_low(i1:i2,j1:j2)=ph_out_low(i1:i2,j1:j2)+ph_filt_low;
     end
 end
+
+ph_out=abs(ph).*exp(j*angle(ph_out)); % reset magnitude
+ph_out_low=abs(ph).*exp(j*angle(ph_out_low)); % reset magnitude
+
 

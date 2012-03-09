@@ -9,6 +9,7 @@ function []=uw_stat_costs(unwrap_method,subset_ifg_index);
 %   11/2009 AH: Fix 2D processing
 %   01/2012 AH: Create snaphu.conf file internally
 %   01/2012 AH: Change noise estimation for 2D method
+%   02/2012 AH: Updated for 3D_NONLIN method
 %   ======================================================================
 
 
@@ -50,10 +51,10 @@ if strcmpi(unwrap_method,'2D')
     edge_length=sqrt(diff(x(ui.edges(:,2:3)),[],2).^2+diff(y(ui.edges(:,2:3)),[],2).^2);
     %sigsq_noise=ones(ui.n_edge,1);
     sigsq_noise=(1-exp(-edge_length*uw.pix_size/20000)); % cov of dph=C11+C22-2*C12 (assume APS only contributor)
-    dph_smooth=angle(ut.dph_space);
+    dph_smooth=ut.dph_space_uw;
 else
     sigsq_noise=(std(ut.dph_noise,0,2)/2/pi).^2;
-    sigsq_defo=(std(ut.dph_space_uw-ut.dph_noise,0,2)/2/pi).^2;
+    %sigsq_defo=(std(ut.dph_space_uw-ut.dph_noise,0,2)/2/pi).^2;
     dph_smooth=ut.dph_space_uw-ut.dph_noise;
 end
  
@@ -64,22 +65,19 @@ end
   end
 
   sigsq=int16(round(((sigsq_noise)*nshortcycle^2)/costscale.*n_edges)); % weight by number of occurences
-
+  spread=int16(round((abs(ut.spread)*nshortcycle^2)/6/costscale.*repmat(n_edges,1,size(ut.spread,2))));
+  
   sigsq(sigsq<1)=1; % zero causes snaphu to crash
 
   rowcost=zeros((nrow-1),ncol*4,'int16');
   colcost=zeros((nrow),(ncol-1)*4,'int16');
 
   nzrowix=abs(rowix)>0; % 0 = same node, NaN = no stats
-  stdgrid=ones(size(rowix),'int16');
-  stdgrid(nzrowix)= sigsq(abs(rowix(nzrowix)));
-  rowcost(:,2:4:end)= stdgrid; % sigsq
+  rowstdgrid=ones(size(rowix),'int16');
 
   nzcolix=abs(colix)>0;
-  stdgrid=ones(size(colix),'int16');
-  stdgrid(nzcolix)= sigsq(abs(colix(nzcolix)));
-  colcost(:,2:4:end)= stdgrid; % sigsq
-
+  colstdgrid=ones(size(colix),'int16');
+  
   rowcost(:,3:4:end)= maxshort;% dzmax - value at which cost soars proportional to square of value exceeding dzmax
   colcost(:,3:4:end)= maxshort; % dzmax
 
@@ -104,7 +102,13 @@ fclose(fid);
 
 for i1=subset_ifg_index
     fprintf('\nProcessing IFG %d of %d\n',i1,length(subset_ifg_index));
-
+    
+    sigsqtot=sigsq+spread(:,i1);
+    rowstdgrid(nzrowix)= sigsqtot(abs(rowix(nzrowix)));
+    rowcost(:,2:4:end)= rowstdgrid; % sigsq
+    colstdgrid(nzcolix)= sigsqtot(abs(colix(nzcolix)));
+    colcost(:,2:4:end)= colstdgrid; % sigsq
+    
     offset_cycle=(angle(ut.dph_space(:,i1))-dph_smooth(:,i1))/2/pi;
     offgrid=zeros(size(rowix),'int16');
     offgrid(nzrowix)=round(offset_cycle(abs(rowix(nzrowix))).*sign(rowix(nzrowix))*nshortcycle);

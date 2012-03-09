@@ -1,4 +1,4 @@
-function []=uw_unwrap_space_time(day,unwrap_method,time_win,master_day,bperp,n_trial_wraps)
+function []=uw_unwrap_space_time(day,unwrap_method,time_win,master_day,la_flag,bperp,n_trial_wraps,prefilt_win)
 %UW_UNWRAP_SPACE_TIME smooth and unwrap phase diffs between neighboring data points in time
 %
 %   Andy Hooper, June 2006
@@ -6,7 +6,8 @@ function []=uw_unwrap_space_time(day,unwrap_method,time_win,master_day,bperp,n_t
 %   ============================================================================
 %   04/2007 AH: Smoothing changed to time domain (better for non-uniform sampling)
 %   11/2009 AH: Extra iteration added on local linear fit for smoothing
-%   01/2012 AH: New method 3D_NEW that estimates SCLA for each arc
+%   01/2012 AH: New option to estimate look angle error for each arc
+%   02/2012 AH: New method 3D_NEW
 %   ============================================================================
 
 if nargin<1
@@ -26,8 +27,12 @@ if nargin<2
     unwrap_method='3D';
 end
 
-if nargin<5 & strcmpi(unwrap_method,'3D_NEW');
-    error('perpendicular baselines must be passed for method 3D_NEW')
+if nargin<5 
+    la_flag = 'n'
+end
+
+if nargin<6 & strcmpi(la_flag,'y')
+    error('perpendicular baselines must be passed for look angle error estimation')
 end
 
 
@@ -35,6 +40,8 @@ fprintf('Unwrapping in space-time...\n')
 
 uw=load('uw_grid');
 ui=load('uw_interp');
+
+[nrow,ncol]=size(ui.Z);
 
 day_pos_ix=find(day>0);
 [Y,I]=min(day(day_pos_ix));
@@ -46,7 +53,7 @@ end
 dph_space=(uw.ph(ui.edges(:,3),:).*conj(uw.ph(ui.edges(:,2),:)));
 K=zeros(ui.n_edge,1);
 
-if strcmpi(unwrap_method,'3D_NEW')
+if strcmpi(la_flag,'y')
     dph_temp=[dph_space(:,[1:close_master_ix-1]),mean(abs(dph_space),2),dph_space(:,[close_master_ix:end])];
     ddph=dph_temp(:,[2:end]).*conj(dph_temp(:,1:end-1)); % sequential dph, to reduce influence of defo
     ddph=ddph./abs(ddph); % normalise
@@ -54,14 +61,16 @@ if strcmpi(unwrap_method,'3D_NEW')
     bperp_master=[bperp(1:close_master_ix-1);0;bperp(close_master_ix:end)];
     bperp_diff=diff(bperp_master);
     bperp_range=max(bperp_diff)-min(bperp_diff);
-
+    ix=bperp_diff~=0;
+    bperp_diff=bperp_diff(ix);
+    
     trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
     n_trials=length(trial_mult);
     trial_phase=bperp_diff/bperp_range*pi/4;
     trial_phase_mat=exp(-j*trial_phase*trial_mult);
     coh=zeros(ui.n_edge,1);
     for i=1:ui.n_edge
-        cpxphase=ddph(i,:).';
+        cpxphase=ddph(i,ix).';
         cpxphase_mat=repmat(cpxphase,1,n_trials);
         phaser=trial_phase_mat.*cpxphase_mat;
         phaser_sum=sum(phaser);
@@ -78,12 +87,20 @@ if strcmpi(unwrap_method,'3D_NEW')
         coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
     end
     K(coh<0.31)=0;
-    dph_space=dph_space.*exp(-j*K*bperp');
+    dph_space=dph_space.*exp(-j*K*bperp');   
+
 end
 
+spread=zeros(ui.n_edge,uw.n_ifg);
+
 if strcmpi(unwrap_method,'2D')
-    save('uw_space_time','dph_space');
-else    
+    dph_space_uw=angle(dph_space);
+    if strcmpi(la_flag,'y')
+        dph_space=dph_space.*exp(j*K*bperp'); % add back DEM error
+        dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
+    end
+    save('uw_space_time','dph_space','dph_space_uw','spread');    
+else
     dph_smooth=zeros(ui.n_edge,uw.n_ifg,'single');
     for i1=1:uw.n_ifg
         time_diff=(day(i1)-day)';
@@ -104,16 +121,61 @@ else
     dph_close_master=mean(dph_smooth_uw(:,close_master_ix),2);
     dph_smooth_uw=dph_smooth_uw-repmat(dph_close_master-angle(exp(j*dph_close_master)),1,uw.n_ifg);
     dph_space_uw=dph_smooth_uw+(dph_noise);
-    if strcmpi(unwrap_method,'3D_NEW')
-        dph_space_uw=dph_space_uw+K*bperp';
+    
+    if strcmpi(la_flag,'y')
+        dph_space=dph_space.*exp(j*K*bperp'); % add back DEM error
+        dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
+    
+    if strcmpi(unwrap_method,'3D_NEW')
 
+        ifreq_ij=nan(uw.n_ps,uw.n_ifg);
+        jfreq_ij=nan(uw.n_ps,uw.n_ifg);
+        ifgw=zeros(nrow,ncol);
+        dph_smooth_uw2=nan(ui.n_edge,uw.n_ifg);
+        spread2=spread;
+        for i=1:uw.n_ifg
+            ifgw(uw.nzix)=uw.ph(:,i);
+            [ifreq,jfreq,grad_ij,Hmag]=gradient_filt(ifgw,prefilt_win);
+            ix=~isnan(ifreq)&Hmag>3;
+            ifreq_ij(:,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),ifreq(ix),uw.ij(:,2),uw.ij(:,1));
+            jfreq_ij(:,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),jfreq(ix),uw.ij(:,2),uw.ij(:,1));
+            nan_ix=isnan(ifreq_ij(:,i));
+            ifreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),ifreq(ix),uw.ij(nan_ix,2),uw.ij(nan_ix,1),'nearest');
+            jfreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),jfreq(ix),uw.ij(nan_ix,2),uw.ij(nan_ix,1),'nearest');
+        end
 
+        for i=1:ui.n_edge
+            nodes_ix=ui.edges(i,[2:3]);
+            ifreq_edge=mean(ifreq_ij(nodes_ix,:));
+            jfreq_edge=mean(jfreq_ij(nodes_ix,:));
+            spread2(i,:)=diff(ifreq_ij(nodes_ix,:))+diff(jfreq_ij(nodes_ix,:));
+            dph_smooth_uw2(i,:)=diff(uw.ij(nodes_ix,1))*ifreq_edge+diff(uw.ij(nodes_ix,2))*jfreq_edge;
+        end
+        dph_noise2=angle((dph_space).*exp(-j*dph_smooth_uw2));
+        shaky_ix=std(dph_noise,0,2)>std(dph_noise2,0,2); % spatial smoothing works better index
+        shaky_nodes=ui.edges(shaky_ix,[2:3]);
+        shaky_nodes=sort(shaky_nodes(:));
+        not_uniq_ix=find(diff(shaky_nodes)==0);
+        shaky_nodes=shaky_nodes(not_uniq_ix);
+        shaky_nodes=unique(shaky_nodes);
+        for i=1:length(shaky_nodes)
+            shaky_edges=(ui.edges(:,2)==shaky_nodes(i)|ui.edges(:,3)==shaky_nodes(i));
+            shaky_ix(shaky_edges)=true; % for nodes with >1 shaky edges, set all edges to shaky
+        end
+        dph_noise(shaky_ix,:)=dph_noise2(shaky_ix,:);
+        dph_space_uw(shaky_ix,:)=dph_smooth_uw2(shaky_ix,:)+dph_noise2(shaky_ix,:);
+        spread(shaky_ix,:)=spread2(shaky_ix,:);
+    end
+    
+    
     fprintf('\n   ESTIMATES OF DIFF PHASE NOISE STD DEV\n')
     fprintf('   =====================================\n')
     for i=1:uw.n_ifg
         fprintf('   %s  %4.1f deg\n',datestr(master_day+day(i)),std(dph_noise(:,i))*180/pi)
     end
 
-    save('uw_space_time','dph_space','dph_space_uw','close_master_ix','dph_noise','K');
+    dph_noise(std(dph_noise,0,2)>1.3,:)=nan;
+
+    save('uw_space_time','dph_space','dph_space_uw','close_master_ix','dph_noise','K','spread');
 end

@@ -6,6 +6,7 @@ function []=uw_grid_wrapped(ph_in,xy_in,pix_size,prefilt_win,goldfilt_flag,lowfi
 % ============================================================
 % 10/2008 AH: Amended to deal with zero phase values
 % 08/2009 AH: Goldstein alpha value added to calling parms
+% 02/2012 AH: save ij
 % ============================================================
 
 fprintf('Resampling phase to grid...\n')
@@ -54,6 +55,7 @@ nzix=sum(ph_grid~=0,3)>0;
 n_ps=sum(nzix(:));
 [nz_i,nz_j]=find(sum(ph_grid~=0,3)>0);
 xy=[[1:n_ps]',(nz_j-0.5)*pix_size,(nz_i-0.5)*pix_size];
+ij=[nz_i,nz_j];
 
 ph=zeros(n_ps,n_ifg,'single');
 ph_lowpass=ph;
@@ -71,5 +73,5 @@ for i=1:n_ifg
     end
 end
 
-save('uw_grid','ph','ph_lowpass','xy','nzix','grid_x_min','grid_y_min','n_i','n_j','n_ifg','n_ps','grid_ij','pix_size')    
+save('uw_grid','ph','ph_lowpass','xy','ij','nzix','grid_x_min','grid_y_min','n_i','n_j','n_ifg','n_ps','grid_ij','pix_size')    
 

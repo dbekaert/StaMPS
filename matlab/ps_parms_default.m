@@ -168,6 +168,10 @@ if ~isfield(parms,'drop_ifg_index')
     parms.drop_ifg_index=[];  
 end
 
+if ~isfield(parms,'unwrap_la_error_flag')
+    parms.unwrap_la_error_flag='n';
+end
+
 if ~isfield(parms,'unwrap_prefilter_flag')
     parms.unwrap_prefilter_flag='y';
 end

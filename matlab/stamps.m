@@ -37,9 +37,9 @@ fillstr=[repmat('#',1,nfill),'\n'];
 skipstr='\n';
 msgstr=fillstr;
 
-msgstr(round(nfill)/2-11:round(nfill/2)+12)=' StaMPS/MTI Version 3.2 ';
+msgstr(round(nfill)/2-11:round(nfill/2)+12)=' StaMPS/MTI Version 4.0 ';
 fprintf([skipstr,fillstr,msgstr]);
-msgstr(round(nfill)/2-11:round(nfill/2)+12)=' Andy Hooper, Nov 2009  ';
+msgstr(round(nfill)/2-11:round(nfill/2)+12)=' Andy Hooper, Mar 2012  ';
 fprintf([msgstr,fillstr,skipstr]);
 
 
