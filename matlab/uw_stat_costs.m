@@ -109,7 +109,8 @@ for i1=subset_ifg_index
     colstdgrid(nzcolix)= sigsqtot(abs(colix(nzcolix)));
     colcost(:,2:4:end)= colstdgrid; % sigsq
     
-    offset_cycle=(angle(ut.dph_space(:,i1))-dph_smooth(:,i1))/2/pi;
+%    offset_cycle=(angle(ut.dph_space(:,i1))-dph_smooth(:,i1))/2/pi;
+    offset_cycle=(angle(exp(1i*ut.dph_space_uw(:,i1)))-dph_smooth(:,i1))/2/pi;
     offgrid=zeros(size(rowix),'int16');
     offgrid(nzrowix)=round(offset_cycle(abs(rowix(nzrowix))).*sign(rowix(nzrowix))*nshortcycle);
     rowcost(:,1:4:end)= -offgrid; % offset

@@ -33,6 +33,7 @@ ifreq_ij=[];
 jfreq_ij=[];
 
 if strcmpi(la_flag,'y')
+    fprintf('   Calculating look angle error (elapsed time = %d s)\n',round(toc))
     bperp_range=max(bperp)-min(bperp);
 
     trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
@@ -65,7 +66,6 @@ spread=zeros(ui.n_edge,n_ifg,'single');
 if strcmpi(unwrap_method,'2D')
     dph_space_uw=angle(dph_space);
     if strcmpi(la_flag,'y')
-        dph_space=dph_space.*exp(1i*K*bperp'); % add back DEM error
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
     save('uw_space_time','dph_space','dph_space_uw','spread');    
@@ -73,7 +73,6 @@ elseif strcmpi(unwrap_method,'3D_NO_DEF')
     dph_noise=angle(dph_space);
     dph_space_uw=angle(dph_space);        
     if strcmpi(la_flag,'y')
-        dph_space=dph_space.*exp(1i*K*bperp'); % add back DEM error
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
     save('uw_space_time','dph_space','dph_space_uw','dph_noise','spread');
@@ -199,10 +198,9 @@ else
     dph_space_uw=dph_smooth_ifg+dph_noise;
     
     if strcmpi(la_flag,'y')
-        dph_space=dph_space.*exp(1i*K*bperp'); % add back DEM error
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
-
+    
     if strcmpi(unwrap_method,'3D_NEW') | strcmpi(unwrap_method,'3D_FULL')
        
         fprintf('   Calculating local phase gradients (elapsed time = %d s)\n',round(toc))
@@ -252,5 +250,5 @@ else
         spread(shaky_ix,:)=spread2(shaky_ix,:);
     end
     
-    save('uw_space_time','dph_space','dph_space_uw','dph_noise','G','spread','ifreq_ij','jfreq_ij');
+    save('uw_space_time','dph_space_uw','dph_noise','G','spread','ifreq_ij','jfreq_ij');
 end

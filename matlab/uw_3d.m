@@ -2,7 +2,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 %UW_3D unwrap phase time series (single or multiple master)
 %   PH_UW = UW_3D(PH,XY,DAY,IFGDAY_IX,BPERP,OPTIONS)
 %
-%   PH  = N x M matrix of wrapped phase values (complex)
+%   PH  = N x M matrix of wrapped phase values (real phase or complex phasor)
 %        where N is number of pixels and M is number of interferograms
 %   XY  = N x 2 matrix of coordinates in metres
 %        (optional extra column, in which case first column is ignored)
@@ -81,7 +81,7 @@ if ~isfield(options,'unwrap_method')
     if single_master_flag==1
         options.unwrap_method='3D_NEW';
     else
-        options.unwrap_method='3D_NEW';
+        options.unwrap_method='3D_FULL';
     end
 end
 
@@ -114,7 +114,7 @@ if size(day,1)==1
 end
 
 if strcmpi('unwrap_method','3D') & single_master_flag~=1
-    options.la_flag='y';
+    options.lowfilt_flag='y';
 end
 
 uw_grid_wrapped(ph,xy,options.grid_size,options.prefilt_win,options.goldfilt_flag,options.lowfilt_flag,options.gold_alpha);
