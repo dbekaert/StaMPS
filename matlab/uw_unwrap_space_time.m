@@ -54,6 +54,7 @@ dph_space=(uw.ph(ui.edges(:,3),:).*conj(uw.ph(ui.edges(:,2),:)));
 K=zeros(ui.n_edge,1);
 
 if strcmpi(la_flag,'y')
+    fprintf('   Estimating look angle error\n')
     dph_temp=[dph_space(:,[1:close_master_ix-1]),mean(abs(dph_space),2),dph_space(:,[close_master_ix:end])];
     ddph=dph_temp(:,[2:end]).*conj(dph_temp(:,1:end-1)); % sequential dph, to reduce influence of defo
     ddph=ddph./abs(ddph); % normalise
@@ -91,7 +92,7 @@ if strcmpi(la_flag,'y')
 
 end
 
-spread=zeros(ui.n_edge,uw.n_ifg);
+spread=zeros(ui.n_edge,uw.n_ifg,'single');
 
 if strcmpi(unwrap_method,'2D')
     dph_space_uw=angle(dph_space);
@@ -101,6 +102,7 @@ if strcmpi(unwrap_method,'2D')
     end
     save('uw_space_time','dph_space','dph_space_uw','spread');    
 else
+    fprintf('   Smoothing in time\n')
     dph_smooth=zeros(ui.n_edge,uw.n_ifg,'single');
     for i1=1:uw.n_ifg
         time_diff=(day(i1)-day)';
@@ -128,9 +130,9 @@ else
     end
     
     if strcmpi(unwrap_method,'3D_NEW')
-
-        ifreq_ij=nan(uw.n_ps,uw.n_ifg);
-        jfreq_ij=nan(uw.n_ps,uw.n_ifg);
+        fprintf('   Calculating local phase gradients\n')
+        ifreq_ij=nan(uw.n_ps,uw.n_ifg,'single');
+        jfreq_ij=nan(uw.n_ps,uw.n_ifg,'single');
         ifgw=zeros(nrow,ncol);
         dph_smooth_uw2=nan(ui.n_edge,uw.n_ifg);
         spread2=spread;
@@ -144,7 +146,8 @@ else
             ifreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),ifreq(ix),uw.ij(nan_ix,2),uw.ij(nan_ix,1),'nearest');
             jfreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),jfreq(ix),uw.ij(nan_ix,2),uw.ij(nan_ix,1),'nearest');
         end
-
+        
+        fprintf('   Smoothing using local phase gradients\n')
         for i=1:ui.n_edge
             nodes_ix=ui.edges(i,[2:3]);
             ifreq_edge=mean(ifreq_ij(nodes_ix,:));
@@ -152,6 +155,7 @@ else
             spread2(i,:)=diff(ifreq_ij(nodes_ix,:))+diff(jfreq_ij(nodes_ix,:));
             dph_smooth_uw2(i,:)=diff(uw.ij(nodes_ix,1))*ifreq_edge+diff(uw.ij(nodes_ix,2))*jfreq_edge;
         end
+        fprintf('   Choosing between time and phase gradient smoothing\n')        
         dph_noise2=angle((dph_space).*exp(-j*dph_smooth_uw2));
         shaky_ix=std(dph_noise,0,2)>std(dph_noise2,0,2); % spatial smoothing works better index
         shaky_nodes=ui.edges(shaky_ix,[2:3]);

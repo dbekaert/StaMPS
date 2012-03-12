@@ -1,6 +1,6 @@
 function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 %UW_3D unwrap phase time series (single or multiple master)
-%   PH_UW = UW_3D(PH,XY,DAY,IFGDAY_IX,OPTIONS)
+%   PH_UW = UW_3D(PH,XY,DAY,IFGDAY_IX,BPERP,OPTIONS)
 %
 %   PH  = N x M matrix of wrapped phase values (complex)
 %        where N is number of pixels and M is number of interferograms

@@ -8,6 +8,7 @@ function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag
 %   01/2010 AH: Allow for non-positive definite inverse var/covar matrix
 %   01/2012 AH: New option la_flag that estimates LA error for each arc
 %   02/2012 AH: New method 3D_NEW
+%   02/2012 AH: New method 3D_FULL
 %   ======================================================================
 
 disp('Unwrapping in time-space...')
@@ -59,7 +60,7 @@ if strcmpi(la_flag,'y')
     dph_space=dph_space.*exp(-1i*K*bperp');
 end
 
-spread=zeros(ui.n_edge,n_ifg);
+spread=zeros(ui.n_edge,n_ifg,'single');
 
 if strcmpi(unwrap_method,'2D')
     dph_space_uw=angle(dph_space);
@@ -77,7 +78,7 @@ elseif strcmpi(unwrap_method,'3D_NO_DEF')
     end
     save('uw_space_time','dph_space','dph_space_uw','dph_noise','spread');
 else
-
+    fprintf('   Smoothing in time (elapsed time = %d s)\n',round(toc))
     G=zeros(n_ifg,n_image);
     for i=1:n_ifg
         G(i,ifgday_ix(i,1))=-1;
@@ -89,65 +90,124 @@ else
     G=G(:,nzc_ix);
     n=size(G,2);
     
-    %x=(0:n-1)'; % use sequence for smoothing
-    x=(day-day(1))*(n-1)/(day(end)-day(1)); % use dates for smoothing
-    
-    dph_space_series=[zeros(1,ui.n_edge);double(G(:,2:end))\double(angle(dph_space))'];
-    dph_smooth_series=zeros(size(G,2),ui.n_edge,'single');
+    if strcmpi(unwrap_method,'3D_FULL')
+        
+       dph_smooth_ifg=nan(size(dph_space),'single');
+       
+       for i=1:n_image
+           ix=G(:,i)~=0;
+           gsub=G(ix,i);
+           dph_sub=dph_space(:,ix); % only ifgs using ith image
+           sign_ix=repmat(-sign(single(gsub')),ui.n_edge,1);
+           dph_sub(sign_ix==-1)=conj(dph_sub(sign_ix==-1)); % flip sign if necessary to make ith image master 
+           slave_ix=sum(ifgday_ix(ix,:),2)-i;
+           day_sub=day(slave_ix); % extract days for subset
+           [day_sub,sort_ix]=sort(day_sub); % sort ascending day
+           dph_sub=dph_sub(:,sort_ix); % sort ascending day
+           n_sub=length(day_sub);
+           dph_smooth=zeros(ui.n_edge,n_sub,'single');
+           for i1=1:n_sub
+               time_diff=(day_sub(i1)-day_sub)';
+               weight_factor=exp(-(time_diff.^2)/2/time_win^2);
+               weight_factor=weight_factor/sum(weight_factor);
 
-    for i1=1:n
-        time_diff_sq=(day(i1)-day).^2;
-        weight_factor=exp(-time_diff_sq/2/time_win^2);
-        weight_factor=weight_factor/sum(weight_factor);
-        dph_smooth_series(i1,:)=sum(dph_space_series.*repmat(weight_factor,1,ui.n_edge));
-    end
-
-    dph_smooth_ifg=(G*dph_smooth_series)';
-    dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
-
-    if strcmpi(unwrap_method,'3D_SMALL_DEF')|...
-       strcmpi(unwrap_method,'3D_QUICK')|...
-       strcmpi(unwrap_method,'3D_NEW')
-      not_small_ix=find(std(dph_noise,0,2)>1.3)';
-      fprintf('Ignoring %d edges. Elapsed time = %d s\n',length(not_small_ix),round(toc))
-      dph_noise(not_small_ix,:)=nan;
+               dph_mean=sum(dph_sub.*repmat(weight_factor,ui.n_edge,1),2);
+               dph_mean_adj=angle(dph_sub.*repmat(conj(dph_mean),1,n_sub)); % subtract weighted mean
+               GG=[ones(n_sub,1),time_diff'];
+               m=lscov(GG,double(dph_mean_adj)',weight_factor);
+               dph_mean_adj=angle(exp(1i*(dph_mean_adj-(GG*m)'))); % subtract first estimate
+               m2=lscov(GG,double(dph_mean_adj)',weight_factor);
+               dph_smooth(:,i1)=dph_mean.*exp(1i*(m(1,:)'+m2(1,:)')); % add back weighted mean
+            end
+            dph_smooth_sub=cumsum([angle(dph_smooth(:,1)),angle(dph_smooth(:,2:end).*conj(dph_smooth(:,1:end-1)))],2);
+            close_master_ix=find(slave_ix-i>0);
+            if isempty(close_master_ix)
+                close_master_ix=n_sub;
+            else
+                close_master_ix=close_master_ix(1);
+                if close_master_ix>1
+                    close_master_ix=[close_master_ix-1;close_master_ix];
+                end
+            end
+            dph_close_master=mean(dph_smooth_sub(:,close_master_ix),2);
+            dph_smooth_sub=dph_smooth_sub-repmat(dph_close_master-angle(exp(j*dph_close_master)),1,n_sub);
+            dph_smooth_sub=dph_smooth_sub.*sign_ix;
+            already_sub_ix=~isnan(dph_smooth_ifg(1,ix)); % already unwrapped index
+            ix=find(ix);
+            already_ix=ix(already_sub_ix);
+            std_noise1=std(angle(dph_space(:,already_ix).*exp(-1i*dph_smooth_ifg(:,already_ix))));
+            std_noise2=std(angle(dph_space(:,already_ix).*exp(-1i*dph_smooth_sub(:,already_sub_ix))));
+            keep_ix=true(n_sub,1);
+            keep_ix(already_sub_ix(std_noise1<std_noise2))=false; % keep least noisy
+            dph_smooth_ifg(:,ix(keep_ix))=dph_smooth_sub(:,keep_ix);
+       end
+       
+       dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
+      
     else
-      ph_noise=angle(uw.ph.*conj(uw.ph_lowpass));
-      dph_noise_sf=((ph_noise(ui.edges(:,3),:)-(ph_noise(ui.edges(:,2),:))));      
-      m_minmax=repmat([-pi,pi],5,1).*repmat([0.5;0.25;1;0.25;1],1,2);
-      anneal_opts=[1;15;0;0;0;0;0];
-      covm=cov((dph_noise_sf)); % estimate of covariance
-      [W,P]=chol(inv(covm)); % weighting matrix 
-      if P~=0
-          W=diag(1./sqrt(diag(covm)));
-      end
-      not_small_ix=find(std(dph_noise,0,2)>1)';
-      fprintf('Performing more complex smoothing on %d edges. Elapsed time = %d s\n',length(not_small_ix),round(toc))
+        %x=(0:n-1)'; % use sequence for smoothing
+        x=(day-day(1))*(n-1)/(day(end)-day(1)); % use dates for smoothing
 
-      n_proc=0;
-      for i=not_small_ix
-        dph=angle(dph_space(i,:))';
-        dph_smooth_series(:,i)=uw_sb_smooth_unwrap(m_minmax,anneal_opts,G,W,dph,x);
+        dph_space_series=[zeros(1,ui.n_edge);double(G(:,2:end))\double(angle(dph_space))'];
+        dph_smooth_series=zeros(size(G,2),ui.n_edge,'single');
 
-        n_proc=n_proc+1;
-        if round(n_proc/1000)==n_proc/1000
-            save('uw_unwrap_time','G','dph_space','dph_smooth_series');
-            fprintf('%d edges of %d reprocessed. Elapsed time = %d s\n',n_proc,length(not_small_ix),round(toc))
+        for i1=1:n
+            time_diff_sq=(day(i1)-day).^2;
+            weight_factor=exp(-time_diff_sq/2/time_win^2);
+            weight_factor=weight_factor/sum(weight_factor);
+            dph_smooth_series(i1,:)=sum(dph_space_series.*repmat(weight_factor,1,ui.n_edge));
         end
-      end
-      dph_smooth_ifg=(G*dph_smooth_series)';
-      dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
+
+        dph_smooth_ifg=(G*dph_smooth_series)';
+        dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
+
+        if strcmpi(unwrap_method,'3D_SMALL_DEF')|...
+           strcmpi(unwrap_method,'3D_QUICK')|...
+           strcmpi(unwrap_method,'3D_NEW')
+          not_small_ix=find(std(dph_noise,0,2)>1.3)';
+          fprintf('   Ignoring %d edges (elapsed time = %d s)\n',length(not_small_ix),round(toc))
+          dph_noise(not_small_ix,:)=nan;
+        else
+          ph_noise=angle(uw.ph.*conj(uw.ph_lowpass));
+          dph_noise_sf=((ph_noise(ui.edges(:,3),:)-(ph_noise(ui.edges(:,2),:))));      
+          m_minmax=repmat([-pi,pi],5,1).*repmat([0.5;0.25;1;0.25;1],1,2);
+          anneal_opts=[1;15;0;0;0;0;0];
+          covm=cov((dph_noise_sf)); % estimate of covariance
+          [W,P]=chol(inv(covm)); % weighting matrix 
+          if P~=0
+              W=diag(1./sqrt(diag(covm)));
+          end
+          not_small_ix=find(std(dph_noise,0,2)>1)';
+          fprintf('   Performing complex smoothing on %d edges (elapsed time = %d s)\n',length(not_small_ix),round(toc))
+
+          n_proc=0;
+          for i=not_small_ix
+            dph=angle(dph_space(i,:))';
+            dph_smooth_series(:,i)=uw_sb_smooth_unwrap(m_minmax,anneal_opts,G,W,dph,x);
+
+            n_proc=n_proc+1;
+            if round(n_proc/1000)==n_proc/1000
+                save('uw_unwrap_time','G','dph_space','dph_smooth_series');
+                fprintf('%d edges of %d reprocessed (elapsed time = %d s)\n',n_proc,length(not_small_ix),round(toc))
+            end
+          end
+          dph_smooth_ifg=(G*dph_smooth_series)';
+          dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
+        end
     end
+    
     dph_space_uw=dph_smooth_ifg+dph_noise;
+    
     if strcmpi(la_flag,'y')
         dph_space=dph_space.*exp(1i*K*bperp'); % add back DEM error
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
 
-    if strcmpi(unwrap_method,'3D_NEW')
-
-        ifreq_ij=nan(n_ps,n_ifg);
-        jfreq_ij=nan(n_ps,n_ifg);
+    if strcmpi(unwrap_method,'3D_NEW') | strcmpi(unwrap_method,'3D_FULL')
+       
+        fprintf('   Calculating local phase gradients (elapsed time = %d s)\n',round(toc))
+        ifreq_ij=nan(n_ps,n_ifg,'single');
+        jfreq_ij=nan(n_ps,n_ifg,'single');
         ifgw=zeros(nrow,ncol);
         dph_smooth_uw2=nan(ui.n_edge,n_ifg);
         spread2=spread;
@@ -161,7 +221,8 @@ else
             ifreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),ifreq(ix),uw.ij(nan_ix,2),uw.ij(nan_ix,1),'nearest');
             jfreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),jfreq(ix),uw.ij(nan_ix,2),uw.ij(nan_ix,1),'nearest');
         end
-
+        
+        fprintf('   Smoothing using local phase gradients (elapsed time = %d s)\n',round(toc))
         for i=1:ui.n_edge
             nodes_ix=ui.edges(i,[2:3]);
             ifreq_edge=mean(ifreq_ij(nodes_ix,:));
@@ -169,6 +230,7 @@ else
             spread2(i,:)=diff(ifreq_ij(nodes_ix,:))+diff(jfreq_ij(nodes_ix,:));
             dph_smooth_uw2(i,:)=diff(uw.ij(nodes_ix,1))*ifreq_edge+diff(uw.ij(nodes_ix,2))*jfreq_edge;
         end
+        fprintf('   Choosing between time and phase gradient smoothing (elapsed time = %d s)\n',round(toc))        
         dph_noise2=angle((dph_space).*exp(-j*dph_smooth_uw2));
         std_noise=std(dph_noise,0,2);
         std_noise2=std(dph_noise2,0,2);
@@ -183,11 +245,12 @@ else
             shaky_edges=(ui.edges(:,2)==shaky_nodes(i)|ui.edges(:,3)==shaky_nodes(i));
             shaky_ix(shaky_edges)=true; % for nodes with >1 shaky edges, set all edges to shaky
         end
+        fprintf('   %d arcs smoothed in time, %d in space (elapsed time = %d s)\n',ui.n_edge-sum(shaky_ix),sum(shaky_ix),round(toc))        
 
         dph_noise(shaky_ix,:)=dph_noise2(shaky_ix,:);
         dph_space_uw(shaky_ix,:)=dph_smooth_uw2(shaky_ix,:)+dph_noise2(shaky_ix,:);
         spread(shaky_ix,:)=spread2(shaky_ix,:);
     end
     
-    save('uw_space_time','dph_space','dph_space_uw','dph_noise','G','dph_smooth_series','spread','ifreq_ij','jfreq_ij');
+    save('uw_space_time','dph_space','dph_space_uw','dph_noise','G','spread','ifreq_ij','jfreq_ij');
 end

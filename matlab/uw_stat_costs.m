@@ -9,7 +9,7 @@ function []=uw_stat_costs(unwrap_method,subset_ifg_index);
 %   11/2009 AH: Fix 2D processing
 %   01/2012 AH: Create snaphu.conf file internally
 %   01/2012 AH: Change noise estimation for 2D method
-%   02/2012 AH: Updated for 3D_NONLIN method
+%   02/2012 AH: Updated for 3D_NEW method
 %   ======================================================================
 
 
