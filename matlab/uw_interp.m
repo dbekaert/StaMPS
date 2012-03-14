@@ -9,23 +9,18 @@ function []=uw_interp();
 
 fprintf('Interpolating grid...\n')
 
-uw=load('uw_grid');
-
-[n_ps,n_ifg]=size(uw.ph);
-
-disp(sprintf('   Number of interferograms: %d',n_ifg))
-disp(sprintf('   Number of points per ifg: %d',n_ps))
+uw=load('uw_grid','n_ps','n_ifg','nzix');
 
 nodename=['unwrap.1.node'];
 fid=fopen(nodename,'w');
-fprintf(fid,'%d 2 0 0\n',n_ps);
+fprintf(fid,'%d 2 0 0\n',uw.n_ps);
 
 [y,x]=find(uw.nzix);
-xy=[[1:n_ps]',x,y];
+xy=[[1:uw.n_ps]',x,y];
 fprintf(fid,'%d %d %d\n',xy');
 fclose(fid);
 
-!triangle -e unwrap.1.node
+!triangle -e unwrap.1.node > triangle.log
 
 fid=fopen('unwrap.2.edge','r');
 header=str2num(fgetl(fid));
@@ -47,7 +42,7 @@ if n_ele~=N
     error('missing lines in unwrap.2.ele')
 end
 
-z=[1:n_ps];
+z=[1:uw.n_ps];
 [nrow,ncol]=size(uw.nzix);
 
 [X,Y]=meshgrid(1:ncol,1:nrow);
@@ -68,7 +63,7 @@ gridedgeix=(J2(J)-1).*edge_sign; % index to edges
 colix=reshape(gridedgeix(1:nrow*(ncol-1)),nrow,ncol-1);
 rowix=reshape(gridedgeix(nrow*(ncol-1)+1:end),ncol,nrow-1)';
 
-fprintf('Number of unique edges in grid: %d\n\n',n_edge);
+fprintf('   Number of unique edges in grid: %d\n',n_edge);
 
 
 save('uw_interp','edges','n_edge','rowix','colix','Z');

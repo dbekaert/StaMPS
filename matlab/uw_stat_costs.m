@@ -26,7 +26,7 @@ fprintf('Unwrapping in space...\n')
 
 uw=load('uw_grid');
 ui=load('uw_interp');
-ut=load('uw_space_time');
+ut=load('uw_space_time','dph_space_uw','dph_noise','spread');
 
 if nargin<2
     subset_ifg_index=[1:size(uw.ph,2)];
@@ -57,7 +57,8 @@ else
     %sigsq_defo=(std(ut.dph_space_uw-ut.dph_noise,0,2)/2/pi).^2;
     dph_smooth=ut.dph_space_uw-ut.dph_noise;
 end
- 
+ut=rmfield(ut,'dph_noise');
+
   nostats_ix=find(isnan(sigsq_noise))'; %noise set to nans in uw_sb_unwrap_time
   for i=nostats_ix
     rowix(abs(rowix)==i)=nan;
@@ -65,7 +66,6 @@ end
   end
 
   sigsq=int16(round(((sigsq_noise)*nshortcycle^2)/costscale.*n_edges)); % weight by number of occurences
-  spread=int16(round((abs(ut.spread)*nshortcycle^2)/6/costscale.*repmat(n_edges,1,size(ut.spread,2))));
   
   sigsq(sigsq<1)=1; % zero causes snaphu to crash
 
@@ -101,9 +101,10 @@ fclose(fid);
 
 
 for i1=subset_ifg_index
-    fprintf('\nProcessing IFG %d of %d\n',i1,length(subset_ifg_index));
-    
-    sigsqtot=sigsq+spread(:,i1);
+    fprintf('   Processing IFG %d of %d\n',i1,length(subset_ifg_index));
+    spread=full(ut.spread(:,i1));
+    spread=int16(round((abs(spread)*nshortcycle^2)/6/costscale.*repmat(n_edges,1,size(spread,2))));
+    sigsqtot=sigsq+spread;
     rowstdgrid(nzrowix)= sigsqtot(abs(rowix(nzrowix)));
     rowcost(:,2:4:end)= rowstdgrid; % sigsq
     colstdgrid(nzcolix)= sigsqtot(abs(colix(nzcolix)));
@@ -123,7 +124,7 @@ for i1=subset_ifg_index
     fclose(fid);
     ifgw=reshape(uw.ph(Z,i1),nrow,ncol);
     writecpx('snaphu.in',ifgw)
-    cmdstr=['!snaphu -d -f snaphu.conf ',num2str(ncol),' >> snaphu.log'];
+    cmdstr=['!snaphu -d -f snaphu.conf ',num2str(ncol),' >& snaphu.log'];
     eval(cmdstr)
     fid=fopen('snaphu.out');
     ifguw=fread(fid,[ncol,inf],'float');

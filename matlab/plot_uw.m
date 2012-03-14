@@ -1,11 +1,14 @@
-function []=plot_uw();
+function []=plot_uw(ifg_list);
 %PLOT_UW plot some figures of intermediate unwrapping steps
+%   PLOT_UW(IFG_LIST) - default is to plot all 
 %
 % Andy Hooper, March 2012
 
 load uw_interp
 load uw_grid
-load uw_space_time
+
+ph=ph(:,ifg_list);
+
 n_ifg=size(ph,2);
 ni=floor(sqrt(n_ifg+1));
 nj=ceil(sqrt(n_ifg+1));
@@ -48,7 +51,11 @@ colorbar('westoutside')
 cla
 axis off
 
+load uw_space_time ifreq_ij jfreq_ij
+
 if ~isempty(ifreq_ij)
+ifreq_ij=ifreq_ij(:,n_ifg);
+jfreq_ij=ifreq_ij(:,n_ifg);
 figure
 for i=1:n_ifg
     subplot(ni,nj,i)

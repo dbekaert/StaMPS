@@ -10,7 +10,7 @@ function [ph_uw,msd]=uw_unwrap_from_grid(ph,xy,pix_size)
 
 fprintf('Unwrapping from grid...\n')
 
-uw=load('uw_grid');
+uw=load('uw_grid','nzix','n_ps','grid_ij');
 uu=load('uw_phaseuw');
 
 [n_ps,n_ifg]=size(ph);

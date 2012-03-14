@@ -31,7 +31,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 % 01/2012 AH: Add bperp for new look angle error estimation
 % 02/2012 AH: Add new method 3D_NEW
 % ============================================================
-
+tic;
 if nargin<3
     help uw_3d
     error('not enough arguments')
@@ -55,7 +55,7 @@ else
     single_master_flag=0;
 end
 
-valid_options={'la_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha'};
+valid_options={'la_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha','n_trial_wraps'};
 invalid_options=setdiff(fieldnames(options),valid_options);
 if length(invalid_options)>0
     error(['"',invalid_options{1}, '" is an invalid option'])

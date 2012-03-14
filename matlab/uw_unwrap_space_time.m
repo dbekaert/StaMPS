@@ -28,7 +28,7 @@ if nargin<2
 end
 
 if nargin<5 
-    la_flag = 'n'
+    la_flag = 'n';
 end
 
 if nargin<6 & strcmpi(la_flag,'y')
@@ -44,7 +44,7 @@ ui=load('uw_interp');
 [nrow,ncol]=size(ui.Z);
 
 day_pos_ix=find(day>0);
-[Y,I]=min(day(day_pos_ix));
+[~,I]=min(day(day_pos_ix));
 close_master_ix=day_pos_ix(I);
 if close_master_ix>1
     close_master_ix=[close_master_ix-1;close_master_ix];
@@ -54,7 +54,7 @@ dph_space=(uw.ph(ui.edges(:,3),:).*conj(uw.ph(ui.edges(:,2),:)));
 K=zeros(ui.n_edge,1);
 
 if strcmpi(la_flag,'y')
-    fprintf('   Estimating look angle error\n')
+    fprintf('   Estimating look angle error (elapsed time=%ds)\n',round(toc))
     dph_temp=[dph_space(:,[1:close_master_ix-1]),mean(abs(dph_space),2),dph_space(:,[close_master_ix:end])];
     ddph=dph_temp(:,[2:end]).*conj(dph_temp(:,1:end-1)); % sequential dph, to reduce influence of defo
     ddph=ddph./abs(ddph); % normalise
@@ -68,74 +68,79 @@ if strcmpi(la_flag,'y')
     trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
     n_trials=length(trial_mult);
     trial_phase=bperp_diff/bperp_range*pi/4;
-    trial_phase_mat=exp(-j*trial_phase*trial_mult);
+    trial_phase_mat=exp(-1i*trial_phase*trial_mult);
     coh=zeros(ui.n_edge,1);
     for i=1:ui.n_edge
         cpxphase=ddph(i,ix).';
         cpxphase_mat=repmat(cpxphase,1,n_trials);
         phaser=trial_phase_mat.*cpxphase_mat;
         phaser_sum=sum(phaser);
-        [coh_max,coh_max_ix]=max(abs(phaser_sum));
+        [~,coh_max_ix]=max(abs(phaser_sum));
         K0=pi/4/bperp_range*trial_mult(coh_max_ix);
-        resphase=cpxphase.*exp(-j*(K0*bperp_diff)); % subtract approximate fit
+        resphase=cpxphase.*exp(-1i*(K0*bperp_diff)); % subtract approximate fit
         offset_phase=sum(resphase);
         resphase=angle(resphase*conj(offset_phase)); % subtract offset, take angle (unweighted)
         weighting=abs(cpxphase); 
         mopt=double(weighting.*bperp_diff)\double(weighting.*resphase);
         K(i)=K0+mopt;
-        phase_residual=cpxphase.*exp(-j*(K0*bperp_diff)); 
+        phase_residual=cpxphase.*exp(-1i*(K0*bperp_diff)); 
         mean_phase_residual=sum(phase_residual); 
         coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
     end
+    clear ddph cpxphase_mat trial_phase_mat phaser
     K(coh<0.31)=0;
-    dph_space=dph_space.*exp(-j*K*bperp');   
+    dph_space=dph_space.*exp(-1i*K*bperp');   
 
 end
 
-spread=zeros(ui.n_edge,uw.n_ifg,'single');
+spread=sparse(zeros(ui.n_edge,uw.n_ifg));
 
 if strcmpi(unwrap_method,'2D')
     dph_space_uw=angle(dph_space);
     if strcmpi(la_flag,'y')
-        dph_space=dph_space.*exp(j*K*bperp'); % add back DEM error
+        dph_space=dph_space.*exp(1i*K*bperp'); % add back DEM error
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
-    save('uw_space_time','dph_space','dph_space_uw','spread');    
+    save('uw_space_time','dph_space_uw','spread');    
 else
-    fprintf('   Smoothing in time\n')
+    fprintf('   Smoothing in time (elapsed time=%ds)\n',round(toc))
     dph_smooth=zeros(ui.n_edge,uw.n_ifg,'single');
+    dph_space_angle=angle(dph_space);
     for i1=1:uw.n_ifg
         time_diff=(day(i1)-day)';
         weight_factor=exp(-(time_diff.^2)/2/time_win^2);
         weight_factor=weight_factor/sum(weight_factor);
             
         dph_mean=sum(dph_space.*repmat(weight_factor,ui.n_edge,1),2);
-        dph_mean_adj=angle(dph_space.*repmat(conj(dph_mean),1,uw.n_ifg)); % subtract weighted mean
+        %dph_mean_adj=angle(dph_space.*repmat(conj(dph_mean),1,uw.n_ifg)); % subtract weighted mean
+        dph_mean_adj=mod(dph_space_angle-repmat(angle(dph_mean),1,uw.n_ifg)+pi,2*pi)-pi;
         G=[ones(uw.n_ifg,1),time_diff'];
         m=lscov(G,double(dph_mean_adj)',weight_factor);
-        dph_mean_adj=angle(exp(j*(dph_mean_adj-(G*m)'))); % subtract first estimate
-        m2=lscov(G,double(dph_mean_adj)',weight_factor);
-        dph_smooth(:,i1)=dph_mean.*exp(j*(m(1,:)'+m2(1,:)')); % add back weighted mean
+        %dph_mean_adj=angle(exp(j*(dph_mean_adj-(G*m)'))); % subtract first estimate
+        %dph_mean_adj=mod(dph_mean_adj-(G*m)'+pi,2*pi)-pi; % subtract first estimate
+        %m2=lscov(G,double(dph_mean_adj)',weight_factor);
+        %dph_smooth(:,i1)=dph_mean.*exp(1i*(m(1,:)'+m2(1,:)')); % add back weighted mean
+        dph_smooth(:,i1)=dph_mean.*exp(1i*(m(1,:)')); % add back weighted mean
     end
     dph_noise=angle(dph_space.*conj(dph_smooth));
+    clear dph_space dph_mean_adj dph_space_angle
     dph_smooth_uw=cumsum([angle(dph_smooth(:,1)),angle(dph_smooth(:,2:end).*conj(dph_smooth(:,1:end-1)))],2);
-
+    clear dph_smooth
     dph_close_master=mean(dph_smooth_uw(:,close_master_ix),2);
-    dph_smooth_uw=dph_smooth_uw-repmat(dph_close_master-angle(exp(j*dph_close_master)),1,uw.n_ifg);
+    dph_smooth_uw=dph_smooth_uw-repmat(dph_close_master-angle(exp(1i*dph_close_master)),1,uw.n_ifg);
     dph_space_uw=dph_smooth_uw+(dph_noise);
+    clear dph_smooth_uw
     
     if strcmpi(la_flag,'y')
-        dph_space=dph_space.*exp(j*K*bperp'); % add back DEM error
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
     
     if strcmpi(unwrap_method,'3D_NEW')
-        fprintf('   Calculating local phase gradients\n')
+        fprintf('   Calculating local phase gradients (elapsed time=%ds)\n',round(toc))
         ifreq_ij=nan(uw.n_ps,uw.n_ifg,'single');
         jfreq_ij=nan(uw.n_ps,uw.n_ifg,'single');
         ifgw=zeros(nrow,ncol);
-        dph_smooth_uw2=nan(ui.n_edge,uw.n_ifg);
-        spread2=spread;
+
         for i=1:uw.n_ifg
             ifgw(uw.nzix)=uw.ph(:,i);
             [ifreq,jfreq,grad_ij,Hmag]=gradient_filt(ifgw,prefilt_win);
@@ -147,7 +152,11 @@ else
             jfreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),jfreq(ix),uw.ij(nan_ix,2),uw.ij(nan_ix,1),'nearest');
         end
         
-        fprintf('   Smoothing using local phase gradients\n')
+        fprintf('   Smoothing using local phase gradients (elapsed time=%ds)\n',round(toc))
+
+        dph_smooth_uw2=nan(ui.n_edge,uw.n_ifg,'single');
+        spread2=zeros(size(spread),'single');
+
         for i=1:ui.n_edge
             nodes_ix=ui.edges(i,[2:3]);
             ifreq_edge=mean(ifreq_ij(nodes_ix,:));
@@ -155,18 +164,19 @@ else
             spread2(i,:)=diff(ifreq_ij(nodes_ix,:))+diff(jfreq_ij(nodes_ix,:));
             dph_smooth_uw2(i,:)=diff(uw.ij(nodes_ix,1))*ifreq_edge+diff(uw.ij(nodes_ix,2))*jfreq_edge;
         end
-        fprintf('   Choosing between time and phase gradient smoothing\n')        
-        dph_noise2=angle((dph_space).*exp(-j*dph_smooth_uw2));
+        fprintf('   Choosing between time and phase gradient smoothing (elapsed time=%ds)\n',round(toc))     
+        dph_noise2=angle(exp(1i*(dph_space_uw-dph_smooth_uw2)));
         shaky_ix=std(dph_noise,0,2)>std(dph_noise2,0,2); % spatial smoothing works better index
         shaky_nodes=ui.edges(shaky_ix,[2:3]);
         shaky_nodes=sort(shaky_nodes(:));
-        not_uniq_ix=find(diff(shaky_nodes)==0);
+        not_uniq_ix= diff(shaky_nodes)==0;
         shaky_nodes=shaky_nodes(not_uniq_ix);
         shaky_nodes=unique(shaky_nodes);
         for i=1:length(shaky_nodes)
             shaky_edges=(ui.edges(:,2)==shaky_nodes(i)|ui.edges(:,3)==shaky_nodes(i));
             shaky_ix(shaky_edges)=true; % for nodes with >1 shaky edges, set all edges to shaky
         end
+        fprintf('   %d arcs smoothed in time, %d in space (elapsed time=%ds)\n',ui.n_edge-sum(shaky_ix),sum(shaky_ix),round(toc))        
         dph_noise(shaky_ix,:)=dph_noise2(shaky_ix,:);
         dph_space_uw(shaky_ix,:)=dph_smooth_uw2(shaky_ix,:)+dph_noise2(shaky_ix,:);
         spread(shaky_ix,:)=spread2(shaky_ix,:);
@@ -181,5 +191,5 @@ else
 
     dph_noise(std(dph_noise,0,2)>1.3,:)=nan;
 
-    save('uw_space_time','dph_space','dph_space_uw','close_master_ix','dph_noise','K','spread');
+    save('uw_space_time','dph_space_uw','close_master_ix','dph_noise','K','spread');
 end

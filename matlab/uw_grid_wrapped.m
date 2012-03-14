@@ -32,6 +32,10 @@ if nargin<7
 end
 
 [n_ps,n_ifg]=size(ph_in);
+
+disp(sprintf('   Number of interferograms  : %d',n_ifg))
+disp(sprintf('   Number of points per ifg  : %d',n_ps))
+
  
 xy_in(:,1)=[1:n_ps]';
 
@@ -58,14 +62,24 @@ else
   end
 end
 
+clear ph_in
+
 nzix=sum(ph_grid~=0,3)>0;
 n_ps=sum(nzix(:));
+
+disp(sprintf('   Number of resampled points: %d',n_ps))
+
 [nz_i,nz_j]=find(sum(ph_grid~=0,3)>0);
 xy=[[1:n_ps]',(nz_j-0.5)*pix_size,(nz_i-0.5)*pix_size];
 ij=[nz_i,nz_j];
 
 ph=zeros(n_ps,n_ifg,'single');
-ph_lowpass=ph;
+
+if strcmpi(lowfilt_flag,'y')
+    ph_lowpass=ph;
+else
+    ph_lowpass=[];
+end
 
 for i=1:n_ifg
     ph_this=ph_grid(:,:,i);
