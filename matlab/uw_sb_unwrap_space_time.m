@@ -10,7 +10,9 @@ function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag
 %   02/2012 AH: New method 3D_NEW
 %   02/2012 AH: New method 3D_FULL
 %   ======================================================================
-
+% 
+%   18/03/2012 version
+%
 disp('Unwrapping in time-space...')
 
 
@@ -36,34 +38,64 @@ K=zeros(ui.n_edge,1);
 ifreq_ij=[];
 jfreq_ij=[];
 
+G=zeros(n_ifg,n_image);
+for i=1:n_ifg
+    G(i,ifgday_ix(i,1))=-1;
+    G(i,ifgday_ix(i,2))=1;
+end
+
+nzc_ix=sum(abs(G))~=0; % non-zero column index
+day=day(nzc_ix);
+G=G(:,nzc_ix);
+day=day(nzc_ix);
+n=size(G,2);
+
+    
 if strcmpi(la_flag,'y')
     fprintf('   Estimating look angle error (elapsed time=%ds)\n',round(toc))
+
     bperp_range=max(bperp)-min(bperp);
+
+    if strcmpi(unwrap_method,'3D_FULL')
+        ix=find(abs(diff(ifgday_ix,[],2))==1);
+        bperp_sub=bperp(ix);
+        dph_sub=dph_space(:,ix); % only ifgs using ith image
+        bperp_sub=bperp(ix);
+        bperp_range_sub=max(bperp_sub)-min(bperp_sub);
+        n_trial_wraps=n_trial_wraps*(bperp_range_sub/bperp_range);
+    else
+        dph_sub=dph_space;
+        bperp_sub=bperp;
+        bperp_range_sub=bperp_range;
+    end
+
 
     trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
     n_trials=length(trial_mult);
-    trial_phase=bperp/bperp_range*pi/4;
+    trial_phase=bperp_sub/bperp_range_sub*pi/4;
     trial_phase_mat=exp(-j*trial_phase*trial_mult);
     coh=zeros(ui.n_edge,1);
     for i=1:ui.n_edge
-        cpxphase=dph_space(i,:).';
+        cpxphase=dph_sub(i,:).';
         cpxphase_mat=repmat(cpxphase,1,n_trials);
         phaser=trial_phase_mat.*cpxphase_mat;
         phaser_sum=sum(phaser);
         [~,coh_max_ix]=max(abs(phaser_sum));
-        K0=pi/4/bperp_range*trial_mult(coh_max_ix);
-        resphase=cpxphase.*exp(-1i*(K0*bperp)); % subtract approximate fit
+        K0=pi/4/bperp_range_sub*trial_mult(coh_max_ix);
+        resphase=cpxphase.*exp(-1i*(K0*bperp_sub)); % subtract approximate fit
         offset_phase=sum(resphase);
         resphase=angle(resphase*conj(offset_phase)); % subtract offset, take angle (unweighted)
         weighting=abs(cpxphase); 
-        mopt=double(weighting.*bperp)\double(weighting.*resphase);
+        mopt=double(weighting.*bperp_sub)\double(weighting.*resphase);
         K(i)=K0+mopt;
-        phase_residual=cpxphase.*exp(-1i*(K0*bperp)); 
+        phase_residual=cpxphase.*exp(-1i*(K0*bperp_sub)); 
         mean_phase_residual=sum(phase_residual); 
         coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
     end
-    clear cpxphase_mat trial_phase_mat phaser
+        
+    clear cpxphase_mat trial_phase_mat phaser dph_sub
     dph_space=dph_space.*exp(-1i*K*bperp');
+        
 end
 
 spread=sparse(zeros(ui.n_edge,n_ifg));
@@ -83,16 +115,6 @@ elseif strcmpi(unwrap_method,'3D_NO_DEF')
     save('uw_space_time','dph_space_uw','dph_noise','spread');
 else
     fprintf('   Smoothing in time (elapsed time=%ds)\n',round(toc))
-    G=zeros(n_ifg,n_image);
-    for i=1:n_ifg
-        G(i,ifgday_ix(i,1))=-1;
-        G(i,ifgday_ix(i,2))=1;
-    end
-
-    nzc_ix=sum(abs(G))~=0; % non-zero column index
-    day=day(nzc_ix);
-    G=G(:,nzc_ix);
-    n=size(G,2);
     
     if strcmpi(unwrap_method,'3D_FULL')
         
@@ -248,16 +270,16 @@ else
         std_noise=std(dph_noise,0,2);
         std_noise2=std(dph_noise2,0,2);
         dph_noise2(std_noise2>1.3,:)=nan;
-        shaky_ix=isnan(std_noise) | std_noise>std_noise2; % spatial smoothing works better index
-        shaky_nodes=ui.edges(shaky_ix,[2:3]);
-        shaky_nodes=sort(shaky_nodes(:));
-        not_uniq_ix= diff(shaky_nodes)==0;
-        shaky_nodes=shaky_nodes(not_uniq_ix);
-        shaky_nodes=unique(shaky_nodes);
-        for i=1:length(shaky_nodes)
-            shaky_edges=(ui.edges(:,2)==shaky_nodes(i)|ui.edges(:,3)==shaky_nodes(i));
-            shaky_ix(shaky_edges)=true; % for nodes with >1 shaky edges, set all edges to shaky
-        end
+        shaky_ix=isnan(std_noise) | std_noise>std_noise2 | std_noise>0.9; % spatial smoothing works better index
+        %shaky_nodes=ui.edges(shaky_ix,[2:3]);
+        %shaky_nodes=sort(shaky_nodes(:));
+        %not_uniq_ix= diff(shaky_nodes)==0;
+        %shaky_nodes=shaky_nodes(not_uniq_ix);
+        %shaky_nodes=unique(shaky_nodes);
+        %for i=1:length(shaky_nodes)
+        %    shaky_edges=(ui.edges(:,2)==shaky_nodes(i)|ui.edges(:,3)==shaky_nodes(i));
+        %    shaky_ix(shaky_edges)=true; % for nodes with >1 shaky edges, set all edges to shaky
+        %end
         fprintf('   %d arcs smoothed in time, %d in space (elapsed time=%ds)\n',ui.n_edge-sum(shaky_ix),sum(shaky_ix),round(toc))        
 
         dph_noise(shaky_ix,:)=dph_noise2(shaky_ix,:);
