@@ -11,7 +11,7 @@ function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag
 %   02/2012 AH: New method 3D_FULL
 %   ======================================================================
 % 
-%   18/03/2012 version
+%   19/03/2012 version updated for subsets of full network
 %
 disp('Unwrapping in time-space...')
 
@@ -55,9 +55,11 @@ if strcmpi(la_flag,'y')
     fprintf('   Estimating look angle error (elapsed time=%ds)\n',round(toc))
 
     bperp_range=max(bperp)-min(bperp);
+    ix=find(abs(diff(ifgday_ix,[],2))==1);
+    
 
-    if strcmpi(unwrap_method,'3D_FULL')
-        ix=find(abs(diff(ifgday_ix,[],2))==1);
+    if length(ix)>=length(day)-1 % if almost full cascade is present
+        fprintf('   (using sequential cascade of interferograms only)\n')
         bperp_sub=bperp(ix);
         dph_sub=dph_space(:,ix); % only ifgs using ith image
         bperp_sub=bperp(ix);
@@ -167,7 +169,8 @@ else
             std_noise1=std(angle(dph_space(:,already_ix).*exp(-1i*dph_smooth_ifg(:,already_ix))));
             std_noise2=std(angle(dph_space(:,already_ix).*exp(-1i*dph_smooth_sub(:,already_sub_ix))));
             keep_ix=true(n_sub,1);
-            keep_ix(already_sub_ix(std_noise1<std_noise2))=false; % keep least noisy
+            %keep_ix(already_sub_ix(std_noise1<std_noise2))=false; % keep least noisy
+            keep_ix(already_sub_ix(std_noise1>std_noise2))=false; % keep most noisy
             dph_smooth_ifg(:,ix(keep_ix))=dph_smooth_sub(:,keep_ix);
        end
        
