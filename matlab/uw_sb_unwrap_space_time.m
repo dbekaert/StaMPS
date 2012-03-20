@@ -47,7 +47,6 @@ end
 nzc_ix=sum(abs(G))~=0; % non-zero column index
 day=day(nzc_ix);
 G=G(:,nzc_ix);
-day=day(nzc_ix);
 n=size(G,2);
 
     
@@ -172,10 +171,11 @@ else
             %keep_ix(already_sub_ix(std_noise1<std_noise2))=false; % keep least noisy
             keep_ix(already_sub_ix(std_noise1>std_noise2))=false; % keep most noisy
             dph_smooth_ifg(:,ix(keep_ix))=dph_smooth_sub(:,keep_ix);
-       end
+        end
        
-       dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
-      
+        dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
+        dph_noise(std(dph_noise,0,2)>0.9,:)=nan;
+     
     else
         %x=(0:n-1)'; % use sequence for smoothing
         x=(day-day(1))*(n-1)/(day(end)-day(1)); % use dates for smoothing
@@ -197,7 +197,7 @@ else
            strcmpi(unwrap_method,'3D_QUICK')|...
            strcmpi(unwrap_method,'3D_NEW')
           not_small_ix=find(std(dph_noise,0,2)>1.3)';
-          fprintf('   Ignoring %d edges (elapsed time=%ds)\n',length(not_small_ix),round(toc))
+          fprintf('   %d edges with high std dev in time (elapsed time=%ds)\n',length(not_small_ix),round(toc))
           dph_noise(not_small_ix,:)=nan;
         else
           uw=load('uw_grid');
@@ -230,7 +230,6 @@ else
         end
     end
     clear dph_space
-    
     dph_space_uw=dph_smooth_ifg+dph_noise;
     clear dph_smooth_ifg
     
@@ -269,11 +268,11 @@ else
             dph_smooth_uw2(i,:)=diff(ij(nodes_ix,1))*ifreq_edge+diff(ij(nodes_ix,2))*jfreq_edge;
         end
         fprintf('   Choosing between time and phase gradient smoothing (elapsed time=%ds)\n',round(toc))        
-        dph_noise2=angle(exp(-j*(dph_space_uw-dph_smooth_uw2)));
         std_noise=std(dph_noise,0,2);
+        dph_noise2=angle(exp(-j*(dph_space_uw-dph_smooth_uw2)));
         std_noise2=std(dph_noise2,0,2);
         dph_noise2(std_noise2>1.3,:)=nan;
-        shaky_ix=isnan(std_noise) | std_noise>std_noise2 | std_noise>0.9; % spatial smoothing works better index
+        shaky_ix=isnan(std_noise) | std_noise>std_noise2; % spatial smoothing works better index
         %shaky_nodes=ui.edges(shaky_ix,[2:3]);
         %shaky_nodes=sort(shaky_nodes(:));
         %not_uniq_ix= diff(shaky_nodes)==0;
