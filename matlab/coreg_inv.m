@@ -36,8 +36,8 @@ for i=1:length(cpmname);
     stdev=sqrt(3/2/N).*sqrt(1-corrf.^2)/pi./corrf*osf^(3/2);
     weighting=1./stdev;
     ifgs=sscanf(thisname,'CPM_Data.%d.%d');
-    ifg1=ifgs(1);  % 0  cpm.0.1
-    ifg2=ifgs(2);  % 1
+    ifg1=ifgs(1);
+    ifg2=ifgs(2);
     
     Gblock1=[ones(size(posL1)),posL1,posP1,posL1.^2,posL1.*posP1,posP1.^2];
     Gblock1=Gblock1.*repmat(weighting,1,6);

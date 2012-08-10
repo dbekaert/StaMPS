@@ -40,4 +40,4 @@ y=y(keep_iy);
 fid=fopen('fc_pos.in','w');
 fprintf(fid,'%i  %i\n',[Y(:),X(:)]');
 fclose(fid);
-%EOF
+

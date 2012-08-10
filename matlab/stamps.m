@@ -197,9 +197,4 @@ if start_step<=8 & end_step >=8
     ps_scn_filt
 end
 
-if start_step<=9 & end_step >=9   % Experimental Codes
-    msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 9 ';
-    fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
-    ps_scn_filt_step9
-end
 
