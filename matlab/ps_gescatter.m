@@ -40,10 +40,12 @@ step=1:step:size(lonlat,1);
 
 jetme=fliplr(jet);  % change colors order for climsmtx
 
+% size value range for google icon (shaded_dot): 0.0 to 1.0
+
 if (nargin > 4) % do clims
-  gescatter(filename,lonlat(step,1),lonlat(step,2),data(step,:),'size',5,'colormap',jetme,'opacity',opacity,'clims',climsmtx) 
+  gescatter(filename,lonlat(step,1),lonlat(step,2),data(step,:),'size',1,'colormap',jetme,'opacity',opacity,'clims',climsmtx) 
 else            % don't do clims
-  gescatter(filename,lonlat(step,1),lonlat(step,2),data(step,:),'size',5,'colormap','jet','opacity',opacity)
+  gescatter(filename,lonlat(step,1),lonlat(step,2),data(step,:),'size',1,'colormap','jet','opacity',opacity)
 end
  
 %EOF
