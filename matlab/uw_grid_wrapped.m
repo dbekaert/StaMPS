@@ -36,6 +36,9 @@ end
 disp(sprintf('   Number of interferograms  : %d',n_ifg))
 disp(sprintf('   Number of points per ifg  : %d',n_ps))
 
+if sum(ph_in(:)==0)>0
+    error('Some phase values are zero')
+end
  
 xy_in(:,1)=[1:n_ps]';
 
@@ -50,49 +53,56 @@ grid_ij(grid_ij(:,2)==max(grid_ij(:,2)),2)=max(grid_ij(:,2))-1;
 n_i=max(grid_ij(:,1));
 n_j=max(grid_ij(:,2));
 
-ph_grid=zeros(n_i,n_j,n_ifg,'single');
+ph_grid=zeros(n_i,n_j,'single');
 
-if isreal(ph_in)
-  for i=1:n_ps
-    ph_grid(grid_ij(i,1),grid_ij(i,2),:)=ph_grid(grid_ij(i,1),grid_ij(i,2),:)+exp(1i*shiftdim(ph_in(i,:),-1));
-  end
-else
-  for i=1:n_ps
-    ph_grid(grid_ij(i,1),grid_ij(i,2),:)=ph_grid(grid_ij(i,1),grid_ij(i,2),:)+shiftdim(ph_in(i,:),-1);
-  end
+
+for i1=1:n_ifg
+    if isreal(ph_in)
+        ph_this=exp(1i*ph_in(:,i1));
+    else
+        ph_this=ph_in(:,i1);
+    end 
+    ph_grid(:)=0;
+    for i=1:n_ps     
+        ph_grid(grid_ij(i,1),grid_ij(i,2))=ph_grid(grid_ij(i,1),grid_ij(i,2))+ph_this(i);
+    end
+  
+    if i1==1
+        nzix=ph_grid~=0;
+        n_ps_grid=sum(nzix(:));
+        ph=zeros(n_ps_grid,n_ifg,'single');
+        if strcmpi(lowfilt_flag,'y')
+            ph_lowpass=ph;
+        else
+            ph_lowpass=[];
+        end
+    end
+    if strcmpi(goldfilt_flag,'y') | strcmpi(lowfilt_flag,'y')
+        [ph_this_gold,ph_this_low]=wrap_filt(ph_grid,prefilt_win,gold_alpha,lowfilt_flag);
+        if strcmpi(lowfilt_flag,'y')
+            ph_lowpass(:,i)=ph_this_low(nzix);
+        end
+    end
+    if strcmpi(goldfilt_flag,'y')
+        ph(:,i1)=ph_this_gold(nzix);
+    else
+        ph(:,i1)=ph_grid(nzix);
+    end
+
 end
 
-clear ph_in
-
-nzix=sum(ph_grid~=0,3)>0;
-n_ps=sum(nzix(:));
+n_ps=n_ps_grid;
 
 disp(sprintf('   Number of resampled points: %d',n_ps))
 
-[nz_i,nz_j]=find(sum(ph_grid~=0,3)>0);
+[nz_i,nz_j]=find(ph_grid~=0);
 xy=[[1:n_ps]',(nz_j-0.5)*pix_size,(nz_i-0.5)*pix_size];
 ij=[nz_i,nz_j];
 
-ph=zeros(n_ps,n_ifg,'single');
 
-if strcmpi(lowfilt_flag,'y')
-    ph_lowpass=ph;
-else
-    ph_lowpass=[];
-end
 
-for i=1:n_ifg
-    ph_this=ph_grid(:,:,i);
-    if strcmpi(goldfilt_flag,'y') | strcmpi(lowfilt_flag,'y')
-        [ph_this_gold,ph_this_low]=wrap_filt(ph_this,prefilt_win,gold_alpha);
-        ph_lowpass(:,i)=ph_this_low(nzix);
-    end
-    if strcmpi(goldfilt_flag,'y')
-        ph(:,i)=ph_this_gold(nzix);
-    else
-        ph(:,i)=ph_this(nzix);
-    end
-end
 
-save('uw_grid','ph','ph_lowpass','xy','ij','nzix','grid_x_min','grid_y_min','n_i','n_j','n_ifg','n_ps','grid_ij','pix_size')    
+
+
+save('uw_grid','ph','ph_in','ph_lowpass','xy','ij','nzix','grid_x_min','grid_y_min','n_i','n_j','n_ifg','n_ps','grid_ij','pix_size')    
 

@@ -264,8 +264,11 @@ else
             nodes_ix=ui.edges(i,[2:3]);
             ifreq_edge=mean(ifreq_ij(nodes_ix,:));
             jfreq_edge=mean(jfreq_ij(nodes_ix,:));
+            diff_i=diff(ij(nodes_ix,1));
+            diff_j=diff(ij(nodes_ix,2));
+            dph_smooth_uw2(i,:)=diff_i*ifreq_edge+diff_j*jfreq_edge;
+%            spread2(i,:)=diff_i*diff(ifreq_ij(nodes_ix,:))+diff_j*diff(jfreq_ij(nodes_ix,:));
             spread2(i,:)=diff(ifreq_ij(nodes_ix,:))+diff(jfreq_ij(nodes_ix,:));
-            dph_smooth_uw2(i,:)=diff(ij(nodes_ix,1))*ifreq_edge+diff(ij(nodes_ix,2))*jfreq_edge;
         end
         fprintf('   Choosing between time and phase gradient smoothing (elapsed time=%ds)\n',round(toc))        
         std_noise=std(dph_noise,0,2);

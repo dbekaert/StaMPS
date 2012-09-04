@@ -46,7 +46,9 @@ z=[1:uw.n_ps];
 [nrow,ncol]=size(uw.nzix);
 
 [X,Y]=meshgrid(1:ncol,1:nrow);
-Z=dsearch(x,y,ele(:,2:4),X,Y); %index from grid to pixel node
+%Z=dsearch(x,y,ele(:,2:4),X,Y); % dsearch removed in MatlabR2012a
+Z=dsearchn([x,y],ele(:,2:4),[X(:),Y(:)]); %index from grid to pixel node
+Z = reshape(Z,nrow,ncol);
 Zvec=Z(:);
 grid_edges=[Zvec(1:end-nrow),Zvec(nrow+1:end)]; % col edges
 Zvec=reshape(Z',nrow*ncol,1);

@@ -1,4 +1,4 @@
-function [ph_out,ph_out_low]=wrap_filt(ph,n_win,alpha,n_pad)
+function [ph_out,ph_out_low]=wrap_filt(ph,n_win,alpha,n_pad,low_flag)
 %WRAP_FILT Goldstein adaptive and lowpass filtering
 %   [ph_out]=wrap_filt(ph,n_win,alpha,n_pad)
 %
@@ -12,6 +12,10 @@ function [ph_out,ph_out_low]=wrap_filt(ph,n_win,alpha,n_pad)
 if nargin<4
     n_pad=round(n_win*0.25);
 end
+
+if nargin<5
+    low_flag='n';
+end
     
 [n_i,n_j]=size(ph);
 n_inc=floor(n_win/2);
@@ -19,7 +23,11 @@ n_win_i=ceil(n_i/n_inc)-1;
 n_win_j=ceil(n_j/n_inc)-1;
 
 ph_out=zeros(size(ph));
-ph_out_low=ph_out;
+if strcmpi(low_flag,'y')
+    ph_out_low=ph_out;
+else
+    ph_out_low=[];
+end
 x=[1:n_win/2];
 [X,Y]=meshgrid(x,x);
 X=X+Y;
@@ -64,18 +72,24 @@ for ix1=1:n_win_i
         H=H.^alpha;
         ph_filt=ifft2(ph_fft.*H);
         ph_filt=ph_filt(1:n_win,1:n_win).*wf2;
-        ph_filt_low=ifft2(ph_fft.*L);
-        ph_filt_low=ph_filt_low(1:n_win,1:n_win).*wf2;
+        if strcmpi(low_flag,'y')
+            ph_filt_low=ifft2(ph_fft.*L);
+            ph_filt_low=ph_filt_low(1:n_win,1:n_win).*wf2;
+        end
         if isnan(ph_filt(1,1))
             disp('filtered phase contains NaNs in goldstein_filt')
             keyboard
         end
         ph_out(i1:i2,j1:j2)=ph_out(i1:i2,j1:j2)+ph_filt;
-        ph_out_low(i1:i2,j1:j2)=ph_out_low(i1:i2,j1:j2)+ph_filt_low;
+        if strcmpi(low_flag,'y')
+            ph_out_low(i1:i2,j1:j2)=ph_out_low(i1:i2,j1:j2)+ph_filt_low;
+        end
     end
 end
 
 ph_out=abs(ph).*exp(j*angle(ph_out)); % reset magnitude
-ph_out_low=abs(ph).*exp(j*angle(ph_out_low)); % reset magnitude
+if strcmpi(low_flag,'y')
+    ph_out_low=abs(ph).*exp(j*angle(ph_out_low)); % reset magnitude
+end
 
 

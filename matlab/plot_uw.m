@@ -55,7 +55,7 @@ load uw_space_time ifreq_ij jfreq_ij
 
 if ~isempty(ifreq_ij)
 ifreq_ij=ifreq_ij(:,n_ifg);
-jfreq_ij=ifreq_ij(:,n_ifg);
+jfreq_ij=jfreq_ij(:,n_ifg);
 figure
 for i=1:n_ifg
     subplot(ni,nj,i)

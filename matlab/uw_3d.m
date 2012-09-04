@@ -118,6 +118,7 @@ if strcmpi('unwrap_method','3D') & single_master_flag~=1
 end
 
 uw_grid_wrapped(ph,xy,options.grid_size,options.prefilt_win,options.goldfilt_flag,options.lowfilt_flag,options.gold_alpha);
+clear ph
 uw_interp;
 if single_master_flag==1
     uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win);
@@ -125,5 +126,5 @@ else
     uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win);
 end
 uw_stat_costs(options.unwrap_method);
-[ph_uw,msd]=uw_unwrap_from_grid(ph,xy,options.grid_size);
+[ph_uw,msd]=uw_unwrap_from_grid(xy,options.grid_size);
 

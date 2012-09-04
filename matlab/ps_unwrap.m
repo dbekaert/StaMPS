@@ -133,6 +133,13 @@ options.prefilt_win=getparm('unwrap_gold_n_win',1);
 options.goldfilt_flag=getparm('unwrap_prefilter_flag',1);
 options.gold_alpha=getparm('unwrap_gold_alpha',1);
 options.la_flag=getparm('unwrap_la_error_flag',1);
+load pm1 n_trial_wraps
+if exist('n_trial_wraps','var')
+    options.n_trial_wraps=n_trial_wraps;
+else
+    options.n_trial_wraps=1;
+end
+
 
 
 if strcmpi(small_baseline_flag,'y')

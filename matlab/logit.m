@@ -11,7 +11,11 @@ function []=logit(logmsg,whereto,parent_flag)
 % Andy Hooper, March 2010
    
 [fstack]=dbstack ;
-fname=upper(fstack(2).name);
+if size(fstack,1)>1
+    fname=upper(fstack(2).name);
+else
+    fname='Command line';
+end
 
 if nargin<1
     logmsg=0;
