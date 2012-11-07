@@ -9,9 +9,10 @@ function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag
 %   01/2012 AH: New option la_flag that estimates LA error for each arc
 %   02/2012 AH: New method 3D_NEW
 %   02/2012 AH: New method 3D_FULL
+%   03/2012 AH: version updated for subsets of full network
+%   10/2012 AH: Bug corrected in 3D_FULL
 %   ======================================================================
 % 
-%   19/03/2012 version updated for subsets of full network
 %
 disp('Unwrapping in time-space...')
 
@@ -143,7 +144,11 @@ else
                %dph_mean_adj=angle(dph_sub.*repmat(conj(dph_mean),1,n_sub)); % subtract weighted mean
                dph_mean_adj=mod(dph_sub_angle-repmat(angle(dph_mean),1,n_sub)+pi,2*pi)-pi;
                GG=[ones(n_sub,1),time_diff'];
-               m=lscov(GG,double(dph_mean_adj)',weight_factor);
+               if size(GG,1)>1
+                   m=lscov(GG,double(dph_mean_adj)',weight_factor);
+               else
+                   m=zeros(size(GG,1),ui.n_edge);
+               end
                %dph_mean_adj=mod(dph_mean_adj-(GG*m)'+pi,2*pi)-pi; % subtract first estimate
                %m2=lscov(GG,double(dph_mean_adj)',weight_factor);
                %dph_smooth(:,i1)=dph_mean.*exp(1i*(m(1,:)'+m2(1,:)')); % add back weighted mean
@@ -162,7 +167,7 @@ else
             dph_close_master=mean(dph_smooth_sub(:,close_master_ix),2);
             dph_smooth_sub=dph_smooth_sub-repmat(dph_close_master-angle(exp(j*dph_close_master)),1,n_sub);
             dph_smooth_sub=dph_smooth_sub.*sign_ix;
-            already_sub_ix=~isnan(dph_smooth_ifg(1,ix)); % already unwrapped index
+            already_sub_ix=find(~isnan(dph_smooth_ifg(1,ix))); % already unwrapped index
             ix=find(ix);
             already_ix=ix(already_sub_ix);
             std_noise1=std(angle(dph_space(:,already_ix).*exp(-1i*dph_smooth_ifg(:,already_ix))));
@@ -174,7 +179,7 @@ else
         end
        
         dph_noise=angle(dph_space.*exp(-1i*dph_smooth_ifg));
-        dph_noise(std(dph_noise,0,2)>0.9,:)=nan;
+        dph_noise(std(dph_noise,0,2)>1.2,:)=nan;
      
     else
         %x=(0:n-1)'; % use sequence for smoothing
@@ -292,5 +297,5 @@ else
         spread(shaky_ix,:)=spread2(shaky_ix,:);
     end
     
-    save('uw_space_time','dph_space_uw','dph_noise','G','spread','ifreq_ij','jfreq_ij');
+    save('uw_space_time','dph_space_uw','dph_noise','G','spread','ifreq_ij','jfreq_ij','shaky_ix');
 end

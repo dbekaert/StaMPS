@@ -1,11 +1,16 @@
 function []=plot_uw(ifg_list);
 %PLOT_UW plot some figures of intermediate unwrapping steps
-%   PLOT_UW(IFG_LIST) - default is to plot all 
+%   PLOT_UW(IFG_LIST) - default is to plot the first
 %
 % Andy Hooper, March 2012
 
+if nargin<1
+    ifg_list=1;
+end
+
 load uw_interp
 load uw_grid
+ut=load('uw_space_time')
 
 ph=ph(:,ifg_list);
 
@@ -24,7 +29,7 @@ for i=1:n_ifg
      ifgw(nzix)=angle(ph(:,i));
      imagesc(ifgw,[-pi,pi+pi/31.9])
      axis off
-     axis equal
+%     axis equal
      axis xy
 end
 colormap([jet(64);0,0,0]);
@@ -41,7 +46,7 @@ for i=1:n_ifg
     ifgw=angle(reshape(ph(Z,i),nrow,ncol));
     imagesc(ifgw,[-pi,pi])
     axis off
-    axis equal
+%    axis equal
     axis xy
 end
 set(gcf,'name','Interpolated phase')
@@ -66,7 +71,7 @@ for i=1:n_ifg
     ifgw(~nzix)=clim(2);
     imagesc(ifgw,clim);
     axis off
-    axis equal
+%    axis equal
     axis xy
 end
 colormap([jet(64);0,0,0]);
@@ -89,7 +94,7 @@ for i=1:n_ifg
     ifgw(~nzix)=clim(2);
     imagesc(ifgw,clim);
     axis off
-    axis equal
+%    axis equal
     axis xy
 end
 colormap([jet(64);0,0,0]);
@@ -100,3 +105,23 @@ colorbar('westoutside')
 cla
 axis off
 end
+
+figure
+ifgw=ones(nrow,ncol)*(pi+pi/31.9);
+ifgw(nzix)=angle(ph(:,1));
+imagesc([min(xy(:,2)),max(xy(:,2))],[min(xy(:,3)),max(xy(:,3))],ifgw,[-pi,pi+pi/31.9])
+colormap([jet(64);0,0,0]);
+
+plot_edges(edges,xy(:,2),xy(:,3),'w');
+if isfield(ut,'shaky_ix')
+    plot_edges(edges(ut.shaky_ix,:),xy(:,2),xy(:,3),'r');
+end
+
+axis off
+axis xy
+
+
+set(gcf,'name','Arcs')
+
+end
+
