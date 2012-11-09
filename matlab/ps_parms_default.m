@@ -172,6 +172,10 @@ if ~isfield(parms,'unwrap_la_error_flag')
     parms.unwrap_la_error_flag='n';
 end
 
+if ~isfield(parms,'unwrap_spatial_cost_func_flag')
+    parms.unwrap_spatial_cost_func_flag='n';
+end
+
 if ~isfield(parms,'unwrap_prefilter_flag')
     parms.unwrap_prefilter_flag='y';
 end

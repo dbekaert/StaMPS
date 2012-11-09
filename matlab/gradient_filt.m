@@ -61,7 +61,7 @@ for ix1=1:n_win_i
             I2(I2==0)=n_win;
             
             ifreq(ix1,ix2)=(I1-n_win/2-1)*2*pi/n_win; % i is top to bottom, fft is bottom to top
-            jfreq(ix1,ix2)=(I2-n_win/2-1)*2*pi/n_win; 
+            jfreq(ix1,ix2)=(I2-n_win/2-1)*-2*pi/n_win; 
         end
         ij(i,:)=[(i1+i2)/2,(j1+j2)/2];
     end

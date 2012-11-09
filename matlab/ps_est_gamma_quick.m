@@ -1,4 +1,4 @@
-function []=PS_est_gamma_quick(restart_flag)
+function []=ps_est_gamma_quick(restart_flag)
 % PS_EST_GAMMA_QUICK estimate coherence of PS cands
 %   PS_EST_GAMMA_QUICK(RESTART_FLAG) set R
 %   RESTART_FLAG=1 restarts from previous values

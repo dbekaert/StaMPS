@@ -133,11 +133,13 @@ options.prefilt_win=getparm('unwrap_gold_n_win',1);
 options.goldfilt_flag=getparm('unwrap_prefilter_flag',1);
 options.gold_alpha=getparm('unwrap_gold_alpha',1);
 options.la_flag=getparm('unwrap_la_error_flag',1);
-load pm1 n_trial_wraps
-if exist('n_trial_wraps','var')
-    options.n_trial_wraps=n_trial_wraps;
-else
-    options.n_trial_wraps=1;
+options.scf_flag=getparm('unwrap_spatial_cost_func_flag',1);
+options.n_trial_wraps=2;
+if exist('pm1.mat','file')
+    load pm1 n_trial_wraps
+    if exist('n_trial_wraps','var')
+        options.n_trial_wraps=n_trial_wraps;
+    end
 end
 
 
@@ -149,13 +151,15 @@ if strcmpi(small_baseline_flag,'y')
     day=ps.day-ps.master_day;
 else
     lowfilt_flag='n';
-    ifgday_ix=[];
+    %ifgday_ix=[];
+    ifgday_ix=[ones(ps.n_ifg,1)*ps.master_ix,[1:ps.n_ifg]'];
     master_ix=sum(ps.master_day>ps.day)+1;
     unwrap_ifg_index=setdiff(unwrap_ifg_index,master_ix); % leave master ifg (which is only noise) out
-    day=ps.day(unwrap_ifg_index)-ps.master_day;
+    %day=ps.day(unwrap_ifg_index)-ps.master_day;
+    day=ps.day-ps.master_day;
 end
 
-[ph_uw_some,msd_some]=uw_3d(ph_w(:,unwrap_ifg_index),ps.xy,day,ifgday_ix,ps.bperp(unwrap_ifg_index),options);
+[ph_uw_some,msd_some]=uw_3d(ph_w(:,unwrap_ifg_index),ps.xy,day,ifgday_ix(unwrap_ifg_index,:),ps.bperp(unwrap_ifg_index),options);
 
 ph_uw=zeros(ps.n_ps,ps.n_ifg,'single');
 msd=zeros(ps.n_ifg,1,'single');
