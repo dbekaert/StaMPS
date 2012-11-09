@@ -21,6 +21,7 @@ function []=ps_select(reest_flag,plot_flag)
 %   09/2010 JJS+MA: To make use oversampling dataset
 %   12/2010 AH: Fix error message for density selection
 %   02/2011 DB: Fix error with keep_ix
+%   05/2012 AH: subtract only pixel being tested, not zero whole grid cell
 %   ======================================================================
 logit;
 fprintf('Selecting stable-phase pixels...\n')
@@ -276,8 +277,9 @@ if reest_flag~=1
 
         ph_bit=pm.ph_grid(i_min:i_max,j_min:j_max,:);
 
-        ph_bit(ps_bit_i,ps_bit_j,:)=0;
-
+        %ph_bit(ps_bit_i,ps_bit_j,:)=0;
+        ph_bit(ps_bit_i,ps_bit_j,:)=ph_bit(ps_bit_i,ps_bit_j,:)-shiftdim(pm.ph_weighting(i,:),-1);
+        
         % JJS oversample update for PS removal + [MA] general usage update
         ix_i=ps_bit_i-(slc_osf-1):ps_bit_i+(slc_osf-1);
         ix_i=ix_i(ix_i>0&ix_i<=size(ph_bit,1));

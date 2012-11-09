@@ -7,14 +7,16 @@ function []=ps_est_gamma_quick(restart_flag)
 %
 %   Andy Hooper, June 2006
 %
-%   ==========================================================
+%   ==============================================================
 %   09/2006 AH: short baseline added,  
 %   09/2006 AH: unwrapped phase loaded from separate workspace  
 %   09/2006 AH: restart processing fixed 
 %   10/2006 AH: convergence criteria changed
 %   04/2007 AH: number of wraps no longer rounded
 %   12/2008 AH: avoid divide by zero for zero phase values
-%   ==========================================================
+%   05/2012 AH: correct weighted phase for range error and save it
+%   05/2012 AH: remove convergence condition that gamma_cc<0
+%   ==============================================================
 logit;
 logit('Estimating gamma for candidate pixels')
 
@@ -191,9 +193,11 @@ while loop_end_sw==0
 
     ph_grid=zeros(n_i,n_j,n_ifg,'single');
     ph_filt=ph_grid;
+    ph_weight=ph.*exp(-j*bp.bperp_mat.*repmat(K_ps,1,n_ifg)).*repmat(weighting,1,n_ifg);
     
     for i=1:n_ps
-        ph_grid(grid_ij(i,1),grid_ij(i,2),:)=ph_grid(grid_ij(i,1),grid_ij(i,2),:)+shiftdim(ph(i,:),-1)*weighting(i);
+        %ph_grid(grid_ij(i,1),grid_ij(i,2),:)=ph_grid(grid_ij(i,1),grid_ij(i,2),:)+shiftdim(ph(i,:),-1)*weighting(i);
+        ph_grid(grid_ij(i,1),grid_ij(i,2),:)=ph_grid(grid_ij(i,1),grid_ij(i,2),:)+shiftdim(ph_weight(i,:),-1);
     end
     
     for i=1:n_ifg
@@ -234,36 +238,6 @@ while loop_end_sw==0
             end
         end
         
-        
-        if strcmpi(filter_weighting,'P-square')
-            Na=hist(coh_ps,coh_bins);
-            Nr=Nr*sum(Na(1:low_coh_thresh))/sum(Nr(1:low_coh_thresh)); % scale random distribution to actual, using low coh values
-            Na(Na==0)=1; % avoid divide by zero
-            Prand=Nr./Na;
-            Prand(1:low_coh_thresh)=1;
-            Prand(Nr_max_nz_ix+1:end)=0;
-            Prand(Prand>1)=1;
-            Prand=filter(gausswin(7),1,[ones(1,7),Prand])/sum(gausswin(7));
-            Prand=Prand(8:end);
-            Prand=interp([1,Prand],10); % interpolate to 100 samples
-            Prand=Prand(1:end-9);
-            Prand_ps=Prand(round(coh_ps*1000)+1)';
-            weighting=(1-Prand_ps).^2;
-        else
-            %ph_n=angle(ph_res.*repmat(conj(sum(ph_res,2)),1,n_ifg)); % subtract mean, take angle
-            %sigma_n=std(A.*sin(ph_n),0,2); % noise
-            
-            g=mean(A.*cos(ph_res),2); % signal
-            sigma_n=sqrt(0.5*(mean(A.^2,2)-g.^2));
-            %snr=(g./sigma_n).^2;
-
-            weighting(sigma_n==0)=0;
-            weighting(sigma_n~=0)=g(sigma_n~=0)./sigma_n(sigma_n~=0); % snr
-        end
-
-        weighting_rms=sqrt(sum((weighting-weighting_save).^2)/n_ps);
-        weighting_save=weighting;
-
 
         step_number=1;
 
@@ -282,7 +256,8 @@ while loop_end_sw==0
         coh_ps_save=coh_ps;
 
         gamma_change_convergence=getparm('gamma_change_convergence',1);
-        if gamma_change_change<0&abs(gamma_change_change)<gamma_change_convergence
+%        if gamma_change_change<0&abs(gamma_change_change)<gamma_change_convergence
+        if abs(gamma_change_change)<gamma_change_convergence
             %figure
             %subplot(2,1,1)
             %hist(weighting,100)
@@ -291,11 +266,36 @@ while loop_end_sw==0
             loop_end_sw=1;
         else
             i_loop=i_loop+1;
+            if strcmpi(filter_weighting,'P-square')
+                Na=hist(coh_ps,coh_bins);
+                Nr=Nr*sum(Na(1:low_coh_thresh))/sum(Nr(1:low_coh_thresh)); % scale random distribution to actual, using low coh values
+                Na(Na==0)=1; % avoid divide by zero
+                Prand=Nr./Na;
+                Prand(1:low_coh_thresh)=1;
+                Prand(Nr_max_nz_ix+1:end)=0;
+                Prand(Prand>1)=1;
+                Prand=filter(gausswin(7),1,[ones(1,7),Prand])/sum(gausswin(7));
+                Prand=Prand(8:end);
+                Prand=interp([1,Prand],10); % interpolate to 100 samples
+                Prand=Prand(1:end-9);
+                Prand_ps=Prand(round(coh_ps*1000)+1)';
+                weighting=(1-Prand_ps).^2;
+            else
+                %ph_n=angle(ph_res.*repmat(conj(sum(ph_res,2)),1,n_ifg)); % subtract mean, take angle
+                %sigma_n=std(A.*sin(ph_n),0,2); % noise
+
+                g=mean(A.*cos(ph_res),2); % signal
+                sigma_n=sqrt(0.5*(mean(A.^2,2)-g.^2));
+                %snr=(g./sigma_n).^2;
+
+                weighting(sigma_n==0)=0;
+                weighting(sigma_n~=0)=g(sigma_n~=0)./sigma_n(sigma_n~=0); % snr
+            end
         end
     else
         loop_end_sw=1;
     end
     
-save(pmname,'ph_patch','K_ps','C_ps','coh_ps','N_opt','ph_res','step_number','ph_grid','n_trial_wraps','grid_ij','grid_size','low_pass','i_loop','weighting','Nr','Nr_max_nz_ix','coh_bins','coh_ps_save','gamma_change_save') 
+save(pmname,'ph_patch','K_ps','C_ps','coh_ps','N_opt','ph_res','step_number','ph_grid','n_trial_wraps','grid_ij','grid_size','low_pass','i_loop','ph_weight','Nr','Nr_max_nz_ix','coh_bins','coh_ps_save','gamma_change_save') 
 end
 logit(1);
