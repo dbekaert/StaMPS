@@ -105,6 +105,9 @@ A=single(A);
 A(A==0)=1; % avoid divide by zero
 ph=ph./A;
 
+%%% ===============================================
+%%% The code below needs to be made sensor specific
+%%% ===============================================
 if exist(laname,'file')
     la=load(laname);
     inc_mean=mean(la.la)+0.052; % incidence angle approx equals look angle + 3 deg
@@ -112,8 +115,11 @@ if exist(laname,'file')
 else
     inc_mean=21*pi/180 % guess the incidence angle
 end
-
 max_K=max_topo_err/(lambda*rho*sin(inc_mean)/4/pi);
+%%% ===============================================
+%%% The code above needs to be made sensor specific
+%%% ===============================================
+
 bperp_range=max(bperp)-min(bperp);
 n_trial_wraps=(bperp_range*max_K/(2*pi));
 logit(sprintf('n_trial_wraps=%f',n_trial_wraps))

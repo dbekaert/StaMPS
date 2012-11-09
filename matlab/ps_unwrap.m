@@ -24,6 +24,7 @@ psname=['ps',num2str(psver)];
 rcname=['rc',num2str(psver)];
 pmname=['pm',num2str(psver)];
 bpname=['bp',num2str(psver)];
+
 if ~strcmpi(small_baseline_flag,'y')
     sclaname=['scla_smooth',num2str(psver)];
     apsname=['aps',num2str(psver)];
@@ -134,14 +135,29 @@ options.goldfilt_flag=getparm('unwrap_prefilter_flag',1);
 options.gold_alpha=getparm('unwrap_gold_alpha',1);
 options.la_flag=getparm('unwrap_la_error_flag',1);
 options.scf_flag=getparm('unwrap_spatial_cost_func_flag',1);
-options.n_trial_wraps=2;
-if exist('pm1.mat','file')
-    load pm1 n_trial_wraps
-    if exist('n_trial_wraps','var')
-        options.n_trial_wraps=n_trial_wraps;
-    end
-end
 
+max_topo_err=getparm('max_topo_err',1);
+lambda=getparm('lambda',1);
+%%% ===============================================
+%%% The code below needs to be made sensor specific
+%%% ===============================================
+rho = 830000; % mean range - need only be approximately correct
+laname=['./la',num2str(psver),'.mat'];
+if exist(laname,'file')
+    la=load(laname);
+    inc_mean=mean(la.la)+0.052; % incidence angle approx equals look angle + 3 deg
+    clear la
+else
+    inc_mean=21*pi/180; % guess the incidence angle
+end
+max_K=max_topo_err/(lambda*rho*sin(inc_mean)/4/pi);
+%%% ===============================================
+%%% The code above needs to be made sensor specific
+%%% ===============================================
+
+bperp_range=max(ps.bperp)-min(ps.bperp);
+options.n_trial_wraps=(bperp_range*max_K/(2*pi));
+logit(sprintf('n_trial_wraps=%f',options.n_trial_wraps))
 
 
 if strcmpi(small_baseline_flag,'y')
