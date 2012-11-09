@@ -87,7 +87,7 @@ if strcmpi(la_flag,'y') | strcmpi(temp_flag,'y')
         ifgs_per_image=sum(abs(G));
         [max_ifgs_per_image,max_ix]=max(ifgs_per_image);
         if max_ifgs_per_image>=length(day)-2; % can create cascade from (almost) complete single master series
-            fprintf('   using sequential cascade of interferograms\n')
+            fprintf('   Using sequential cascade of interferograms\n')
             ix=G(:,max_ix)~=0;
             gsub=G(ix,max_ix);
             sign_ix=-sign(single(gsub'));
@@ -141,23 +141,21 @@ if strcmpi(la_flag,'y')
         phaser=trial_phase_mat.*cpxphase_mat;
         phaser_sum=sum(phaser);
         coh_trial=abs(phaser_sum)/sum(abs(cpxphase));
-        [coh_max,coh_max_ix]=max(coh_trial); % allow for no peaks
-        peak_ix=coh_max_ix-8:coh_max_ix+8;
-        peak_ix=peak_ix(peak_ix>0&peak_ix<=n_trials);
-        coh_trial(peak_ix)=0;
-        if coh_max-max(coh_trial)>0.1 % diff in peaks at least 0.1
-%         coh_diff=diff(coh_trial);
-%         coh_peak_ix=[];
-%         for i1=2:length(coh_diff)
-%           if coh_diff(i1)<0 & coh_diff(i1-1)>0
-%               coh_peak_ix=[coh_peak_ix,i1];
-%           end
-%         end 
-%         coh_peak=coh_trial(coh_peak_ix); % peak values of coherence
-%         [coh_max,coh_max_peak_ix]=max(coh_peak);
-%         if length(coh_peak)<2 | min(coh_max-coh_peak([1:coh_max_peak_ix-1,coh_max_peak_ix+1:end]))>0.1 % diff in peaks at least 0.1
-            %coh_max_ix=coh_peak_ix(coh_max_peak_ix);
-%            [~,coh_max_ix]=max(abs(phaser_sum)); % allow for no peaks
+        [coh_max,coh_max_ix]=max(coh_trial);
+        falling_ix=find(diff(coh_trial(1:coh_max_ix))<0); % segemnts prior to peak where falling
+        if ~isempty(falling_ix)
+            peak_start_ix=falling_ix(end)+1;
+        else
+            peak_start_ix=1;
+        end
+        rising_ix=find(diff(coh_trial(coh_max_ix:end))>0); % segemnts after peak where rising
+        if ~isempty(rising_ix)
+            peak_end_ix=rising_ix(1)+coh_max_ix-1;
+        else
+            peak_end_ix=n_trials;
+        end
+        coh_trial(peak_start_ix:peak_end_ix)=0;
+        if coh_max-max(coh_trial)>0.1 % diff between peak and next peak at least 0.1
             K0=pi/4/bperp_range_sub*trial_mult(coh_max_ix);
             resphase=cpxphase.*exp(-1i*(K0*bperp_sub)); % subtract approximate fit
             offset_phase=sum(resphase);
@@ -194,17 +192,21 @@ if strcmpi(temp_flag,'y')
         phaser=trial_phase_mat.*cpxphase_mat;
         phaser_sum=sum(phaser);
         coh_trial=abs(phaser_sum)/sum(abs(cpxphase));
-        coh_diff=diff(coh_trial);
-        coh_peak_ix=[];
-        for i1=2:length(coh_diff)
-          if coh_diff(i1)<0 & coh_diff(i1-1)>0
-              coh_peak_ix=[coh_peak_ix,i1];
-          end
-        end 
-        coh_peak=coh_trial(coh_peak_ix); % peak values of coherence
-        [coh_max,coh_max_peak_ix]=max(coh_peak);
-        if length(coh_peak)<2 | min(coh_max-coh_peak([1:coh_max_peak_ix-1,coh_max_peak_ix+1:end]))>0.1 % diff in peaks at least 0.1
-            [~,coh_max_ix]=max(abs(phaser_sum)); % allow for no peaks
+        [coh_max,coh_max_ix]=max(coh_trial);
+        falling_ix=find(diff(coh_trial(1:coh_max_ix))<0); % segemnts prior to peak where falling
+        if ~isempty(falling_ix)
+            peak_start_ix=falling_ix(end)+1;
+        else
+            peak_start_ix=1;
+        end
+        rising_ix=find(diff(coh_trial(coh_max_ix:end))>0); % segemnts after peak where rising
+        if ~isempty(rising_ix)
+            peak_end_ix=rising_ix(1)+coh_max_ix-1;
+        else
+            peak_end_ix=n_trials;
+        end
+        coh_trial(peak_start_ix:peak_end_ix)=0;
+        if coh_max-max(coh_trial)>0.1 % diff between peak and next peak at least 0.1        
             K0=pi/4/temp_range_sub*trial_mult(coh_max_ix);
             resphase=cpxphase.*exp(-1i*(K0*temp_sub)); % subtract approximate fit
             offset_phase=sum(resphase);

@@ -133,8 +133,8 @@ end
 if size(day,1)==1
     day=day';
 end
-
-if strcmpi(options.unwrap_method,'3D') 
+    
+if strcmpi(options.unwrap_method,'3D') | strcmpi(options.unwrap_method,'3D_NEW') 
     if length(unique(ifgday_ix(:,1)))==1
         options.unwrap_method='3D_FULL';
     else
