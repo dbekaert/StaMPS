@@ -36,7 +36,7 @@ end
 disp(sprintf('   Number of interferograms  : %d',n_ifg))
 disp(sprintf('   Number of points per ifg  : %d',n_ps))
 
-if sum(ph_in(:)==0)>0
+if ~isreal(ph_in) & sum(ph_in(:)==0)>0
     error('Some phase values are zero')
 end
  
