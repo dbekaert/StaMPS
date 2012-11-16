@@ -1,4 +1,4 @@
-function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag,bperp,n_trial_wraps,prefilt_win,scf_flag,temp,n_temp_wraps)
+function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag,bperp,n_trial_wraps,prefilt_win,scf_flag,temp,n_temp_wraps,max_bperp_for_temp_est)
 %UW_SB_UNWRAP_SPACE_TIME smooth and unwrap phase diffs between neighboring data points in time
 %
 %   Andy Hooper, June 2007
@@ -60,125 +60,16 @@ if ~isempty(temp)
 else
     temp_flag='n';
 end
-    
-if strcmpi(la_flag,'y') | strcmpi(temp_flag,'y')
-    
-    if isempty(bperp)
-        bperp=[1:n_ifg]';
-    end
-    if isempty(temp)
-        temp=[1:n_ifg]';
-    end
-    
-    bperp_range=max(bperp)-min(bperp);
-    temp_range=max(temp)-min(temp);
-    ix=find(abs(diff(ifgday_ix,[],2))==1);   
-
-    if length(ix)>=length(day)-1 % if almost full cascade is present
-        fprintf('   using sequential cascade of interferograms\n')
-        temp_sub=temp(ix);
-        temp_range_sub=max(temp_sub)-min(temp_sub);
-        dph_sub=dph_space(:,ix); % only ifgs using ith image
-        bperp_sub=bperp(ix);
-        bperp_range_sub=max(bperp_sub)-min(bperp_sub);
-        n_trial_wraps=n_trial_wraps*(bperp_range_sub/bperp_range);
-        n_temp_wraps=n_temp_wraps*(temp_range_sub/temp_range);
-    else
-        ifgs_per_image=sum(abs(G));
-        [max_ifgs_per_image,max_ix]=max(ifgs_per_image);
-        if max_ifgs_per_image>=length(day)-2; % can create cascade from (almost) complete single master series
-            fprintf('   Using sequential cascade of interferograms\n')
-            ix=G(:,max_ix)~=0;
-            gsub=G(ix,max_ix);
-            sign_ix=-sign(single(gsub'));
-            dph_sub=dph_space(:,ix); % only ifgs using chosen master image
-            bperp_sub=[bperp(ix)]; 
-            bperp_sub(sign_ix==-1)=-bperp_sub(sign_ix==-1);
-            bperp_sub=[bperp_sub;0]; % add master
-            temp_sub=[temp(ix)]; 
-            temp_sub(sign_ix==-1)=-temp_sub(sign_ix==-1);
-            temp_sub=[temp_sub;0]; % add master
-            sign_ix=repmat(sign_ix,ui.n_edge,1);
-            dph_sub(sign_ix==-1)=conj(dph_sub(sign_ix==-1)); % flip sign if necessary to make ith image master 
-            dph_sub=[dph_sub,mean(abs(dph_sub),2)]; % add zero phase master
-            slave_ix=sum(ifgday_ix(ix,:),2)-max_ix;
-            day_sub=day([slave_ix;max_ix]); % extract days for subset
-            [day_sub,sort_ix]=sort(day_sub); % sort ascending day
-            dph_sub=dph_sub(:,sort_ix); % sort ascending day
-            bperp_sub=bperp_sub(sort_ix);
-            bperp_sub=diff(bperp_sub);
-            bperp_range_sub=max(bperp_sub)-min(bperp_sub);
-            n_trial_wraps=n_trial_wraps*(bperp_range_sub/bperp_range);           
-            temp_sub=temp_sub(sort_ix);
-            temp_sub=diff(temp_sub);
-            temp_range_sub=max(temp_sub)-min(temp_sub);
-            n_temp_wraps=n_temp_wraps*(temp_range_sub/temp_range);           
-            n_sub=length(day_sub);
-            dph_sub=dph_sub(:,[2:end]).*conj(dph_sub(:,1:end-1)); % sequential dph, to reduce influence of defo
-            dph_sub=dph_sub./abs(dph_sub); % normalise
-        else % just use all available
-            dph_sub=dph_space;
-            bperp_sub=bperp;
-            bperp_range_sub=bperp_range;
-            temp_sub=temp;
-            temp_range_sub=temp_range;
-        end
-    end
-end
-    
-if strcmpi(la_flag,'y') 
-    fprintf('   Estimating look angle error (elapsed time=%ds)\n',round(toc))
-    
-    trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
-    n_trials=length(trial_mult);
-    trial_phase=bperp_sub/bperp_range_sub*pi/4;
-    trial_phase_mat=exp(-j*trial_phase*trial_mult);
-    K=zeros(ui.n_edge,1,'single');
-    coh=zeros(ui.n_edge,1,'single');
-    for i=1:ui.n_edge
-        cpxphase=dph_sub(i,:).';
-        cpxphase_mat=repmat(cpxphase,1,n_trials);
-        phaser=trial_phase_mat.*cpxphase_mat;
-        phaser_sum=sum(phaser);
-        coh_trial=abs(phaser_sum)/sum(abs(cpxphase));
-        [coh_max,coh_max_ix]=max(coh_trial);
-        falling_ix=find(diff(coh_trial(1:coh_max_ix))<0); % segemnts prior to peak where falling
-        if ~isempty(falling_ix)
-            peak_start_ix=falling_ix(end)+1;
-        else
-            peak_start_ix=1;
-        end
-        rising_ix=find(diff(coh_trial(coh_max_ix:end))>0); % segemnts after peak where rising
-        if ~isempty(rising_ix)
-            peak_end_ix=rising_ix(1)+coh_max_ix-1;
-        else
-            peak_end_ix=n_trials;
-        end
-        coh_trial(peak_start_ix:peak_end_ix)=0;
-        if coh_max-max(coh_trial)>0.1 % diff between peak and next peak at least 0.1
-            K0=pi/4/bperp_range_sub*trial_mult(coh_max_ix);
-            resphase=cpxphase.*exp(-1i*(K0*bperp_sub)); % subtract approximate fit
-            offset_phase=sum(resphase);
-            resphase=angle(resphase*conj(offset_phase)); % subtract offset, take angle (unweighted)
-            weighting=abs(cpxphase); 
-            mopt=double(weighting.*bperp_sub)\double(weighting.*resphase);
-            K(i)=K0+mopt;
-            phase_residual=cpxphase.*exp(-1i*(K(i)*bperp_sub)); 
-            mean_phase_residual=sum(phase_residual); 
-            coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
-        end
-    end
-    
-    clear cpxphase_mat trial_phase_mat phaser 
-    K(coh<0.31)=0; % not to be trusted;
-    dph_space=dph_space.*exp(-1i*K*bperp');
-    dph_sub=dph_sub.*exp(-1i*K*bperp_sub');
-        
-end
-
+ 
 
 if strcmpi(temp_flag,'y')
     fprintf('   Estimating temperature correlation (elapsed time=%ds)\n',round(toc))
+    ix=abs(bperp)<max_bperp_for_temp_est;
+    temp_sub=temp(ix);
+    temp_range=max(temp)-min(temp);
+    temp_range_sub=max(temp_sub)-min(temp_sub);
+    dph_sub=dph_space(:,ix); % only ifgs using ith image
+    n_temp_wraps=n_temp_wraps*(temp_range_sub/temp_range);
 
     trial_mult=[-ceil(8*n_temp_wraps):ceil(8*n_temp_wraps)];
     n_trials=length(trial_mult);
@@ -220,9 +111,108 @@ if strcmpi(temp_flag,'y')
         end
     end
         
-    clear cpxphase_mat trial_phase_mat phaser dph_sub
+    clear cpxphase_mat trial_phase_mat phaser 
     Kt(coh<0.31)=0; % not to be trusted;
     dph_space=dph_space.*exp(-1i*Kt*temp');
+    dph_sub=dph_sub.*exp(-1i*Kt*temp_sub');
+        
+end
+
+
+if strcmpi(la_flag,'y') 
+
+    fprintf('   Estimating look angle error (elapsed time=%ds)\n',round(toc))
+          
+    bperp_range=max(bperp)-min(bperp);
+    ix=find(abs(diff(ifgday_ix,[],2))==1);   
+
+    if length(ix)>=length(day)-1 % if almost full chain is present
+        fprintf('   using sequential daisy chain of interferograms\n')
+        dph_sub=dph_space(:,ix); % only ifgs using ith image
+        bperp_sub=bperp(ix);
+        bperp_range_sub=max(bperp_sub)-min(bperp_sub);
+        n_trial_wraps=n_trial_wraps*(bperp_range_sub/bperp_range);
+    else
+        ifgs_per_image=sum(abs(G));
+        [max_ifgs_per_image,max_ix]=max(ifgs_per_image);
+        if max_ifgs_per_image>=length(day)-2; % can create chain from (almost) complete single master series
+            fprintf('   Using sequential daisy chain of interferograms\n')
+            ix=G(:,max_ix)~=0;
+            gsub=G(ix,max_ix);
+            sign_ix=-sign(single(gsub'));
+            dph_sub=dph_space(:,ix); % only ifgs using chosen master image
+            bperp_sub=[bperp(ix)]; 
+            bperp_sub(sign_ix==-1)=-bperp_sub(sign_ix==-1);
+            bperp_sub=[bperp_sub;0]; % add master
+            sign_ix=repmat(sign_ix,ui.n_edge,1);
+            dph_sub(sign_ix==-1)=conj(dph_sub(sign_ix==-1)); % flip sign if necessary to make ith image master 
+            dph_sub=[dph_sub,mean(abs(dph_sub),2)]; % add zero phase master
+            slave_ix=sum(ifgday_ix(ix,:),2)-max_ix;
+            day_sub=day([slave_ix;max_ix]); % extract days for subset
+            [day_sub,sort_ix]=sort(day_sub); % sort ascending day
+            dph_sub=dph_sub(:,sort_ix); % sort ascending day
+            bperp_sub=bperp_sub(sort_ix);
+            bperp_sub=diff(bperp_sub);
+            bperp_range_sub=max(bperp_sub)-min(bperp_sub);
+            n_trial_wraps=n_trial_wraps*(bperp_range_sub/bperp_range);           
+            n_sub=length(day_sub);
+            dph_sub=dph_sub(:,[2:end]).*conj(dph_sub(:,1:end-1)); % sequential dph, to reduce influence of defo
+            dph_sub=dph_sub./abs(dph_sub); % normalise
+        else % just use all available
+            dph_sub=dph_space;
+            bperp_sub=bperp;
+            bperp_range_sub=bperp_range;
+        end
+    end
+        
+    trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
+    n_trials=length(trial_mult);
+    trial_phase=bperp_sub/bperp_range_sub*pi/4;
+    trial_phase_mat=exp(-j*trial_phase*trial_mult);
+    K=zeros(ui.n_edge,1,'single');
+    coh=zeros(ui.n_edge,1,'single');
+    for i=1:ui.n_edge
+        cpxphase=dph_sub(i,:).';
+        cpxphase_mat=repmat(cpxphase,1,n_trials);
+        phaser=trial_phase_mat.*cpxphase_mat;
+        phaser_sum=sum(phaser);
+        coh_trial=abs(phaser_sum)/sum(abs(cpxphase));
+        [coh_max,coh_max_ix]=max(coh_trial);
+        falling_ix=find(diff(coh_trial(1:coh_max_ix))<0); % segemnts prior to peak where falling
+        if ~isempty(falling_ix)
+            peak_start_ix=falling_ix(end)+1;
+        else
+            peak_start_ix=1;
+        end
+        rising_ix=find(diff(coh_trial(coh_max_ix:end))>0); % segemnts after peak where rising
+        if ~isempty(rising_ix)
+            peak_end_ix=rising_ix(1)+coh_max_ix-1;
+        else
+            peak_end_ix=n_trials;
+        end
+        coh_trial(peak_start_ix:peak_end_ix)=0;
+        if coh_max-max(coh_trial)>0.1 % diff between peak and next peak at least 0.1
+            K0=pi/4/bperp_range_sub*trial_mult(coh_max_ix);
+            resphase=cpxphase.*exp(-1i*(K0*bperp_sub)); % subtract approximate fit
+            offset_phase=sum(resphase);
+            resphase=angle(resphase*conj(offset_phase)); % subtract offset, take angle (unweighted)
+            weighting=abs(cpxphase); 
+            mopt=double(weighting.*bperp_sub)\double(weighting.*resphase);
+            K(i)=K0+mopt;
+            phase_residual=cpxphase.*exp(-1i*(K(i)*bperp_sub)); 
+            mean_phase_residual=sum(phase_residual); 
+            coh(i)=abs(mean_phase_residual)/sum(abs(phase_residual)); 
+        end
+    end
+    
+    clear cpxphase_mat trial_phase_mat phaser dph_sub
+    K(coh<0.31)=0; % not to be trusted;
+    if strcmpi(temp_flag,'y')
+        dph_space(K==0,:)=dph_space(K==0,:).*exp(1i*Kt(K==0)*temp'); % add back temp correction if not able to estimate DEM reliably
+        Kt(K==0)=0;
+        K(Kt==0)=0; 
+    end
+    dph_space=dph_space.*exp(-1i*K*bperp');
         
 end
 
@@ -233,7 +223,7 @@ if strcmpi(unwrap_method,'2D')
     if strcmpi(la_flag,'y')
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
-    if ~isempty(temp)
+    if strcmpi(temp_flag,'y')
         dph_space_uw=dph_space_uw+Kt*temp';   % equal to dph_space + integer cycles
     end
     save('uw_space_time','dph_space_uw','spread');    
@@ -243,7 +233,7 @@ elseif strcmpi(unwrap_method,'3D_NO_DEF')
     if strcmpi(la_flag,'y')
         dph_space_uw=dph_space_uw+K*bperp';   % equal to dph_space + integer cycles
     end
-    if ~isempty(temp)
+    if strcmpi(temp_flag,'y')
         dph_space_uw=dph_space_uw+Kt*temp';   % equal to dph_space + integer cycles
     end
     save('uw_space_time','dph_space_uw','dph_noise','spread');
@@ -307,7 +297,6 @@ else
             std_noise2=std(angle(dph_space(:,already_ix).*exp(-1i*dph_smooth_sub(:,already_sub_ix))));
             keep_ix=true(n_sub,1);
             keep_ix(already_sub_ix(std_noise1<std_noise2))=false; % keep least noisy
-            %keep_ix(already_sub_ix(std_noise1>std_noise2))=false; % keep most noisy
             dph_smooth_ifg(:,ix(keep_ix))=dph_smooth_sub(:,keep_ix);
           end
         end
@@ -316,7 +305,6 @@ else
         dph_noise(std(dph_noise,0,2)>1.2,:)=nan;
      
     else
-        %x=(0:n-1)'; % use sequence for smoothing
         x=(day-day(1))*(n-1)/(day(end)-day(1)); % use dates for smoothing
 
         dph_space_series=[zeros(1,ui.n_edge);double(G(:,2:end))\double(angle(dph_space))'];
@@ -396,9 +384,6 @@ else
             if sum(ix(:))>2
                 jfreq_ij(:,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),jfreq(ix),ij(:,2),ij(:,1),'linear');
             end
-            %nan_ix=isnan(ifreq_ij(:,i));
-            %ifreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),ifreq(ix),ij(nan_ix,2),ij(nan_ix,1),'nearest');
-            %jfreq_ij(nan_ix,i)=griddata(grad_ij(ix,2),grad_ij(ix,1),jfreq(ix),ij(nan_ix,2),ij(nan_ix,1),'nearest');
         end
         clear uw
         
@@ -423,20 +408,6 @@ else
         dph_noise2(std_noise2>1.3,:)=nan;
         shaky_ix=isnan(std_noise) | std_noise>std_noise2; % spatial smoothing works better index
         
-        %%%FIX FIX
-        %shaky_ix=isnan(std_noise) | std_noise>0; % spatial smoothing always works better index
-        %shaky_ix= std_noise<0; % spatial smoothing never works better index
-        %%%%%%%%%%
-        
-        %shaky_nodes=ui.edges(shaky_ix,[2:3]);
-        %shaky_nodes=sort(shaky_nodes(:));
-        %not_uniq_ix= diff(shaky_nodes)==0;
-        %shaky_nodes=shaky_nodes(not_uniq_ix);
-        %shaky_nodes=unique(shaky_nodes);
-        %for i=1:leph_uw=uw_3d(ph(:,ix),xy,day,ifgday_ix(ix,:),bperp(ix),options);ngth(shaky_nodes)
-        %    shaky_edges=(ui.edges(:,2)==shaky_nodes(i)|ui.edges(:,3)==shaky_nodes(i));
-        %    shaky_ix(shaky_edges)=true; % for nodes with >1 shaky edges, set all edges to shaky
-        %end
         fprintf('   %d arcs smoothed in time, %d in space (elapsed time=%ds)\n',ui.n_edge-sum(shaky_ix),sum(shaky_ix),round(toc))        
 
         dph_noise(shaky_ix,:)=dph_noise2(shaky_ix,:);

@@ -60,7 +60,7 @@ else
     single_master_flag=0;
 end
 
-valid_options={'la_flag','scf_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha','n_trial_wraps','temp','n_temp_wraps'};
+valid_options={'la_flag','scf_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha','n_trial_wraps','temp','n_temp_wraps','max_bperp_for_temp_est'};
 invalid_options=setdiff(fieldnames(options),valid_options);
 if length(invalid_options)>0
     error(['"',invalid_options{1}, '" is an invalid option'])
@@ -126,6 +126,10 @@ if ~isfield(options,'n_temp_wraps')
     options.n_temp_wraps=2;
 end
 
+if ~isfield(options,'max_bperp_for_temp_est')
+    options.max_bperp_for_temp_est=100;
+end
+
 if size(xy,2)==2
    xy(:,2:3)=xy(:,1:2);
 end
@@ -148,7 +152,7 @@ uw_interp;
 if single_master_flag==1
     uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win,options.scf_flag,options.temp,options.n_temp_wraps);
 else
-    uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win,options.scf_flag,options.temp,options.n_temp_wraps);
+    uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win,options.scf_flag,options.temp,options.n_temp_wraps,options.max_bperp_for_temp_est);
 end
 uw_stat_costs(options.unwrap_method);
 [ph_uw,msd]=uw_unwrap_from_grid(xy,options.grid_size);
