@@ -1,15 +1,20 @@
-function [K0,C0,coh0,phase_residual]=ps_topofit(cpxphase,bperp,n_trial_wraps,plotflag)
+function [K0,C0,coh0,phase_residual]=ps_topofit(cpxphase,bperp,n_trial_wraps,plotflag,asym)
 %PS_TOPOFIT find best-fitting range error 
-%   PS_TOPOFIT(cpxphase,bperp,n_trial_wraps,plotflag)
+%   PS_TOPOFIT(cpxphase,bperp,n_trial_wraps,plotflag,asym)
+%   ASYM = -1 (only -ve K searched) to +1 (only +ve K) (default 0)
 %
 %   Andy Hooper, June 2006
 %
 %   ==========================================================
 %   04/2007 AH: Added 64-bit machine compatibility
 %   04/2007 AH: Tightened up max topo error processing
+%   11/2012 AH: Add asymmetry option
 %   ==========================================================
 
 
+if nargin<5
+    asym=0;
+end
 
 if size(cpxphase,2)>1
    cpxphase=cpxphase.';
@@ -23,7 +28,7 @@ bperp_range=max(bperp)-min(bperp);
 
 wphase=angle(cpxphase);
 
-trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)];
+trial_mult=[-ceil(8*n_trial_wraps):ceil(8*n_trial_wraps)]+asym*8*n_trial_wraps;
 n_trials=length(trial_mult);
 trial_phase=bperp/bperp_range*pi/4;
 trial_phase_mat=exp(-j*trial_phase*trial_mult);
@@ -33,15 +38,15 @@ phaser_sum=sum(phaser);
 C_trial=angle(phaser_sum);
 coh_trial=abs(phaser_sum)/sum(abs(cpxphase));
 
-coh_diff=diff(coh_trial);
-coh_max_ix=[];
-for i=2:length(coh_diff)
-    if coh_diff(i)<0 & coh_diff(i-1)>0
-        coh_max_ix=[coh_max_ix,i];
-    end
-end 
-
-coh_max=coh_trial(coh_max_ix); % maximum value of coherence
+% coh_diff=diff(coh_trial);
+% coh_max_ix=[];
+% for i=2:length(coh_diff)
+%     if coh_diff(i)<0 & coh_diff(i-1)>0
+%         coh_max_ix=[coh_max_ix,i];
+%     end
+% end 
+%
+% coh_max=coh_trial(coh_max_ix); % maximum value of coherence
 
 [dummy,coh_high_max_ix]=max(coh_trial); % only select highest
 
