@@ -1,0 +1,388 @@
+#!/bin/bash
+##
+## stack_overview : the script that creates overview of SAR data
+## multiimage processing StaMPS. It provides full information about
+## Bperp, Btemp and delta_fDC and expected stack coherence that helps
+## to select the bast 'master' image. 
+## Output: ASCII table of Bperp, Btemp, RHO + .png plot  
+## 
+## Requirements: Doris, StaMPS, matlab, GnuPlot
+##
+## Made by Zbigniew Perski
+##
+## big parts of the code and the name of the script comes from  
+## 'stack_overwiew.sh' by Petar Marinkovic
+## rho calculation comes from and from 'master_select' made by Karsten Spaans
+## and 'masterchoice.m done by Karsten is here used.
+##
+## Started on   07-JUN-2012
+## Last update  13-JUN-2012
+##
+## TODO1: Improve plots   
+###################################################################
+
+if [ $# -le 0 ]; 
+then
+
+    echo "Usage: $0 SENSOR"
+    echo "Run in SLC directory!"
+    echo "available SENSORS: ERS, Envisat, RSAT, TSX, CSK"
+    echo "OPTIONAL INPUT: [Tcrit] [Bcrit] [Dcrit]"
+    echo "         where Tcrit is the critical temporal baseline"
+    echo "               Bcrit is the critical perpendicular baseline"
+    echo "               Dcrit is the critical Doppler baseline"
+    echo "example1: stack_overview ERS"
+    echo "example2: stack_overview Envisat 1200 600 1000"
+    echo "          you can modify only selected parameter keeping others as x:"
+    echo "example3: stack_overview Envisat x 600 x" 
+  	
+    exit 127
+fi
+
+SENSOR=${1}
+WORKDIR=`pwd`
+
+# as the master the first (the oldest) scene  
+cd $WORKDIR
+ls -d -1 */ > slc_list
+MASTER=$(head -1 slc_list | awk 'BEGIN { FS="/"} {print $1}')
+echo "using first scene as the master"
+echo "SESNOR: ${SENSOR}  MASTER: ${MASTER}"
+
+if [ $# -eq 4 ]
+then
+  if [ $2 == x ]
+  then
+  Tcrit=1800
+  else 
+  Tcrit=${2}
+  fi
+  if [ $3 == x ]
+  then
+  Bcrit=1100
+  else 
+  Bcrit=${3}
+  fi
+  if [ $4 == x ]
+  then
+  Dcrit=1380
+  else 
+  Dcrit=${4}
+  fi
+  echo "using Tcrit=${Tcrit} days, Bcrit=${Bcrit} m, Dcrit=${Dcrit} Hz"
+else
+  Tcrit=1800
+  Bcrit=1100
+  Dcrit=1380
+  echo "using default values: Tcrit=1800 days Bcrit=1100 m Dcrit=1380 Hz"
+fi
+cd $WORKDIR
+WORKDIR=`pwd`
+
+# make direcory where all ouputs will be stored
+
+cd $WORKDIR
+cd ..
+mkdir stack_overview
+cd stack_overview
+OUTDIR=`pwd`
+
+case $SENSOR in
+"ERS" )
+dorisinput=readfiles_ERS.dorisin
+;;
+"Envisat" )
+dorisinput=readfiles_Envisat.dorisin
+;;
+"RSAT" )
+dorisinput=readfiles_RSAT.dorisin
+;;
+"TSX" )
+dorisinput=readfiles_TSX.dorisin
+;;
+"CSK" )
+dorisinput=readfiles_CSK.dorisin
+;;
+*)
+esac
+
+cd $WORKDIR
+ls -d -1 */ > slc_list
+
+for slc in `cat slc_list`
+do 
+slcs=$(echo ${slc} | awk 'BEGIN { FS="/"} {print $1}')
+echo ""
+echo " -----------------------------------------------"
+echo "        entering directory: ${slcs}"
+echo " -----------------------------------------------"
+echo ""
+cd $WORKDIR/${slcs}
+
+cp -f $DORIS_SCR/${dorisinput} $WORKDIR/${slcs}/readfiles.dorisin
+doris $WORKDIR/${slcs}/readfiles.dorisin
+
+step_orbit
+
+mv slave.res $OUTDIR/${slcs}.res
+rm *log*
+rm *dorisin
+
+done
+
+cd $WORKDIR
+mv slc_list $OUTDIR/slave_list
+
+# Now the fun will start - let's do overview #
+
+cd $OUTDIR
+
+####################################################################
+## This part of the code comes from 'stack_overview.sh'
+## Made by Petar Marinkovic:
+####################################################################
+
+# FUNCTIONS - start -
+nawk_res_file()
+{
+
+#    # SENSOR & DATE & DOPPLER: check in res files not in the data : much
+#    # easier since [*.res] files are already there. 
+#
+
+    date=$(nawk '/First_pixel_azimuth_time/ {printf "%s\n",$3}' ${res_file})
+    time=$(nawk '/First_pixel_azimuth_time/ {printf "%s\n",$4}' ${res_file})
+    orbit=$(nawk '/Scene identification/ {printf "%s\n",$4}' ${res_file})
+    fDC=$(nawk '/Xtrack_f_DC_constant/ {printf "%d\n", $NF}' ${res_file})
+    SLC_center_long=$(nawk '/Scene_centre_longitude/ {printf "%5.3f\n", $2}' ${res_file})
+    SLC_center_lat=$(nawk '/Scene_centre_latitude/ {printf "%5.3f\n", $2}' ${res_file})
+
+    local orb_flag=$(nawk '/^precise_orbits/ {print $NF} ' ${res_file})
+
+    if [[ ${orb_flag} == 1 ]]; then
+	orb_dir=prec
+    else
+	orb_dir=annot
+    fi
+
+    return 0
+}
+
+check_slc()
+{
+
+    local slave=${1}
+    
+      # create 'short' variable since everything is there
+	res_file=${slave}.res	
+	
+	if (grep -cq 'ERS' ${res_file} &> /dev/null) || \
+	    (grep -cq 'ENVISAT' ${res_file} &> /dev/null) || \
+	    (grep -cq 'CSK' ${res_file} &> /dev/null) || \
+	    (grep -cq 'TSX' ${res_file} &> /dev/null); then
+	    
+	    nawk_res_file
+	    
+        # if files exist check for sensor and define variables
+	    if (grep -cq 'ERS-1' ${res_file} &> /dev/null); then
+		
+		sensor=ERS1
+		
+	    elif (grep -cq 'ERS-2' ${res_file} &> /dev/null); then
+		
+	        sensor=ERS2
+	    
+	    elif (grep -cq 'ENVISAT' ${res_file} &> /dev/null); then     
+		
+		sensor=Envisat
+
+	    elif (grep -cq 'TSX' ${res_file} &> /dev/null); then     
+		
+		sensor=TSX
+
+	   elif  (grep -cq 'RSAT' ${res_file} &> /dev/null); then 
+		
+		sensor=RSAT
+
+	    elif (grep -cq 'CSK' ${res_file} &> /dev/null); then     
+		
+		sensor=CSK
+	    fi
+	    
+	return 1
+	# continue								
+
+    fi
+	
+    return 0
+
+}
+
+gnuplot_call()
+{
+    
+    local reference=${1}
+    local input=${2}
+    
+    local GNUPLOT=$( which gnuplot )
+
+    if [[ $? == 0 ]]; then
+
+    # sed input_template: NOTE ~ instead of /
+        cat $DORIS_SCR/stack_overview_template.gnuplot \
+	    | sed ''s~DUMPFILE~BPLOT_m${reference}.png~g'' \
+	    | sed ''s~INFILE~${input}~g'' > \
+	    BPLOT_m${reference}.gnuplot
+	
+	${GNUPLOT} BPLOT_m${reference}.gnuplot
+
+    else
+	echo -e "WARNING: gnuplot not found, not creating BASELINE.PLOTS \n"
+	return 1
+    fi
+
+    return 0
+
+}
+
+
+# ------------ end --
+
+master=$MASTER
+
+# for master in ${master_list}; do
+outputfile=stack_overview  
+    check_slc ${master}
+
+  # HEADER: for screen dump
+    echo ""
+    echo -e "MASTER: \t [${master}]     NOTE: ${outputfile}_m${master} contains more detailed output"
+    echo "-------------------------------------------------------------------------------------------------------------------------"
+    echo -e '\E[37;44m'"\033[1mSLC_ID \t SENS. \t ORB.# \t\t DATE \t Btemp[days] \t Bperp[m] \t d_fDC[Hz] \t ORB.dir \033[0m"
+    echo "-------------------------------------------------------------------------------------------------------------------------"
+
+
+# remove previous file if exists
+# if [ ! -e ${outputfile}_m${master} ]; then
+#     rm ${outputfile}_m${master}
+# fi
+    
+# HEADER: for file dump
+#    echo "" > ${outputfile}_m${master}
+    echo -e "SLC_ID \t SENS. \t ORB.# \t\t DATE \t\t TIME \t\t fDC[Hz] \t Btemp[days] \t Bperp[m] \t d_fDC \t Long[Deg] \t Lat[Deg] \t ORB.dir"\
+	>> ${outputfile}_m${master}
+    
+    date_master=${date}
+    fDC_master=${fDC}
+    res_file_master=${res_file}
+    
+    b_temp_master=0.00
+    b_along_master=0.00
+    b_perp_master=0.00
+    
+    counter=1 
+    
+    for slave1 in `cat slave_list` ; do
+
+slave=$(echo ${slave1} | awk 'BEGIN { FS="/"} {print $1}')
+
+#  echo "doing:  ${slave}"
+#  echo  "fDC_master:  $fDC_master"
+      
+	check_slc ${slave}
+	
+    # COMPUTE ALL BASELINES
+	
+	if [[ "${slave}" == "${master}" ]]; then
+	    
+	    b_temp=${b_temp_master}
+	    b_along=${b_along_master}
+	    b_perp=${b_perp_master}
+	    
+	    slc=${master}
+	    
+	else
+	    
+            # temporal baseline [in seconds]
+	    b_temp=$(( $(date --date "${date}" +%s) - \
+		$(date --date "${date_master}" +%s) ))
+
+	    # temporal baseline [in days]
+	    # NOTE: "%.0f" fixes problem in rounding of temporal baselines
+	    b_temp=$( echo ${b_temp} | nawk '{ printf "%.0f" , $1 /60 / 60 / 24 }' )
+	    
+            # along.track baseline: scaled to integers
+	    b_along=$(echo "${fDC} ${fDC_master}" | nawk '{ printf $1 - $2 }' )
+	    
+            # perpendicular baseline: calls baseline.doris script
+	    b_perp=$( baseline.doris.sh ${res_file_master} ${res_file} 2> /dev/null \
+		| nawk '/Bperp/ { printf "%.1f\n" , $NF }')
+	    
+	    slc=${slave}
+	    
+	fi
+	
+	echo -e "${counter} \t ${sensor} \t ${orbit} \t ${date} \t\t ${b_temp} \t\t ${b_perp} \t\t ${b_along} \t ${orb_dir}" 
+	
+    # file
+	echo -e "${counter} \t ${sensor} \t ${orbit} \t ${date} \t ${time} \t ${fDC} \t\t ${b_temp} \t\t ${b_perp} \t\t ${b_along} \t\t ${SLC_center_long} \t ${SLC_center_lat} \t ${orb_dir}" \
+	    >> ${outputfile}_m${master}
+	echo -e "${b_perp}" >> Bperp.txt
+        echo -e "${b_along}" >> Dopp.txt
+        echo -e "${slave}" >> Date.txt
+	let counter=${counter}+1
+	
+    done
+    
+    echo "----------------------------------------------------------------------------------------------------------------------"
+    echo ""
+#    echo -e "MASTER: \t [${master}:stop]"  >> ${outputfile}_m${master}
+
+  # VISUALIZE RESULTS: GNUPlot
+    gnuplot_call ${master} ${outputfile}_m${master}
+    
+##############################################################################
+# This part of the code comes from 'master_select' script:
+#
+# Extract baseline information and calculate expected rho
+# 
+# K.H. Spaans, September 2010
+##############################################################################
+
+Tcrit=1800
+Bcrit=1100
+Dcrit=1380
+
+# if [ ! -e rho.txt ]; then
+#    rm rho.txt
+# fi
+
+echo "masterchoice $Tcrit $Bcrit $Dcrit" >matbgparms.txt
+matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m > masterchoice.log
+
+cat rho.txt
+
+rm masterchoice.log matbgparms.txt Date.txt Dopp.txt Bperp.txt 
+
+# work with rho and merge it with ${outputfile}_m${master} :
+
+awk 'FNR>4{print}' rho.txt > temp__noheaderrho.txt
+sort -k 1 temp__noheaderrho.txt > temp_sortedrho.txt
+awk '{print $2}' temp_sortedrho.txt > temp_rhoonly.txt
+echo -e "RHO" > temp__head.txt
+cat temp__head.txt temp_rhoonly.txt > temp_rhofin.txt
+pr -m -t -s ${outputfile}_m${master} temp_rhofin.txt  | gawk '{print $0}' > ${outputfile}.csv
+
+ rm temp*
+
+echo ""
+echo ""
+echo ""
+echo " * * * * * * * * * * * * * * * * * * * * * * * *"
+echo "            ** MISSION COMPLETED ** "
+echo ""
+echo " check stack overview table: ${outputfile}.csv"
+echo " check plots: BPLOT_m${master}.png"
+echo ""
+echo " * * * * * * * * * * * * * * * * * * * * * * * * "
+echo ""
