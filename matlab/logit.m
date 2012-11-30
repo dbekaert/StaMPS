@@ -5,10 +5,15 @@ function []=logit(logmsg,whereto,parent_flag)
 %   LEVEL = 1 writes to stamps.log only
 %   LEVEL = 2 writes to stdout only
 %   LEVEL = 3 writes to debug.log only
+%   LEVEL = FILENAME writes to FILENAME and stdout
 %   PARENT_FLAG = 0 (default) writes to current directory
 %   PARENT_FLAG = 1 writes to parent directory
 %
 % Andy Hooper, March 2010
+%
+%   ================================================================
+%   11/2012 AH: Add option to specify log filename
+%   ================================================================
    
 [fstack]=dbstack ;
 if size(fstack,1)>1
@@ -38,13 +43,17 @@ if isnumeric(logmsg)
    end
 end
 
-
-
 if strcmp(logmsg(end-1:end),'\n')
     logmsg=logmsg(1:end-2);
 end
 
-logfile='STAMPS.log';
+if ~isnumeric(whereto)
+    logfile=whereto;
+    whereto=0;
+else
+    logfile='STAMPS.log';
+end
+
 debugfile='DEBUG.log';
 if parent_flag==1
    logfile=['../',logfile];
