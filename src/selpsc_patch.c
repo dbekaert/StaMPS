@@ -108,7 +108,7 @@ try {
                   
   strcpy (ijname0,ijname);
   strcat (ijname0,"0");
-  cout << "file name for zero amplitude PS" << ijname0;
+  cout << "file name for zero amplitude PS: " << ijname0;
 //  char *ampoutname;
 //  if (argc < 4) 
 //     ampoutname="pscands.1.amp";
@@ -126,11 +126,10 @@ try {
      meanoutname="mean_amp.flt";
   else meanoutname = argv[5];   
   
-  char *prec;
+  const char *prec;
   if (argc < 7)
      prec="f";
   else prec = argv[6];
-      cout << "prec " << prec << "\n";
 
   int byteswap;
   if (argc < 8)
@@ -230,10 +229,13 @@ try {
   int patch_width = rg_end-rg_start+1;
 
   int sizeofelement; // [MA] size of a pixel
-  if (strncmp(prec,"s",1)==0)
+  if (prec[0]=='s')
   {
-     sizeofelement = sizeof(short);
+      sizeofelement = sizeof(short);
   }else sizeofelement = sizeof(float);
+
+  const int linebytes = width*sizeofelement*2;  // bytes per line in amplitude files (SLCs)
+  const int patch_linebytes =  patch_width*sizeofelement*2;
 
   filebuf *pbuf;
   long size;
@@ -265,7 +267,8 @@ try {
   ofstream meanoutfile(meanoutname,ios::out);
  
   //complex<float>* buffer = new complex<float>[num_files*width]; // used to store 1 line of all amp files
-  complex<float>* buffer = new complex<float>[num_files*patch_width]; // used to store 1 line of all amp files
+  char* buffer = new char[num_files*patch_linebytes]; // used to store 1 line of all amp files
+  complex<float>* bufferf = reinterpret_cast<complex<float>*>(buffer); 
   complex<short>* buffers = reinterpret_cast<complex<short>*>(buffer);
 
 
@@ -276,11 +279,9 @@ try {
   }
 
   //int linebytes = width*8;                      // bytes per line in amplitude files
-  const int linebytes = width*sizeofelement*2;  // bytes per line in amplitude files (SLCs)
   register int y=0;                                      // amplitude files line number
   register int pscid=0;                                  // PS candidate ID number
 
-  const int patch_linebytes =  patch_width*sizeofelement*2;
   register long long pos_start;
   pos_start= (long long)(az_start-1+y)*linebytes+(rg_start-1)*sizeofelement*2; // define position of start of 1st line of patch
                                                                                // on SLC file.
@@ -293,7 +294,7 @@ try {
   {
     //ampfile[i].read (reinterpret_cast<char*>(&buffer[i*width]), linebytes);
     ampfile[i].seekg (pos_start, ios::beg);
-    ampfile[i].read (reinterpret_cast<char*>(&buffer[i*patch_width]), patch_linebytes);
+    ampfile[i].read (&buffer[i*patch_linebytes], patch_linebytes);
   } 
      
   while (! ampfile[1].eof() && y < patch_lines) 
@@ -316,18 +317,17 @@ try {
 	   {
            complex<float> camp; // get amp value
            //float amp=abs(buffer[i*width+x])/calib_factor[i]; // get amp value
-           if (strncmp(prec,"s",1)==0)
+           if (prec[0]=='s')
            {
                if (byteswap == 1)
                {
                   cshortswap(&buffers[i*patch_width+x]);
                }
                camp=buffers[i*patch_width+x];
-
            }
            else
            {
-               camp=buffer[i*patch_width+x]; // get amp value
+               camp=bufferf[i*patch_width+x]; // get amp value
                if (byteswap == 1)
                {
                   cfloatswap(&camp);
@@ -388,7 +388,7 @@ try {
         //pos_start=(long long)(az_start-1+y)*linebytes+(rg_start-1)*sizeofelement*2; // get pos of the next line of patch
         //ampfile[i].seekg (pos_start, ios::beg);
         ampfile[i].seekg (linebytes-patch_linebytes, ios::cur);  // [MA]
-        ampfile[i].read (reinterpret_cast<char*>(&buffer[i*patch_width]), patch_linebytes);
+        ampfile[i].read (&buffer[i*patch_linebytes], patch_linebytes);
      } 
      
      if (y/100.0 == rint(y/100.0))

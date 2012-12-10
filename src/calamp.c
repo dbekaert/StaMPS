@@ -48,6 +48,7 @@ int cshortswap( complex<short>* f )
   b2[3] = b[2];
   f[0]=f2;
 }
+
 int cfloatswap( complex<float>* f )
 {
   char* b = reinterpret_cast<char*>(f);
@@ -84,11 +85,10 @@ try {
      outfilename="parmfile.out";
   else outfilename = argv[3];   
 
-  char *prec;
+  const char *prec;
   if (argc < 5) 
      prec="f";
   else prec = argv[4];   
-      cout << "prec " << prec << "\n"; 
 
   int byteswap;
   if (argc < 6) 
@@ -116,7 +116,7 @@ try {
   complex<float>* buffer = new complex<float>[width];
   complex<short>* buffers = reinterpret_cast<complex<short>*>(buffer);
   int linebytes;
-  if (strncmp(prec,"s",1)==0)
+  if (prec[0]=='s')
   {
      linebytes = sizeof(complex<short>)*width;
   }else linebytes = sizeof(complex<float>)*width;
@@ -147,7 +147,7 @@ try {
       for (int j=0; j<width; j++) // loop over each read pixel pf the buffer
       { 
          complex<float> camp;
-         if (strncmp(prec,"s",1)==0)
+         if (prec[0]=='s')
          {
             if (byteswap == 1)
             {

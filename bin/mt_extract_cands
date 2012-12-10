@@ -6,12 +6,15 @@
 # Andy Hooper, Jan 2007
 # ===========================================================================
 # 06/2011 AH: Option to select processing
+# 12/2012 AH: Short and byteswap options
 # ===========================================================================
 # 
-# mt_extract_cands dophase dolonlat dodem docands
+# mt_extract_cands dophase dolonlat dodem docands precision byteswap
 #    Arguments are optional: 1 (do) or 0 (don't do)
 #    Default for each argument is 0 unless no arguments are input 
 #    when default for becomes 1
+#    precision: 's' for short or 'f' for float (default)
+#    byteswap: 1 for yes or 0 for no (default)
 #
 ### Initial welcome
 set PRG = `basename "$0"`
@@ -39,7 +42,13 @@ else
 endif
 
 if ($#argv > 4) then
-    set byteswap = $argv[5]
+    set prec = $argv[5]
+else 
+    set prec = "f"
+endif
+
+if ($#argv > 5) then
+    set byteswap = $argv[6]
 else 
     set byteswap = 0
 endif
@@ -66,7 +75,7 @@ foreach patch(`\cat patch.list`)
         if ($dirname == "SMALL_BASELINES") then
             selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da 
         else
-            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $byteswap
+            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap
         endif
     endif
 

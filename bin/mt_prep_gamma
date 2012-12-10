@@ -1,26 +1,28 @@
 #!/bin/csh -f
 
-# Interface between Doris and MAINSAR
+# Interface between Gamma and MAINSAR
 #
-# Andy Hooper, January 2007
+# Andy Hooper, December 2012
 #
 # ===========================================================================
-# 04/2009 AH: Deal with extra first/last line/pixels in master.res
-# 10/2009 AH: Fix bug that drops master from calibration
-# 10/2009 MA: Oversampling support
-# 06/2011 AH: Change azimuth overlap default to 50
+# Expected directory structure:
+# rslc/*.rslc
+# diff/*.diff
+# geo/*dem.rdc
 # ===========================================================================
 
 ### Initial welcome
 set PRG = `basename "$0"`
-set AUT = "Andy Hooper, January 2007"
+set AUT = "Andy Hooper, December 2012"
 echo "$PRG $AUT"
 echo " "
 set nonomatch
 
-if ($#argv == 0) then
-    echo "usage: mt_prep da_thresh [rg_patches az_patches rg_overlap az_overlap]"
-    echo "    da_thresh                = (delta) amplitude dispersion"
+if ($#argv < 2) then
+    echo "usage: mt_prep_gamma yyyymmdd rslcdir da_thresh [rg_patches az_patches rg_overlap az_overlap]"
+    echo "    yyyymmdd                 = master date"
+    echo "    rslcdir                  = directory of resampled slcs"
+    echo "    da_thresh                = (delta) amplitude dispersion threshold"
     echo "                                typical values: 0.4 for PS, 0.6 for SB"
     echo "    rg_patches (default 1)   = number of patches in range"
     echo "    az_patches (default 1)   = number of patches in azimuth"
@@ -30,32 +32,35 @@ if ($#argv == 0) then
     exit(4)
 endif
 
-if ($#argv > 0) then
-    set da_thresh = $argv[1]
+set master = $argv[1]
+set rslcdir = $argv[2]
+
+if ($#argv > 2) then
+    set da_thresh = $argv[3]
 else 
     set da_thresh = 0.4
 endif
 
-if ($#argv > 1) then
-    set prg = $argv[2]
+if ($#argv > 3) then
+    set prg = $argv[4]
 else 
     set prg = 1
 endif
 
-if ($#argv > 2) then
-    set paz = $argv[3]
+if ($#argv > 4) then
+    set paz = $argv[5]
 else 
     set paz = 1
 endif
 
-if ($#argv > 3) then
-    set overlap_rg = $argv[4]
+if ($#argv > 5) then
+    set overlap_rg = $argv[6]
 else 
     set overlap_rg = 50
 endif
 
-if ($#argv > 4) then
-    set overlap_az = $argv[5]
+if ($#argv > 6) then
+    set overlap_az = $argv[7]
 else 
     set overlap_az = 50
 endif
@@ -76,53 +81,23 @@ else
     set INSARDIR = $WORKDIR
 endif
 
-set SLC_OSF = `check_slc_sampling $INSARDIR/master.res`
+set RSC = $rslcdir/$master.*slc.par
 
-#set first = `grep 'First_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
-#set last = `grep 'Last_pixel ' $INSARDIR/master.res | gawk 'END {print $4}'` 
-set first = `get_slc_lp $INSARDIR/master.res | awk '{print $3}'`  # Pixel
-set last  = `get_slc_lp $INSARDIR/master.res | awk '{print $4}'`
-@ width = ($last - $first) + 1
+set length   = `gawk '/azimuth_lines/ {print $2}'     < $RSC`
+set width    = `gawk '/range_samples/ {print $2}'     < $RSC`
+
+
 echo $width > $WORKDIR/width.txt
-#set firstl = `grep 'First_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
-#set lastl = `grep 'Last_line ' $INSARDIR/master.res | gawk 'END {print $4}'` 
-set firstl = `get_slc_lp $INSARDIR/master.res | awk '{print $1}'` # Line
-set lastl  = `get_slc_lp $INSARDIR/master.res | awk '{print $2}'`
-@ length = ($lastl - $firstl) + 1
 echo $length > $WORKDIR/len.txt
 
-mt_extract_info
-
-# Calibrate amplitudes
-if ($dirname == "SMALL_BASELINES") then
-    \ls $WORKDIR/*/*filtrg.slc > $WORKDIR/calamp.in
-    set selfile = $WORKDIR/selsbc.in
-else
-    if ($SLC_OSF > 1 ) then
-      set master_slc = `\ls $INSARDIR/[1,2]*_crop_ovs.slc`  # MA
-      echo "[INFO  ]  Using oversampled $master_slc"
-    else
-      set master_slc = `\ls $INSARDIR/[1,2]*_crop.slc`
-    endif
-    if (`grep complex_short $INSARDIR/master.res | gawk '{print $1}'` != "") then
-       if ($SLC_OSF > 1 ) then
-         ln -s $master_slc $master_slc.cr4  # MA assuming oversampled data is cr4
-       else
-         cpxfiddle -w $width -fci2 -ofloat -qnormal $master_slc  > $master_slc.cr4 
-       endif
-       echo $master_slc.cr4 > $WORKDIR/calamp.in
-    else
-       echo $master_slc > $WORKDIR/calamp.in
-    endif
-    \ls $INSARDIR/*/slave_res.slc >> $WORKDIR/calamp.in
-    set selfile = $WORKDIR/selpsc.in
-endif
-calamp calamp.in $width $WORKDIR/calamp.out
+\rm -f $WORKDIR/calamp.in >& /dev/null
+\ls $rslcdir/*.*slc >> $WORKDIR/calamp.in
+set selfile = $WORKDIR/selpsc.in
+calamp calamp.in $width $WORKDIR/calamp.out s 1
 
 # Set up patches
 echo $da_thresh > $selfile
 echo $width >> $selfile
-###cat calamp.out | gawk '{print "../"$0}' >> selpsc.in
 cat $WORKDIR/calamp.out >> $selfile
 
 @ width_p = $width / $prg
@@ -178,16 +153,13 @@ end
 
 
 echo $width > pscphase.in
-\ls $WORKDIR/*/cint.minrefdem.raw >> pscphase.in
-#cat tmp.$$ | gawk '{print "../"$0}' >> pscphase.in
-#rm -rf tmp.$$
+\ls $rslcdir/../diff0/*.diff >> pscphase.in
 
-echo $width > psclonlat.in
-echo $INSARDIR'/lon.raw' >> psclonlat.in
-echo $INSARDIR'/lat.raw' >> psclonlat.in
+#echo $width > psclonlat.in
+#echo $rslcdir'../geo/*.*' >> psclonlat.in
 
 echo $width > pscdem.in
-echo $INSARDIR'/dem_radar_i.raw' >> pscdem.in
+\ls $rslcdir/../geo/*dem.rdc >> pscdem.in
 
 \ls -d PATCH_* > patch.list
-mt_extract_cands
+mt_extract_cands 1 0 1 1 s 1
