@@ -10,6 +10,7 @@
 // 01/2009 MA Deprication Fix
 // 03/2009 MA Fix for gcc 4.3.x
 // 01/2011 MCC neglecting pixel with  zero amplitude
+// 12/2012 AH Add byteswap option
 // ==============================================
 
 #include <iostream>  
@@ -36,18 +37,33 @@ using namespace std;
 // =======================================================================
 // Start of program 
 // =======================================================================
+int cfloatswap( complex<float>* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  complex<float> f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[3];
+  b2[1] = b[2];
+  b2[2] = b[1];
+  b2[3] = b[0];
+  b2[4] = b[7];
+  b2[5] = b[6];
+  b2[6] = b[5];
+  b2[7] = b[4];
+  f[0]=f2;
+}
 
-//int main(long  argc, char *argv[] ) {    
 int main(int  argc, char *argv[] ) {   // [MA]  long --> int for gcc 4.3.x
 
 try {
  
   if (argc < 3)
   {	  
-     cout << "Usage: calamp parmfile.in width parmfile.out" << "\n";
+     cout << "Usage: calamp parmfile.in width parmfile.out byteswap" << "\n";
      cout << "  parmfile.in(input) SLC file names (complex float)" << endl;
      cout << "  width              width of SLCs" << endl;
-     cout << "  parmfile.out(outut) SLC file names and calibration constants" << endl;
+     cout << "  parmfile.out(output) SLC file names and calibration constants" << endl;
+     cout << "  byteswap(input) 1 for to swap bytes, 0 otherwise (default)" << endl;
      throw "";
   }   
      
@@ -55,6 +71,11 @@ try {
   if (argc < 4) 
      outfilename="parmfile.out";
   else outfilename = argv[3];   
+
+  int byteswap;
+  if (argc < 5) 
+     byteswap=0;
+  else byteswap = atoi(argv[4]);   
      
   int width = atoi(argv[2]);
 
@@ -102,6 +123,10 @@ try {
       //i++;
       for (int j=0; j<width; j++) // loop over each read pixel pf the buffer
       { 
+         if (byteswap == 1)
+         {
+            cfloatswap(&buffer[j]);
+         }
          amp_pixel=abs(buffer[j]);
          if (amp_pixel >0.001)       //rejects pixels with low amplitude ~0
          {

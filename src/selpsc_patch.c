@@ -12,6 +12,7 @@
 // 07/2010 A0 Update Need for Speed on patches
 // 08/2010 MA Code optimization
 // 01/2010 MCC Drop low amplitudes
+// 12/2012 AH Add byteswap option
 // ==============================================
 
 #include <string.h> 
@@ -47,6 +48,21 @@ using namespace std;
 // =======================================================================
 // Start of program 
 // =======================================================================
+int cfloatswap( complex<float>* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  complex<float> f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[3];
+  b2[1] = b[2];
+  b2[2] = b[1];
+  b2[3] = b[0];
+  b2[4] = b[7];
+  b2[5] = b[6];
+  b2[6] = b[5];
+  b2[7] = b[4];
+  f[0]=f2;
+}
 
 //int main(long  argc, char *argv[] ) {    
 int main(int  argc, char *argv[] ) {   // [MA]  long --> int for gcc 4.3.x 
@@ -55,7 +71,7 @@ try {
  
   if (argc < 3)
   {	  
-     cout << "Usage: selpsc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt maskfile " << endl << endl;
+     cout << "Usage: selpsc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt byteswap maskfile " << endl << endl;
      cout << "input parameters:" << endl;
      cout << "  parmfile (input) amplitude dispersion threshold" << endl;
      cout << "                   width of amplitude files (range bins)" << endl;
@@ -64,6 +80,7 @@ try {
      cout << "  pscands.1.ij   (output) PS candidate locations" << endl;
      cout << "  pscands.1.da   (output) PS candidate amplitude dispersion" << endl << endl;
      cout << "  mean_amp.flt (output) mean amplitude of image" << endl << endl;
+     cout << "  byteswap   (input) 1 for to swap bytes, 0 otherwise (default)" << endl;
      cout << "  maskfile   (input)  mask rows and columns (optional)" << endl;
      throw "";
   }   
@@ -96,11 +113,18 @@ try {
      meanoutname="mean_amp.flt";
   else meanoutname = argv[5];   
   
+  int byteswap;
+  if (argc < 7)
+     byteswap=0;
+  else byteswap = atoi(argv[6]);
+
 //  char *maskfilename;
   const char *maskfilename; // [MA]
-  if (argc < 7) 
+  if (argc < 8) 
      maskfilename="";
-  else maskfilename = argv[6];   
+  else maskfilename = argv[7];   
+
+
      
      
   ifstream parmfile (argv[1], ios::in);
@@ -265,7 +289,13 @@ try {
         for (register int i=0; i<num_files; i++)        // for each amp file
 	      {
            //float amp=abs(buffer[i*width+x])/calib_factor[i]; // get amp value
-           register float amp=abs(buffer[i*patch_width+x])/calib_factor[i]; // get amp value
+           complex<float> camp=buffer[i*patch_width+x]; // get amp value
+           if (byteswap == 1)
+           {
+              cfloatswap(&camp);
+           }
+
+           register float amp=abs(camp)/calib_factor[i]; // get amp value
            if (amp <=0.00005) // do not use amp = 0 values for calculating the AD and set flag to 1
            {
             amp_0=1;
