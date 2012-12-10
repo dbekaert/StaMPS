@@ -38,6 +38,12 @@ else
     set docands = 0
 endif
 
+if ($#argv > 4) then
+    set byteswap = $argv[5]
+else 
+    set byteswap = 0
+endif
+
 if ($#argv > 0) then
     set dophase = $argv[1]
 else 
@@ -60,7 +66,7 @@ foreach patch(`\cat patch.list`)
         if ($dirname == "SMALL_BASELINES") then
             selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da 
         else
-            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da 
+            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $byteswap
         endif
     endif
 
