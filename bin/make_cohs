@@ -4,24 +4,33 @@
 #
 # ===========================================================================
 # 01/2011 AH: Differentiate between small baseline and single master
+# 12/2012 DB: Allow for a list to be given as input
 # ===========================================================================
 
 set WORKDIR = $cwd
 set dirname = `echo $WORKDIR | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
 
-if (! -e make_ifgs.list) then
-    \ls -d $WORKDIR/[1,2]*/interferogram.out | gawk 'BEGIN {FS="interferogram.out"} {print $1}'  > make_ifgs.list
+
+if ($#argv == 1) then # DB
+        set list = $argv[1]
+        echo List given as input
+        echo $list
+else
+	if (! -e make_ifgs.list) then
+    		\ls -d $WORKDIR/[1,2]*/interferogram.out | gawk 'BEGIN {FS="interferogram.out"} {print $1}'  > make_ifgs.list
+	endif
+        set list = make_ifgs.list
 endif
 
 if ($dirname == "SMALL_BASELINES") then
     echo "Small Baseline Processing"
     echo " "
-    foreach dir(`cat make_ifgs.list`)
+    foreach dir(`cat $list`)
        cd $dir
        step_coh_sb
     end
 else
-    foreach dir(`cat make_ifgs.list`)
+    foreach dir(`cat $list`)
        cd $dir
        step_coh
     end
