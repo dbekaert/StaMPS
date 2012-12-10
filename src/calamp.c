@@ -37,6 +37,17 @@ using namespace std;
 // =======================================================================
 // Start of program 
 // =======================================================================
+int cshortswap( complex<short>* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  complex<short> f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[1];
+  b2[1] = b[0];
+  b2[2] = b[3];
+  b2[3] = b[2];
+  f[0]=f2;
+}
 int cfloatswap( complex<float>* f )
 {
   char* b = reinterpret_cast<char*>(f);
@@ -59,10 +70,11 @@ try {
  
   if (argc < 3)
   {	  
-     cout << "Usage: calamp parmfile.in width parmfile.out byteswap" << "\n";
+     cout << "Usage: calamp parmfile.in width parmfile.out precision byteswap" << "\n";
      cout << "  parmfile.in(input) SLC file names (complex float)" << endl;
      cout << "  width              width of SLCs" << endl;
      cout << "  parmfile.out(output) SLC file names and calibration constants" << endl;
+     cout << "  precision(input) s or f (default)" << endl;
      cout << "  byteswap(input) 1 for to swap bytes, 0 otherwise (default)" << endl;
      throw "";
   }   
@@ -72,10 +84,16 @@ try {
      outfilename="parmfile.out";
   else outfilename = argv[3];   
 
-  int byteswap;
+  char *prec;
   if (argc < 5) 
+     prec="f";
+  else prec = argv[4];   
+      cout << "prec " << prec << "\n"; 
+
+  int byteswap;
+  if (argc < 6) 
      byteswap=0;
-  else byteswap = atoi(argv[4]);   
+  else byteswap = atoi(argv[5]);   
      
   int width = atoi(argv[2]);
 
@@ -96,7 +114,12 @@ try {
   char ampfilename[256];
       
   complex<float>* buffer = new complex<float>[width];
-  int linebytes = sizeof(complex<float>)*width;
+  complex<short>* buffers = reinterpret_cast<complex<short>*>(buffer);
+  int linebytes;
+  if (strncmp(prec,"s",1)==0)
+  {
+     linebytes = sizeof(complex<short>)*width;
+  }else linebytes = sizeof(complex<float>)*width;
   
   ampfiles >> ampfilename;
   
@@ -123,14 +146,28 @@ try {
       //i++;
       for (int j=0; j<width; j++) // loop over each read pixel pf the buffer
       { 
-         if (byteswap == 1)
+         complex<float> camp;
+         if (strncmp(prec,"s",1)==0)
          {
-            cfloatswap(&buffer[j]);
+            if (byteswap == 1)
+            {
+               cshortswap(&buffers[j]);
+            }
+            camp=buffers[j];
          }
-         amp_pixel=abs(buffer[j]);
+         else
+         {
+            camp=buffer[j];
+
+            if (byteswap == 1)
+            {
+               cfloatswap(&camp);
+            }
+         }
+         amp_pixel=abs(camp);
          if (amp_pixel >0.001)       //rejects pixels with low amplitude ~0
          {
-          sumamp+=abs(buffer[j]);
+          sumamp+=abs(camp);
           nof_pixels++;
          }else nof_zero_pixels++;
 

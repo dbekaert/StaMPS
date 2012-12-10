@@ -48,6 +48,18 @@ using namespace std;
 // =======================================================================
 // Start of program 
 // =======================================================================
+int cshortswap( complex<short>* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  complex<short> f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[1];
+  b2[1] = b[0];
+  b2[2] = b[3];
+  b2[3] = b[2];
+  f[0]=f2;
+}
+
 int cfloatswap( complex<float>* f )
 {
   char* b = reinterpret_cast<char*>(f);
@@ -71,7 +83,7 @@ try {
  
   if (argc < 3)
   {	  
-     cout << "Usage: selpsc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt byteswap maskfile " << endl << endl;
+     cout << "Usage: selpsc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt precision byteswap maskfile " << endl << endl;
      cout << "input parameters:" << endl;
      cout << "  parmfile (input) amplitude dispersion threshold" << endl;
      cout << "                   width of amplitude files (range bins)" << endl;
@@ -80,6 +92,7 @@ try {
      cout << "  pscands.1.ij   (output) PS candidate locations" << endl;
      cout << "  pscands.1.da   (output) PS candidate amplitude dispersion" << endl << endl;
      cout << "  mean_amp.flt (output) mean amplitude of image" << endl << endl;
+     cout << "  precision(input) s or f (default)" << endl;
      cout << "  byteswap   (input) 1 for to swap bytes, 0 otherwise (default)" << endl;
      cout << "  maskfile   (input)  mask rows and columns (optional)" << endl;
      throw "";
@@ -113,16 +126,22 @@ try {
      meanoutname="mean_amp.flt";
   else meanoutname = argv[5];   
   
-  int byteswap;
+  char *prec;
   if (argc < 7)
+     prec="f";
+  else prec = argv[6];
+      cout << "prec " << prec << "\n";
+
+  int byteswap;
+  if (argc < 8)
      byteswap=0;
-  else byteswap = atoi(argv[6]);
+  else byteswap = atoi(argv[7]);
 
 //  char *maskfilename;
   const char *maskfilename; // [MA]
-  if (argc < 8) 
+  if (argc < 9) 
      maskfilename="";
-  else maskfilename = argv[7];   
+  else maskfilename = argv[8];   
 
 
      
@@ -209,7 +228,12 @@ try {
   // [A0] determine size of a patch
   int patch_lines = az_end-az_start+1;
   int patch_width = rg_end-rg_start+1;
-  const int sizeofelement = sizeof(float); // [MA] size of a pixel
+
+  int sizeofelement; // [MA] size of a pixel
+  if (strncmp(prec,"s",1)==0)
+  {
+     sizeofelement = sizeof(short);
+  }else sizeofelement = sizeof(float);
 
   filebuf *pbuf;
   long size;
@@ -241,7 +265,9 @@ try {
   ofstream meanoutfile(meanoutname,ios::out);
  
   //complex<float>* buffer = new complex<float>[num_files*width]; // used to store 1 line of all amp files
-  register complex<float>* buffer = new complex<float>[num_files*patch_width]; // used to store 1 line of all amp files
+  complex<float>* buffer = new complex<float>[num_files*patch_width]; // used to store 1 line of all amp files
+  complex<short>* buffers = reinterpret_cast<complex<short>*>(buffer);
+
 
   char* maskline = new char[patch_width];
   for (register int x=0; x<patch_width; x++) // for each pixel in range
@@ -287,12 +313,25 @@ try {
         register float sumampsq = 0;
         int amp_0 =0;
         for (register int i=0; i<num_files; i++)        // for each amp file
-	      {
+	   {
+           complex<float> camp; // get amp value
            //float amp=abs(buffer[i*width+x])/calib_factor[i]; // get amp value
-           complex<float> camp=buffer[i*patch_width+x]; // get amp value
-           if (byteswap == 1)
+           if (strncmp(prec,"s",1)==0)
            {
-              cfloatswap(&camp);
+               if (byteswap == 1)
+               {
+                  cshortswap(&buffers[i*patch_width+x]);
+               }
+               camp=buffers[i*patch_width+x];
+
+           }
+           else
+           {
+               camp=buffer[i*patch_width+x]; // get amp value
+               if (byteswap == 1)
+               {
+                  cfloatswap(&camp);
+               }
            }
 
            register float amp=abs(camp)/calib_factor[i]; // get amp value
