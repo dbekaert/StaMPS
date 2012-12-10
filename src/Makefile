@@ -48,7 +48,8 @@ CFLAGS	=	-O3
 ##################################################################
 
 ### The programs we want
-PROGS	=	calamp \
+PROGS	=	selsbc_patch_new \
+		calamp \
 		selpsc_patch \
 		selsbc_patch \
 		cpxsum \
@@ -67,6 +68,8 @@ all:		$(PROGS) dummy
 dummy:
 
 # the utilities.
+selsbc_patch_new: selsbc_patch_new.o
+		  $(CC) $(CFLAGS) $@.o -o $@
 selpsc_patch:	selpsc_patch.o
 		$(CC) $(CFLAGS) $@.o -o $@
 selsbc_patch:	selsbc_patch.o
