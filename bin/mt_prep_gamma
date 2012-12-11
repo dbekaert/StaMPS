@@ -89,6 +89,7 @@ set width    = `gawk '/range_samples/ {print $2}'     < $RSC`
 
 echo $width > $WORKDIR/width.txt
 echo $length > $WORKDIR/len.txt
+echo $RSC > $WORKDIR/rsc.txt
 
 \rm -f $WORKDIR/calamp.in >& /dev/null
 \ls $rslcdir/*.*slc >> $WORKDIR/calamp.in
