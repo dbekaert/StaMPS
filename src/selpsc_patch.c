@@ -228,6 +228,7 @@ try {
   int patch_lines = az_end-az_start+1;
   int patch_width = rg_end-rg_start+1;
 
+  const int sizeoffloat=4; // [MA] size of a pixel
   int sizeofelement; // [MA] size of a pixel
   if (prec[0]=='s')
   {
@@ -349,7 +350,7 @@ try {
            }
          }
 	
-        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeofelement);	
+        meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeoffloat);	
  //       cout << "amp0: " << amp_0  << "sumamp " << sumamp <<" \n" ;
         if (maskline[x]==0 && sumamp > 0)
         {

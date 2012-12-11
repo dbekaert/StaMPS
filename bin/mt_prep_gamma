@@ -86,6 +86,12 @@ set RSC = $rslcdir/$master.*slc.par
 set length   = `gawk '/azimuth_lines/ {print $2}'     < $RSC`
 set width    = `gawk '/range_samples/ {print $2}'     < $RSC`
 
+echo "gamma" > processor.txt
+if ($dirname == "SMALL_BASELINES") then
+    matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/sb_parms_initial.m > sb_parms_initial.log
+else
+    matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/ps_parms_initial.m > ps_parms_initial.log
+endif
 
 echo $width > $WORKDIR/width.txt
 echo $length > $WORKDIR/len.txt
@@ -161,6 +167,8 @@ echo $width > pscphase.in
 
 echo $width > pscdem.in
 \ls $rslcdir/../geo/*dem.rdc >> pscdem.in
+
+
 
 \ls -d PATCH_* > patch.list
 mt_extract_cands 1 0 1 1 s 1

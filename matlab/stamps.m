@@ -30,6 +30,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm)
 %   03/2009 AH: simultaneously estimate velocity when SCLA estimated
 %   03/2009 AH: smooth SCLA for unwrapping iteration
 %   03/2010 AH: move ps_cal_ifg_std to after merge step
+%   12/2012 AH: add gamma option
 %   =================================================================
 
 nfill=40;
@@ -47,6 +48,7 @@ quick_est_gamma_flag=getparm('quick_est_gamma_flag');
 unwrap_method=getparm('unwrap_method');
 unwrap_prefilter_flag=getparm('unwrap_prefilter_flag');
 small_baseline_flag=getparm('small_baseline_flag');
+insar_processor=getparm('insar_processor');
 
 if nargin<1 
     start_step=1;
@@ -115,7 +117,11 @@ for i=1:length(patchdir)
         if strcmpi(small_baseline_flag,'y')
             sb_load_initial
         else
-            ps_load_initial;
+            if strcmpi(insar_processor,'gamma')
+                ps_load_initial_gamma;
+            else
+                ps_load_initial;
+            end
         end
     elseif start_step <=4
         setpsver(1)

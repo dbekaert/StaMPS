@@ -18,6 +18,7 @@ fprintf('Loading data into matlab...\n')
 phname=['pscands.1.ph']; % for each PS candidate, a float complex value for each ifg
 ijname=['pscands.1.ij']; % ID# Azimuth# Range# 1 line per PS candidate
 %llname=['pscands.1.ll']; % ID# Azimuth# Range# 1 line per PS candidate
+hgtname=['pscands.1.hgt']; % ID# Azimuth# Range# 1 line per PS candidate
 daname=['pscands.1.da']; % ID# Azimuth# Range# 1 line per PS candidate
 rscname = ['../rsc.txt'];
 pscname=['../pscphase.in'];
@@ -26,7 +27,7 @@ pscname=['../pscphase.in'];
 psver=1;
 fid=fopen(rscname);
 rslcpar=textscan(fid,'%s');
-rslcpar=rslcpar{1};
+rslcpar=rslcpar{1}{1};
 fclose(fid);
 
 fid=fopen(pscname);
@@ -81,10 +82,10 @@ look=acos((se^2+rg.^2-re^2)./(2*se*rg)); % Satellite look angles
 bperp_mat=zeros(n_ps,n_image);
 for i=1:n_ifg
     basename=[ifgs{i}(1:nb-4),'base'];
-    B_TCN=readparm(basename,'precision_baseline(TCN):',3);
-    BR_TCN=readparm(basename,'precision_baseline_rate:',3);
-    bc=B_TCN(2)+BR_TCN(2)*(ij(:,2)-mean_az)/prf;
-    bn=B_TCN(3)+BR_TCN(3)*(ij(:,2)-mean_az)/prf;
+    B_TCN=readparm(basename,'initial_baseline(TCN):',3);
+    BR_TCN=readparm(basename,'initial_baseline_rate:',3);
+    bc=B_TCN{2}+BR_TCN{2}*(ij(:,2)-mean_az)/prf;
+    bn=B_TCN{3}+BR_TCN{3}*(ij(:,2)-mean_az)/prf;
     bperp_mat(:,i)=bc.*cos(look)-bn.*sin(look); % Convert baselines from (T)CN to perp-para coordinates
     %bpara=bc*sin(look)+bn*cos(look)
 end
@@ -178,6 +179,16 @@ if exist(daname,'file')
   D_A=D_A(sort_ix);
   dasavename=['da',num2str(psver)];
   save(dasavename,'D_A');
+end
+
+if exist(hgtname,'file')
+    fid=fopen(hgtname,'r');
+    hgt=fread(fid,[1,inf],'float','b');
+    hgt=hgt';
+    hgt=hgt(sort_ix);
+    fclose(fid);
+    hgtsavename=['hgt',num2str(psver)];
+    save(hgtsavename,'hgt');
 end
 
 

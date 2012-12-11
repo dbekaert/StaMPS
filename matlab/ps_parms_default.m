@@ -24,6 +24,7 @@ function ps_parms_default()
 %   09/2010 AH: plot_pixels_scatterer added
 %   11/2010 AH: (sb_)recalc_index replaced by (sb_)scla_drop_index
 %   06/2011 AH: add weed_neighbours 
+%   12/2012 AH: add insar_processor
 %   ======================================================================
 
 
@@ -316,6 +317,10 @@ if ~isfield(parms,'sb_scla_drop_index')
     if strcmpi(parms.small_baseline_flag,'y')
         parms.sb_scla_drop_index=[];
     end
+end
+
+if ~isfield(parms,'insar_processor')
+    parms.processor='doris'; % 
 end
 
 parmfields=fieldnames(parms);
