@@ -277,8 +277,8 @@ if reest_flag~=1
 
         ph_bit=pm.ph_grid(i_min:i_max,j_min:j_max,:);
 
-        %ph_bit(ps_bit_i,ps_bit_j,:)=0;
-        ph_bit(ps_bit_i,ps_bit_j,:)=ph_bit(ps_bit_i,ps_bit_j,:)-shiftdim(pm.ph_weight(i,:),-1);
+        ph_bit(ps_bit_i,ps_bit_j,:)=0;
+        %ph_bit(ps_bit_i,ps_bit_j,:)=ph_bit(ps_bit_i,ps_bit_j,:)-shiftdim(pm.ph_weight(i,:),-1);
         
         % JJS oversample update for PS removal + [MA] general usage update
         ix_i=ps_bit_i-(slc_osf-1):ps_bit_i+(slc_osf-1);
