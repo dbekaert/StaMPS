@@ -5,8 +5,11 @@ function []=sb_load_initial()
 %
 %   Andy Hooper, Spetember 2006
 %
+%   ======================================================================
 %   Change Log: 
 %   11/2007 AH: change bperp to be bperp at 0 m
+%   12/2012 DB: Add compatibility with Matlab2012B, keep backward compatible
+%   ======================================================================
 
 %NB IFGS assumed in ascending date order
 
@@ -27,6 +30,10 @@ widthname=['width.txt'];            % width of interferograms
 lenname=['len.txt'];                % length of interferograms
 
 psver=1;
+
+% Get matlab version as function arguments change with the matlab version
+matlab_version = version('-release');           % [DB] getting the matlab version
+matlab_version = str2num(matlab_version(1:4));  % [DB] the year
 
 if ~exist(dayname,'file')
     dayname= ['../',dayname];
@@ -224,8 +231,8 @@ if exist(laname,'file')
     la0=reshape(la0,50,50)';
     la1000=look_angle(2:2:end)*pi/180;
     la1000=reshape(la1000,50,50)';
-    la0_ps=griddata(gridX,gridY,la0,ij(:,3),ij(:,2),'linear',{'QJ'});
-    la1000_ps=griddata(gridX,gridY,la1000,ij(:,3),ij(:,2),'linear',{'QJ'});
+    la0_ps=griddata_version_control(gridX,gridY,la0,ij(:,3),ij(:,2),'linear',matlab_version);               % [DB] fix matlab2012 version and older
+    la1000_ps=griddata_version_control(gridX,gridY,la1000,ij(:,3),ij(:,2),'linear',matlab_version);         % [DB] fix matlab2012 version and older
     la=la0_ps+(la1000_ps-la0_ps).*hgt/1000;
     lasavename=['la',num2str(psver)];
     save(lasavename,'la');
@@ -249,7 +256,7 @@ if length(bperpdir)>0
         bp0=reshape(bp0,50,50)';
         bp1000=bperp_grid(2:2:end);
         bp1000=reshape(bp1000,50,50)';
-        bp0_ps=griddata(gridX,gridY,bp0,ij(:,3),ij(:,2),'linear',{'QJ'});
+        bp0_ps=griddata_version_control(gridX,gridY,bp0,ij(:,3),ij(:,2),'linear',matlab_version);               % [DB] fix matlab2012 version and older
         %bp1000_ps=griddata(gridX,gridY,bp1000,ij(:,3),ij(:,2),'linear',{'QJ'});
         %bperp_mat(:,i)=bp0_ps+(bp1000_ps-bp0_ps).*hgt/1000;
         bperp_mat(:,i)=bp0_ps;

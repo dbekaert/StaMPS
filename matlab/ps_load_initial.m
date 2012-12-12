@@ -16,6 +16,7 @@ function []=ps_load_initial()
 %   10/2009 AH: Add n_image to mat file
 %   04/2010 KS: Fixed small issue with new logit function
 %   10/2009 MA: Oversampling factor file introduced
+%   12/2012 DB: Add compatiblility with Matlab2012B, keep backward compatible
 %   ======================================================================
 
 
@@ -40,6 +41,10 @@ lenname=['len.txt'];                % length of interferograms
 slc_osfname=['slc_osfactor.1.in'];    % oversampling factor  value 1 for no oversampling
 
 psver=1;
+
+% Get matlab version as function arguments change with the matlab version
+matlab_version = version('-release');           % [DB] getting the matlab version
+matlab_version = str2num(matlab_version(1:4));  % [DB] the year
 
 if ~exist(dayname,'file')
     dayname= ['../',dayname];
@@ -226,8 +231,8 @@ if exist(laname,'file')
     la0=reshape(la0,50,50)';
     la1000=look_angle(2:2:end)*pi/180;
     la1000=reshape(la1000,50,50)';
-    la0_ps=griddata(gridX,gridY,la0,ij(:,3),ij(:,2),'linear',{'QJ'});
-    la1000_ps=griddata(gridX,gridY,la1000,ij(:,3),ij(:,2),'linear',{'QJ'});
+    la0_ps=griddata_version_control(gridX,gridY,la0,ij(:,3),ij(:,2),'linear',matlab_version);           % [DB] fix matlab2012 version and older  
+    la1000_ps=griddata_version_control(gridX,gridY,la1000,ij(:,3),ij(:,2),'linear',matlab_version);     % [DB] fix matlab2012 version and older  
     la=la0_ps+(la1000_ps-la0_ps).*hgt/1000;
     lasavename=['la',num2str(psver)];
     save(lasavename,'la');
@@ -253,9 +258,9 @@ if length(bperpdir)>0
         bp0=reshape(bp0,50,50)';
         bp1000=bperp_grid(2:2:end);
         bp1000=reshape(bp1000,50,50)';
-        bp0_ps=griddata(gridX,gridY,bp0,ij(:,3),ij(:,2),'linear',{'QJ'});
-% AH adjust bperp for local height
-        bp1000_ps=griddata(gridX,gridY,bp1000,ij(:,3),ij(:,2),'linear',{'QJ'});
+        bp0_ps=griddata_version_control(gridX,gridY,bp0,ij(:,3),ij(:,2),'linear',matlab_version);       % [DB] fix matlab2012 version and older  
+        % AH adjust bperp for local height
+        bp1000_ps=griddata_version_control(gridX,gridY,bp1000,ij(:,3),ij(:,2),'linear',matlab_version); % [DB] fix matlab2012 version and older  
         bperp_mat(:,i2)=bp0_ps+(bp1000_ps-bp0_ps).*hgt/1000;
     end
 end
