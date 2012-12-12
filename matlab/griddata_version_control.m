@@ -5,7 +5,7 @@ function [z] = griddata_version_control(gridX,gridY,gridZ,x,y,method,matlab_vers
 
 
 if matlab_version>=2012
-    z=griddata(gridX,gridY,gridZ,x,y);
+    z=griddata(gridX,gridY,gridZ,x,y,method);
 else
     z=griddata(gridX,gridY,gridZ,x,y,method,{'QJ'});
 end

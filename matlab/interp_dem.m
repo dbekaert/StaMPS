@@ -9,6 +9,7 @@ function []=interp_dem(width,infile,outfile,length,n_interp)
 % 11/06 AH: interp used instead of interp2 - less memory
 % 05/07 AH: more changes to use less memory
 % 10/08 AH: allow for different interpolation factors 
+% 12/12 DB: Add compatibility with Matlab2012B, keep backward compatible
 % ======================================================
 
 if nargin < 2
@@ -26,6 +27,10 @@ end
 if nargin < 5
    n_interp=5;
 end
+
+% Get matlab version as function arguments change with the matlab version
+matlab_version = version('-release');           % [DB] getting the matlab version
+matlab_version = str2num(matlab_version(1:4));  % [DB] the year
 
 fid=fopen(infile); 
 fseek(fid,0,1);
@@ -70,7 +75,8 @@ for i=ix'
         ix_patch(:)=1;
     end
     [X_patch,Y_patch]=meshgrid([1:length(ix2)],[1:length(ix1)]);
-    demi1(i)=griddata(X_patch(ix_patch),Y_patch(ix_patch),dem_patch(ix_patch),i2-ix2(1)+1,i1-ix1(1)+1,'linear',{'QJ'});
+    % [DB] fix griddata for matlab2012 version and older
+    demi1(i)=griddata_version_control(X_patch(ix_patch),Y_patch(ix_patch),dem_patch(ix_patch),i2-ix2(1)+1,i1-ix1(1)+1,'linear',matlab_version);
 end
 demi1(isnan(demi1))=0;
 demi2=zeros(size(demi1,1)*n_interp,size(demi1,2));
