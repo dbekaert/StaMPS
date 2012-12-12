@@ -17,6 +17,7 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   02/2010 AH: Leave out ifgs in drop_ifg_index from noise calculation
 %   01/2011 AH: Correct arc DEM error estimation for small baselines
 %   06/2011 AH: Add weed_neighbours parm (default still 'y')
+%   12/2012 AH: weed very small heights if weed_zero_elevation='y'
 %   ===================================================================
 logit;
 fprintf('Weeding selected pixels...\n')
@@ -236,7 +237,7 @@ if no_weed_adjacent==0
 end
 
     if strcmpi(weed_zero_elevation,'y') & exist('hgt','var')
-        sea_ix=hgt==0;
+        sea_ix=hgt<1e-6;
         ix_weed(sea_ix)=false;
     end
 
