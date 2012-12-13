@@ -121,6 +121,7 @@ echo $length_p
 set irg = 0
 set iaz = 0
 set ip = 0
+\rm -rf PATCH_* >& /dev/null
 while ($irg < $prg)
     @ irg = $irg + 1
     while ($iaz < $paz)
@@ -178,4 +179,4 @@ echo $width > pscdem.in
 
 
 \ls -d PATCH_* > patch.list
-mt_extract_cands 1 0 1 1 s 1 
+mt_extract_cands 1 0 1 1 s 1 $maskfile

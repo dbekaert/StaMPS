@@ -121,6 +121,7 @@ function []=ps_plot(value_type,varargin)
 %   10/2011 AH: Check that pm file exists before attempting to load
 %   01/2012 AH: Subtract master AOE for 'ts' plot
 %   01/2012 AH: Remove code to subtract SULA error from 'd' plots
+%   12/2012 AH: plot raw phase if psver=1
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -186,7 +187,8 @@ units='rad';
 load psver
 psname=['./ps',num2str(psver)];
 pmname=['./pm',num2str(psver)];
-rcname=['./rc',num2str(psver)];
+rcname=['./rc',num2str(psver),'.mat'];
+phname=['./ph',num2str(psver),'.mat'];
 phuwname=['./phuw',num2str(psver)];
 phuwsbname=['./phuw_sb',num2str(psver)];
 phuwsbresname=['./phuw_sb_res',num2str(psver)];
@@ -273,8 +275,13 @@ end
 value_type=lower(value_type);
 switch(group_type)
     case {'w'}
-        rc=load(rcname);
-        ph_all=rc.ph_rc;
+        if exist(rcname,'file')
+            rc=load(rcname);
+            ph_all=rc.ph_rc;
+        else
+            rc=load(phname);
+            ph_all=rc.ph;
+        end
         if ref_ifg~=0
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end

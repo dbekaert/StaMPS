@@ -284,8 +284,10 @@ try {
   register int y=0;                                      // amplitude files line number
   register int pscid=0;                                  // PS candidate ID number
 
+  register long long pix_start;
   register long long pos_start;
-  pos_start= (long long)(az_start-1+y)*linebytes+(rg_start-1)*sizeofelement*2; // define position of start of 1st line of patch
+  pix_start= (long long)(az_start-1)*width+(rg_start-1); // define pixel number of start of 1st line of patch
+  pos_start= pix_start*sizeofelement*2; // define position of start of 1st line of patch
                                                                                // on SLC file.
   // Turn on following 3 lines for debuing pos_star [MA]
   //cout << "[debug ] " << pos_start << endl;
@@ -298,15 +300,15 @@ try {
     ampfile[i].seekg (pos_start, ios::beg);
     ampfile[i].read (&buffer[i*patch_linebytes], patch_linebytes);
   } 
+  if (mask_exists==1) 
+  {
+      //maskfile.read (maskline, width);
+      maskfile.seekg (pix_start, ios::beg);      // set pointer to start of patch in mask file
+      maskfile.read (maskline, patch_width); // read from pointer nr_pixels*8 bytes
+  }    
      
   while (! ampfile[1].eof() && y < patch_lines) 
   {
-     if (mask_exists==1) 
-     {
-         //maskfile.read (maskline, width);
-         maskfile.seekg (pos_start, ios::beg);      // [AO] set pointer to start of j-th line of mask file
-         maskfile.read (maskline, patch_linebytes); // read from pointer nr_pixels*8 bytes
-     }    
      if (y >=0) // was (y >= az_start-1)
        {
        for (register int x=0; x<patch_width; x++) // for each pixel in range (width of the patch)
@@ -392,6 +394,8 @@ try {
         ampfile[i].seekg (linebytes-patch_linebytes, ios::cur);  // [MA]
         ampfile[i].read (&buffer[i*patch_linebytes], patch_linebytes);
      } 
+     maskfile.seekg (width-patch_width, ios::cur);  // [MA]
+     maskfile.read (maskline, patch_width);
      
      if (y/100.0 == rint(y/100.0))
         cout << y << " lines processed\n";
