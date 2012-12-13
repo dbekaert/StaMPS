@@ -260,6 +260,7 @@ try {
   if (maskfile.is_open()) 
   {	  
       mask_exists=1;
+      cout << "opening " << maskfilename << "...\n";
   }    
   
   ofstream ijfile(ijname,ios::out);

@@ -28,6 +28,7 @@ if ($#argv < 2) then
     echo "    az_patches (default 1)   = number of patches in azimuth"
     echo "    rg_overlap (default 50)  = overlapping pixels between patches in range"
     echo "    az_overlap (default 50) = overlapping pixels between patches in azimuth"
+    echo "    maskfile (optional) char file, same dimensions as slcs, 0 to include, 1 otherwise"
     echo ""
     exit(4)
 endif
@@ -65,6 +66,12 @@ else
     set overlap_az = 50
 endif
 
+if ($#argv > 7) then
+    set maskfile = $argv[8]
+else 
+    set maskfile = ""
+endif
+
 echo "Amplitude Dispersion Threshold:" $da_thresh
 echo "Processing" $prg "patch(es) in range and" $paz "in azimuth"
 echo " "
@@ -100,7 +107,7 @@ echo $RSC > $WORKDIR/rsc.txt
 \rm -f $WORKDIR/calamp.in >& /dev/null
 \ls $rslcdir/*.*slc >> $WORKDIR/calamp.in
 set selfile = $WORKDIR/selpsc.in
-calamp calamp.in $width $WORKDIR/calamp.out s 1
+calamp calamp.in $width $WORKDIR/calamp.out s 1 $maskfile
 
 # Set up patches
 echo $da_thresh > $selfile
@@ -171,4 +178,4 @@ echo $width > pscdem.in
 
 
 \ls -d PATCH_* > patch.list
-mt_extract_cands 1 0 1 1 s 1
+mt_extract_cands 1 0 1 1 s 1 

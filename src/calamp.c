@@ -71,12 +71,13 @@ try {
  
   if (argc < 3)
   {	  
-     cout << "Usage: calamp parmfile.in width parmfile.out precision byteswap" << "\n";
+     cout << "Usage: calamp parmfile.in width parmfile.out precision byteswap maskfile" << "\n";
      cout << "  parmfile.in(input) SLC file names (complex float)" << endl;
      cout << "  width              width of SLCs" << endl;
      cout << "  parmfile.out(output) SLC file names and calibration constants" << endl;
      cout << "  precision(input) s or f (default)" << endl;
      cout << "  byteswap(input) 1 for to swap bytes, 0 otherwise (default)" << endl;
+     cout << "  maskfile   (input)  mask rows and columns (optional)" << endl;
      throw "";
   }   
      
@@ -94,6 +95,12 @@ try {
   if (argc < 6) 
      byteswap=0;
   else byteswap = atoi(argv[5]);   
+
+  const char *maskfilename; 
+  if (argc < 7)
+     maskfilename="";
+  else maskfilename = argv[6];
+
      
   int width = atoi(argv[2]);
 
@@ -110,6 +117,20 @@ try {
       cout << "Error opening file " << outfilename << "\n"; 
       throw "";
   }   
+
+  ifstream maskfile (maskfilename, ios::in);
+  char mask_exists = 0;
+  if (maskfile.is_open())
+  {
+      mask_exists=1;
+  }
+
+  char* maskline = new char[width];
+  for (register int x=0; x<width; x++) // for each pixel in range
+  {
+      maskline[x] = 0;
+  }
+
       
   char ampfilename[256];
       
@@ -125,6 +146,16 @@ try {
   
   while (! ampfiles.eof() ) // loop over SLC names
   {
+    ifstream maskfile (maskfilename, ios::in);
+    char mask_exists = 0;
+    if (maskfile.is_open())
+    {
+        mask_exists=1;
+        cout << "opening " << maskfilename << "...\n";
+        maskfile.read (maskline, width);
+    }
+
+
     float calib_factor=0;
     cout << "opening " << ampfilename << "...\n";
     ifstream ampfile (ampfilename, ios::in|ios::binary);
@@ -165,7 +196,7 @@ try {
             }
          }
          amp_pixel=abs(camp);
-         if (amp_pixel >0.001)       //rejects pixels with low amplitude ~0
+         if (amp_pixel >0.001 && maskline[j]==0)       //rejects pixels with low amplitude ~0
          {
           sumamp+=abs(camp);
           nof_pixels++;
@@ -173,6 +204,7 @@ try {
 
  
       }
+      maskfile.read (maskline, width);
       ampfile.read (reinterpret_cast<char*>(buffer), linebytes);
     }		
     if ( nof_pixels != 0) 
@@ -194,6 +226,10 @@ try {
     cout << "Number of pixels with amplitude different than zero = " <<  nof_pixels   << "\n";
     
     ampfiles >> ampfilename; 
+    if (mask_exists==1)
+    {
+        maskfile.close();
+    }
      
   }
   
