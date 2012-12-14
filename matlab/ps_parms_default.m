@@ -320,7 +320,7 @@ if ~isfield(parms,'sb_scla_drop_index')
 end
 
 if ~isfield(parms,'insar_processor')
-    parms.processor='doris'; % 
+    parms.insar_processor='doris'; % 
 end
 
 parmfields=fieldnames(parms);

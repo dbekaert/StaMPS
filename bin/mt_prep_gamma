@@ -7,8 +7,11 @@
 # ===========================================================================
 # Expected directory structure:
 # rslc/*.rslc
-# diff/*.diff
+# rslc/*.rslc.par
+# diff0/*.diff
 # geo/*dem.rdc
+# geo/*diff_par
+# dem/*_seg.par
 # ===========================================================================
 
 ### Initial welcome
@@ -68,6 +71,10 @@ endif
 
 if ($#argv > 7) then
     set maskfile = $argv[8]
+    if (! -e $maskfile) then
+       echo $maskfile " does not exist, exiting"
+       exit 2
+    endif
 else 
     set maskfile = ""
 endif
@@ -122,6 +129,7 @@ set irg = 0
 set iaz = 0
 set ip = 0
 \rm -rf PATCH_* >& /dev/null
+\rm -rf patch.list
 while ($irg < $prg)
     @ irg = $irg + 1
     while ($iaz < $paz)
@@ -152,6 +160,9 @@ while ($irg < $prg)
         if (! -e PATCH_$ip) then
             mkdir PATCH_$ip
         endif
+
+        echo PATCH_$ip >> patch.list
+
         cd PATCH_$ip
         echo $start_rg > patch.in
         echo $end_rg >> patch.in
@@ -178,5 +189,19 @@ echo $width > pscdem.in
 
 
 
-\ls -d PATCH_* > patch.list
+#\ls -d PATCH_* > patch.list
 mt_extract_cands 1 0 1 1 s 1 $maskfile
+
+set dempar = `\ls $rslcdir/../dem/*_seg.par`
+set diffpar = `\ls $rslcdir/../geo/*.diff_par`
+echo $dempar
+echo $diffpar
+
+foreach patch(`\cat patch.list`)
+
+    cd $patch
+    echo "Patch:" $patch
+
+    #Retrieve lon/lat for PS candidates
+    pt2geo pscands.1.ij.int - $RSC - pscands.1.hgt $dempar $diffpar 1 1  pt.map pscands.1.xy pscands.1.ll
+end

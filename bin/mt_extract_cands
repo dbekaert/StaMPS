@@ -81,7 +81,7 @@ foreach patch(`\cat patch.list`)
         if ($dirname == "SMALL_BASELINES") then
             selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da 
         else
-            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap ../$maskfile
+            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile
         endif
     endif
 

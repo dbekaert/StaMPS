@@ -75,6 +75,17 @@ int cfloatswap( complex<float>* f )
   b2[7] = b[4];
   f[0]=f2;
 }
+int longswap( int32_t* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  int32_t f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[3];
+  b2[1] = b[2];
+  b2[2] = b[1];
+  b2[3] = b[0];
+  f[0]=f2;
+}
 
 //int main(long  argc, char *argv[] ) {    
 int main(int  argc, char *argv[] ) {   // [MA]  long --> int for gcc 4.3.x 
@@ -103,12 +114,16 @@ try {
   if (argc < 4) 
      ijname="pscands.1.ij";
   else ijname = argv[3];   
+
+  char jiname[256]; // float format big endian for gamma
+  strcpy (jiname,ijname);
+  strcat (jiname,".int");
   //MCC
   char ijname0[256]; //used to store PS with at least one amplitude =0. This can happen if frames do not fully overlap
                   
   strcpy (ijname0,ijname);
   strcat (ijname0,"0");
-  cout << "file name for zero amplitude PS: " << ijname0;
+  cout << "file name for zero amplitude PS: " << ijname0 << "\n";
 //  char *ampoutname;
 //  if (argc < 4) 
 //     ampoutname="pscands.1.amp";
@@ -264,6 +279,7 @@ try {
   }    
   
   ofstream ijfile(ijname,ios::out);
+  ofstream jifile(jiname,ios::out);
   ofstream ijfile0(ijname0,ios::out);
   ofstream daoutfile(daoutname,ios::out);
   ofstream meanoutfile(meanoutname,ios::out);
@@ -369,7 +385,13 @@ try {
 
                ++pscid;
 
-               ijfile << pscid << " " << (az_start-1)+y << " " << (rg_start-1)+x << "\n"; 
+               ijfile << pscid << " " << (az_start-1)+y << " " << (rg_start-1)+x << "\n";      
+               int32_t J=(rg_start-1)+x;
+               int32_t I=(az_start-1)+y;
+               longswap(&J);
+               longswap(&I);
+               jifile.write(reinterpret_cast<char*>(&J), sizeof(int32_t));
+               jifile.write(reinterpret_cast<char*>(&I), sizeof(int32_t));
 
 	       register float D_a = sqrt(D_sq);
                daoutfile << D_a << "\n";
@@ -403,6 +425,7 @@ try {
         //cout << D_thresh_sq << "D_thresh_sq \n";
   }  
   ijfile.close();
+  jifile.close();
   ijfile0.close();
   //ampoutfile.close();
   daoutfile.close();
