@@ -1,11 +1,14 @@
 function []=plot_sb_baselines(ix)
 %PLOT_SB_BASELINES plot the small baselines in small_baselines.list
+%Optional an input argument ix can be specified containing a vector of the
+%small baseline interferograms to keep which will be plotted in the baseline plot.
 %
 %   Andy Hooper, June 2007
 %
 %   ======================================================================
 %   09/2010 AH: Add option to plot in MERGED directory
 %   09/2010 AH: For SMALL_BASELINES/MERGED don't plot dropped ifgs 
+%   12/2012 DB: Added meaning of ix to the syntax of the code
 %   ======================================================================
 
 
