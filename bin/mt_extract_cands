@@ -2,26 +2,32 @@
 
 # Cycle through patches in patch.list and extract data for
 # candidiate pixels 
-#
+# To just give a list as input and run rest by default do:
+# 
 # Andy Hooper, Jan 2007
 # ===========================================================================
 # 06/2011 AH: Option to select processing
 # 12/2012 AH: Short and byteswap options
+# 12/2012 DB: Allow for a list to be given as input
 # ===========================================================================
 # 
-# mt_extract_cands dophase dolonlat dodem docands precision byteswap
+# mt_extract_cands dophase dolonlat dodem docands precision byteswap mask_file patch_list
 #    Arguments are optional: 1 (do) or 0 (don't do)
 #    Default for each argument is 0 unless no arguments are input 
 #    when default for becomes 1
-#    precision: 's' for short or 'f' for float (default)
+#    precision: "s" for short or "f" for float (default)
 #    byteswap: 1 for yes or 0 for no (default)
+#    mask_file: by default none specified ""
+#    patch_list: By default this is patch.list
+#
+#    To run by default and specifying all arguments do:
+#    mt_extract_cands 1 1 1 1 "f" 0 "" patch_list
 #
 ### Initial welcome
 set PRG = `basename "$0"`
 set AUT = "Andy Hooper, Jan 2007"
 echo "$PRG $AUT"
 echo " "
-
 
 if ($#argv > 1) then
     set dolonlat = $argv[2]
@@ -58,7 +64,16 @@ if ($#argv > 6) then
 else 
     set maskfile = ""
 endif
-   
+
+if ($#argv == 8) then # DB
+        set list = $argv[8]
+        echo List given as input
+        echo $list
+else
+        set list = patch.list
+endif
+
+
 if ($#argv > 0) then
     set dophase = $argv[1]
 else 
@@ -71,7 +86,7 @@ endif
 set WORKDIR = $cwd
 set dirname = `echo $WORKDIR | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
 
-foreach patch(`\cat patch.list`)
+foreach patch(`cat $list`)
 
     cd $patch
     echo "Patch:" $patch
@@ -79,7 +94,7 @@ foreach patch(`\cat patch.list`)
     if ($docands == 1) then
         # Select PS candidates 
         if ($dirname == "SMALL_BASELINES") then
-            selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da 
+            selsbc_patch_new $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da 
         else
             selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile
         endif
