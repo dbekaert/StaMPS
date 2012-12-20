@@ -1,0 +1,42 @@
+#!/bin/tcsh -f
+# 4/12/12 David Bekaert:  Do multi-looking based on a file_list
+
+set nonomatch # DB
+
+if ($#argv < 2) then
+    echo "USAGE: make_multilook filelist width rg_looks(default 4) aspect_ratio (default 5) format (default r4)"
+else
+
+# Defining the input argumetns
+set list = $argv[1]			# the file list
+set width = $argv[2]			# the width of the file
+if ($#argv < 3) then			# the number of range looks
+       set l_rg = 4
+else
+       set l_rg = $3
+endif
+if ($#argv < 4) then			# the aspect ratio (to get to square pixels)
+       set ar = 5
+else
+       set ar = $4
+endif			
+if ($#argv < 5) then			# format of the data
+       set form = "r4"
+else
+       set form = $5
+endif
+
+
+if ($#argv < 6) then
+        set save_list_flag = 0
+else
+        set save_list_flag = 1
+	set save_list = $6
+endif
+
+foreach file(`cat $list`)
+  echo "\n\nFile : $file \n"
+  step_multilook $file $width $l_rg $ar $form 
+end
+
+

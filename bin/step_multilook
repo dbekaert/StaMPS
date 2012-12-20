@@ -1,0 +1,51 @@
+#!/bin/csh -f
+#
+# Andy Hooper, 2006
+# ===========================================================================
+# 09/2008 AH: Generalised for variable mutilooking in az
+# 09/2009 AH: Format option added
+# 12/2012 DB: Allow output file name to be specified
+# 12/2012 DB: Change default save filename
+# 12/2012 DB: Change the default format from r4 to cr4, allow also DEM to be multi-looked (r4)
+# ===========================================================================
+
+if ($#argv < 2) then
+    echo "USAGE: step_multilook file width rg_looks [default 4] aspect_ratio [default 5] format [default cr4 (complex data), set to r4 for DEM] savename [default basefilename_[rg_looks]l.extension for raw and ras, else file_[rg_looks]l]"
+else
+    if ($#argv < 3) then
+       set l_rg = 4
+    else
+       set l_rg = $3
+    endif
+    if ($#argv < 4) then
+       set ar = 5
+    else
+       set ar = $4
+    endif
+    if ($#argv < 5) then
+       set form = "cr4"
+    else
+       set form = $5
+    endif
+
+    if ($#argv < 6) then
+	# check if the filename ends with .raw or .ras
+	set extension = `echo $1  | awk '{ print substr( $0, length($0) - 3, length($0) ) }'`
+	# if so change the save filename so the .raw .ras is added as last
+	if ($extension == .raw || $extension == .ras) then
+		set basefilename = `echo $1  | awk '{ print substr( $0, 1 , length($0)-4 ) }'` 
+		set save_name = `echo "$basefilename"_"$l_rg"l"$extension"`
+	else
+                set save_name = `echo "$1"_"$l_rg"l`
+	endif
+    else
+	set save_name = $6
+    endif
+
+    @ l_az = $ar * $l_rg
+    
+    cpxfiddle -w$2 -f$form -qnormal -M$l_rg/$l_az -ofloat $1 > $save_name
+    #echo "cpxfiddle -w$2 -f$form -qnormal -M$l_rg/$l_az -ofloat $1 > $save_name"
+
+
+endif
