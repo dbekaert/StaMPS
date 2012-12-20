@@ -6,8 +6,9 @@
 ##
 ## Sensors: ERS,  Envisat and TSX
 ##
-## UPDATE: Zbigniew Perski 20120612
-## Added new sensor: CSK
+## UPDATE: 
+## Added new sensor: CSK - Zbigniew Perski 20120612 
+## Added new sensor: RS2 - Pooja Mahapatra + Mahmut Arikan 20121211
 ##
 
 # Variable 
@@ -79,6 +80,32 @@ goodCSK(){
   done
 }
 
+goodRS2_HH(){
+  [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
+
+  for f in $(find ${DATADIR} -name "p*.xml"); do
+    echo info: $f
+    bname=$( basename ${f} )  # product.xml file
+    #date=$(echo $bname | ${AWK} -F '_' {'print substr($13,1,8)'} )
+    date=$( ${AWK} -F ">|T" '/zeroDopplerTimeFirstLine/{print$3}' $f )
+    date=$( date +%Y%m%d --date $date )
+    tsxdir=${f%/*}
+    tiffile=`find $tsxdir -name "*HH.tif"` 
+    tifbname=$( basename ${tiffile} )
+    cd $CWD/SLC
+    mkdir ${date}
+    cd  ${date}
+    ln -s ${f}              # xml
+    ln -s ${bname} leader.xml   # xml
+    ln -s ${tiffile} 
+    ln -s ${tifbname} image.slc
+   
+    # rs2_dump_heading.py ${f} > image.slc.rsc # TODO
+
+    cd ..
+  done
+}
+
 goodTSX(){
   [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
 
@@ -107,11 +134,14 @@ goodSENSE(){
         local sense=''
         #local file=`find ${DATADIR} -name "*.cos" | head -n 1 `
         local file=`find ${DATADIR} -name "T*.xml" | head -n 1 `
+        local file2=`find ${DATADIR} -name "*.h5" | head -n 1 `
+        local file3=`find ${DATADIR} -name "*HH.tif" | head -n 1 `
         if [ -n "$file" ]; then
           sense='TSX'
-        elif local file=`find ${DATADIR} -name "*.h5" `
-        then
+        elif [ -n "$file2" ]; then
           sense=$(ls -1 ${DATADIR}/*/*.h5 &>/dev/null && echo CSK)
+        elif [ -n "$file3" ]; then
+          sense=$(ls -1 ${DATADIR}/*/*.tif &>/dev/null && echo RS2_HH)
         else
           sense=$(ls -1 ${DATADIR}/*/ASA* &>/dev/null && echo ENV || echo ERS)
         fi
@@ -124,6 +154,7 @@ case $# in
             { [ "${sensor}" == "ENV" ] && goodENV ; } || \
             { [ "${sensor}" == "TSX" ] && goodTSX ; } || \
             { [ "${sensor}" == "CSK" ] && goodCSK ; } || \
+            { [ "${sensor}" == "RS2_HH" ] && goodRS2_HH ; } || \
             echo "Fout gemaakt: Something is wrong!"
             ;;
          *) echo -e "Usage: ${0##*/} <location of original SLC files> \n"
