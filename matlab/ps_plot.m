@@ -122,6 +122,7 @@ function []=ps_plot(value_type,varargin)
 %   01/2012 AH: Subtract master AOE for 'ts' plot
 %   01/2012 AH: Remove code to subtract SULA error from 'd' plots
 %   12/2012 AH: plot raw phase if psver=1
+%   01/2013 DB: Fix plotting of data in case of SB directory
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -218,7 +219,7 @@ drop_ifg_index=getparm('drop_ifg_index');
 small_baseline_flag=getparm('small_baseline_flag');
 scla_deramp = getparm('scla_deramp');
 
-if strcmpi(small_baseline_flag,'y')
+if strcmpi(small_baseline_flag,'y') 
     unwrap_ifg_index_sb=setdiff([1:ps.n_ifg],drop_ifg_index);
     if value_type(1)~='w' & value_type(1)~='p'
       warning('off','MATLAB:load:variableNotFound');
@@ -233,8 +234,10 @@ if strcmpi(small_baseline_flag,'y')
         unwrap_ifg_index=unwrap_ifg_index_sb;
     end
 
-    if length(value_type)>2 & (value_type(1:3)=='usb'|value_type(1:3)=='rsb') & isempty(ifg_list)
-        ifg_list=unwrap_ifg_index_sb;
+    if ischar(value_type)~=1 & isempty(ifg_list) % [DB] to plot data matrix which is not a valuetype
+        	ifg_list=unwrap_ifg_index_sb;
+    elseif ischar(value_type)==1 & length(value_type)>2 & (value_type(1:3)=='usb'|value_type(1:3)=='rsb') & isempty(ifg_list)
+                ifg_list=unwrap_ifg_index_sb;
     end
 else
     unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
@@ -242,7 +245,9 @@ end
 if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='w') & isempty(ifg_list)
     ifg_list=unwrap_ifg_index;
 end
-
+if ischar(value_type)~=1 & size(value_type,2)<length(ifg_list)
+  ifg_list = [1:size(value_type,2)]';
+end 
 
 
 if ischar(value_type)==1
