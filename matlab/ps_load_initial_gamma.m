@@ -17,9 +17,10 @@ fprintf('Loading data into matlab...\n')
 
 phname=['pscands.1.ph']; % for each PS candidate, a float complex value for each ifg
 ijname=['pscands.1.ij']; % ID# Azimuth# Range# 1 line per PS candidate
-%llname=['pscands.1.ll']; % ID# Azimuth# Range# 1 line per PS candidate
-hgtname=['pscands.1.hgt']; % ID# Azimuth# Range# 1 line per PS candidate
-daname=['pscands.1.da']; % ID# Azimuth# Range# 1 line per PS candidate
+llname=['pscands.1.ll']; % 
+xyname=['pscands.1.xy']; % 
+hgtname=['pscands.1.hgt']; % 
+daname=['pscands.1.da']; % 
 rscname = ['../rsc.txt'];
 pscname=['../pscphase.in'];
 
@@ -110,26 +111,28 @@ zero_ph=sum(ph==0,2);
 nonzero_ix=zero_ph<=1;       % if more than 1 phase is zero, drop node
 ph(:,master_ix)=1;
 
-%%% Temp fix as lonlat not konown %%%
-fid=fopen(llname,'r');
-lonlat=fread(fid,[2,inf],'float','b');
-lonlat=lonlat';
-fclose(fid);
+if exist(xyname,'file')
+    fid=fopen(xyname,'r');
+    xy=fread(fid,[2,inf],'float',endian);
+    xy=xy';
+    fclose(fid);
+else
+    xy=fliplr(ij(:,2:3));
+    xy(:,1)=xy(:,1)*20;
+    xy(:,2)=xy(:,2)*4;
+end
 
-fid=fopen(xyname,'r');
-xy=fread(fid,[2,inf],'float','b');
-xy=xy';
-fclose(fid);
-
-%xy=fliplr(ij(:,2:3));
-%xy(:,1)=xy(:,1)*20;
-%xy(:,2)=xy(:,2)*4;
-%lonlat=local2llh(xy'/1000,[0;0])';
-%%% Temp fix as lonlat not known %%%
+if exist(llname,'file')
+    fid=fopen(llname,'r');
+    lonlat=fread(fid,[2,inf],'float',endian);
+    lonlat=lonlat';
+    fclose(fid);
+else
+    lonlat=local2llh(xy'/1000,[0;0])';
+end
 
 ll0=(max(lonlat)+min(lonlat))/2;
-%xy=llh2local(lonlat',ll0)*1000;
-%xy=xy';
+
 sort_x=sortrows(xy,1);
 sort_y=sortrows(xy,2);
 n_pc=round(n_ps*0.001);
@@ -189,7 +192,7 @@ end
 
 if exist(hgtname,'file')
     fid=fopen(hgtname,'r');
-    hgt=fread(fid,[1,inf],'float','b');
+    hgt=fread(fid,[1,inf],'float',endian);
     hgt=hgt';
     hgt=hgt(sort_ix);
     fclose(fid);
