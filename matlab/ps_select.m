@@ -22,6 +22,7 @@ function []=ps_select(reest_flag,plot_flag)
 %   12/2010 AH: Fix error message for density selection
 %   02/2011 DB: Fix error with keep_ix
 %   05/2012 AH: subtract only pixel being tested, not zero whole grid cell
+%   01/2013 AH: Set default threshold if not enough random pixels
 %   ======================================================================
 logit;
 fprintf('Selecting stable-phase pixels...\n')
@@ -173,11 +174,7 @@ else
   
   nonnanix=~isnan(min_coh);
   if sum(nonnanix)<1
-      if strcmpi(select_method,'PERCENT')
-         warning('could not set threshold - try setting percent_rand lower')
-      else
-         warning('could not set threshold - try setting density_rand lower')
-      end
+      warning('Not enough random phase pixels to set gamma threshold - using default threshold of 0.3')
       coh_thresh=0.3;
   else 
   min_coh=min_coh(nonnanix);
@@ -350,7 +347,7 @@ if reest_flag~=1
         if strcmpi(select_method,'PERCENT')
             percent_rand=fliplr(cumsum(fliplr(Nr))./cumsum(fliplr(Na))*100);
         else
-            percent_rand=fliplr(cumsum(fliplr(Nr)));
+            percent_rand=fliplr(cumsum(fliplr(Nr))); % despite the name, percent_rand here is the absolute number
         end
         ok_ix=find(percent_rand<max_percent_rand);
         if isempty(ok_ix)
@@ -372,20 +369,24 @@ if reest_flag~=1
     end
 
     nonnanix=~isnan(min_coh);
-    min_coh=min_coh(nonnanix);
-    D_A_mean=D_A_mean(nonnanix);
-    if length(min_coh)>1
-	%keyboard
-        coh_thresh_coeffs=polyfit(D_A_mean,min_coh,1);  % fit polynomial to the curve
-        if coh_thresh_coeffs(1)>0 % positive slope (as expected)
-            coh_thresh=polyval(coh_thresh_coeffs,D_A(ix));
-        else % unable to ascertain correct slope
-            coh_thresh=polyval(coh_thresh_coeffs,0.35); % set an average threshold for all D_A
+    if sum(nonnanix)<1
+        coh_thresh=0.3;
+    else
+        min_coh=min_coh(nonnanix);
+        D_A_mean=D_A_mean(nonnanix);
+        if length(min_coh)>1
+        %keyboard
+            coh_thresh_coeffs=polyfit(D_A_mean,min_coh,1);  % fit polynomial to the curve
+            if coh_thresh_coeffs(1)>0 % positive slope (as expected)
+                coh_thresh=polyval(coh_thresh_coeffs,D_A(ix));
+            else % unable to ascertain correct slope
+                coh_thresh=polyval(coh_thresh_coeffs,0.35); % set an average threshold for all D_A
+                coh_thresh_coeffs=[];
+            end
+        else
+            coh_thresh=min_coh;
             coh_thresh_coeffs=[];
         end
-    else
-        coh_thresh=min_coh;
-        coh_thresh_coeffs=[];
     end
 
     fprintf('Reestimation gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f\n',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A))
