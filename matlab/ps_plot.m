@@ -13,19 +13,20 @@ function []=ps_plot(value_type,varargin)
 %    'w' for wrapped phase
 %    'w-d' for wrapped phase minus smoothed dem error
 %    'w-o' for wrapped phase minus orbital ramps
-%    'w-dm' for wrapped phase minus dem error and master AOE
-%    'w-do' for wrapped phase minus dem error and orbital ramps
-%    'w-dmo' for wrapped phase minus dem error, master AOE and orbital ramps
+%      also 'w-dm','w-do','w-dmo'
 %    'p' for spatially filtered wrapped phase 
 %    'u' for unwrapped phase
 %    'u-d' for unwrapped phase minus dem error  
 %    'u-m' for unwrapped phase minus and master AOE  
 %    'u-o' for unwrapped phase minus orbital ramps 
-%    'u-dm' for unwrapped phase minus dem error and master AOE  
-%    'u-do' for unwrapped phase minus dem error and orbital ramps
-%    'u-dmo' for unwrapped phase minus dem error, master AOE and orbital ramps
-%    'u-dms' for unwrapped phase minus dem error and all AOE 
-%    'u-dmos' for unwrapped phase minus dem error, all AOE and orbital ramps
+%    'u-a' for unwrapped phase minus topo-correlated atmosphere 
+%      also 'u-dm','u-do','u-da','u-dmo','u-dma','u-dms','u-dmao','u-dmos'
+%    'usb' for unwrapped phase of small baseline ifgs
+%    'usb-d' 
+%    'usb-o' 
+%    'usb-a' 
+%      also 'usb-do' ,'usb-da','usb-dao'
+%    'rsb' residual between unwrapped phase of sb ifgs and inverted
 %    'd' for spatially correlated DEM error (rad/m)
 %    'm' for AOE phase due to master
 %    'o' for orbital ramps 
@@ -33,20 +34,16 @@ function []=ps_plot(value_type,varargin)
 %    'v' mean LOS velocity (MLV) in mm/yr
 %    'v-d' 
 %    'v-o' 
-%    'v-do' 
+%    'v-a' 
+%      also 'v-do','v-da',v-dao' 
 %    'vs' standard deviation of MLV (mm/yr)
 %    'vs-d'
 %    'vs-o' 
-%    'vs-do' 
+%      also 'vs-do' 
 %    'vdrop' MLV calculated from all but current ifg (mm/yr)
 %    'vdrop-d' 
 %    'vdrop-o' 
-%    'vdrop-do' 
-%    'usb' for unwrapped phase of small baseline ifgs
-%    'usb-d' 
-%    'usb-o' 
-%    'usb-do' 
-%    'rsb' residual between unwrapped phase of sb ifgs and inverted
+%      also 'vdrop-do' 
 % 
 %    When the wrapped interferograms are small baseline, 'v' and 'd' plots
 %    are calulated from the unwraped small baseline interferograms by 
@@ -123,6 +120,7 @@ function []=ps_plot(value_type,varargin)
 %   01/2012 AH: Remove code to subtract SULA error from 'd' plots
 %   12/2012 AH: plot raw phase if psver=1
 %   01/2013 DB: Fix plotting of data in case of SB directory
+%   01/2013 AH: Add topo-correlated atmosphere options
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -195,8 +193,8 @@ phuwsbname=['./phuw_sb',num2str(psver)];
 phuwsbresname=['./phuw_sb_res',num2str(psver)];
 scnname=['./scn',num2str(psver)];
 ifgstdname=['./ifgstd',num2str(psver)];
-apsname=['./aps',num2str(psver)];
-apssbname=['./aps_sb',num2str(psver)];
+apsname=['./tca',num2str(psver)];
+apssbname=['./tca_sb',num2str(psver)];
 sclaname=['./scla',num2str(psver)];
 sclasbname=['./scla_sb',num2str(psver)];
 sclasmoothname=['./scla_smooth',num2str(psver)];
@@ -429,7 +427,7 @@ switch(group_type)
     case {'usb-a'}
         uw=load(phuwsbname);
         aps=load(apssbname);
-        ph_all=uw.ph_uw - aps.ph_aps_slave;
+        ph_all=uw.ph_uw - aps.strat_corr;
         clear uw aps
         ref_ps=ps_setref;
         textsize=0;
@@ -438,11 +436,20 @@ switch(group_type)
         uw=load(phuwsbname);
         scla=load(sclasbname);
         aps=load(apssbname);
-        ph_all=uw.ph_uw - scla.ph_scla - aps.ph_aps_slave;
+        ph_all=uw.ph_uw - scla.ph_scla - aps.strat_corr;
         clear uw scla aps
         ref_ps=ps_setref;
         textsize=0;
         fig_name = 'usb-da';
+    case {'usb-dao'}
+        uw=load(phuwsbname);
+        scla=load(sclasbname);
+        aps=load(apssbname);
+        ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp - aps.strat_corr;
+        clear uw scla aps
+        ref_ps=ps_setref;
+        textsize=0;
+        fig_name = 'usb-dao';
     case {'rsb'}
         uw=load(phuwsbname);
         res=load(phuwsbresname);
@@ -454,7 +461,7 @@ switch(group_type)
         fig_name = 'rsb';
     case {'asb'}
         aps=load(apssbname);
-        ph_all=aps.ph_aps_slave;
+        ph_all=aps.strat_corr;
         clear aps
         ref_ps=ps_setref;
         textsize=0;
@@ -468,15 +475,6 @@ switch(group_type)
         ph_all(:,ps.master_ix)=0;
         ref_ps=ps_setref;
         fig_name = 'u-dms';
-    case {'u-dmas'}
-        uw=load(phuwname);
-        scn=load(scnname);
-        scla=load(sclaname);
-        aps=load(apsname);
-        ph_all=uw.ph_uw - scn.ph_scn_slave - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - aps.ph_aps_slave;
-        clear uw scn scla
-        ref_ps=ps_setref;
-        fig_name = 'u-dmas';
     case {'u-dm'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -501,16 +499,40 @@ switch(group_type)
         clear uw scla
         ref_ps=ps_setref;
         fig_name = 'u-dmo';
+    case {'u-da'}
+        uw=load(phuwname);
+        scla=load(sclaname);
+        aps=load(apsname);
+        ph_all=uw.ph_uw; 
+        ph_all=uw.ph_uw - scla.ph_scla - aps.strat_corr;
+        ph_all(:,master_ix)=0;
+        clear uw scla aps
+        ref_ps=ps_setref;
+        fig_name = 'u-da';
     case {'u-dma'}
         uw=load(phuwname);
         scla=load(sclaname);
         aps=load(apsname);
         ph_all=uw.ph_uw; 
-        ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - aps.ph_aps_slave;
+        ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - aps.strat_corr;
         ph_all(:,master_ix)=0;
         clear uw scla aps
         ref_ps=ps_setref;
         fig_name = 'u-dma';
+    case {'u-dmao'}
+        uw=load(phuwname);
+        scla=load(sclaname);
+        aps=load(apsname);
+        if strcmp('n',scla_deramp)
+            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+            return;
+        end
+        ph_all=uw.ph_uw; 
+        ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp - aps.strat_corr;
+        ph_all(:,master_ix)=0;
+        clear uw scla aps
+        ref_ps=ps_setref;
+        fig_name = 'u-dmao';
     case {'u-dmos'}
         uw=load(phuwname);
         scn=load(scnname);
@@ -528,7 +550,7 @@ switch(group_type)
         uw=load(phuwname);
         aps=load(apsname);
         ph_all=uw.ph_uw; 
-        ph_all=uw.ph_uw - aps.ph_aps_slave;
+        ph_all=uw.ph_uw - aps.strat_corr;
         ph_all(:,master_ix)=0;
         clear uw aps
         ref_ps=ps_setref;
@@ -574,7 +596,7 @@ switch(group_type)
     case {'a'}
         aps=load(apsname);
         %ph_all=exp(j*ph_scn);
-        ph_all=aps.ph_aps_slave;
+        ph_all=aps.strat_corr;
         clear aps
         ref_ps=ps_setref;
         fig_name = 'a';
@@ -658,28 +680,31 @@ switch(group_type)
              fig_name = 'v-dos';
         case {'v-a'}
             aps=load(apsname);
-            ph_uw=ph_uw - aps.ph_aps_slave;
+            ph_uw=ph_uw - aps.strat_corr;
             clear scla aps
             fig_name = 'v-a';
         case {'v-da'}
             scla=load(sclaname);
             aps=load(apsname);
-            ph_uw=ph_uw - scla.ph_scla- aps.ph_aps_slave;
+            ph_uw=ph_uw - scla.ph_scla - aps.strat_corr;
             clear scla aps
             fig_name = 'v-da';
+        case {'v-dao'}
+            if strcmp('n',scla_deramp)
+                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+                return;
+            end
+            scla=load(sclaname);
+            aps=load(apsname);
+            ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - aps.strat_corr;
+            clear scla aps
+            fig_name = 'v-dao';
         case {'v-ds'}
             scla=load(sclaname);
             scn=load(scnname);
             ph_uw=ph_uw - scla.ph_scla - scn.ph_scn_slave;
             clear scla scn
             fig_name = 'v-ds';
-        case {'v-das'}
-            scla=load(sclaname);
-            aps=load(apsname);
-            scn=load(scnname);
-            ph_uw=ph_uw - scla.ph_scla - aps.ph_aps_slave - scn.ph_scn_slave;
-            clear scla scn
-            fig_name = 'v-das';
         case {'vdrop'}
             fig_name = 'vdrop';
         case {'vdrop-d'}
