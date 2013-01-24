@@ -176,6 +176,7 @@ else
   if sum(nonnanix)<1
       warning('Not enough random phase pixels to set gamma threshold - using default threshold of 0.3')
       coh_thresh=0.3;
+      coh_thresh_coeffs=[];
   else 
   min_coh=min_coh(nonnanix);
   D_A_mean=D_A_mean(nonnanix);
@@ -371,6 +372,7 @@ if reest_flag~=1
     nonnanix=~isnan(min_coh);
     if sum(nonnanix)<1
         coh_thresh=0.3;
+        coh_thresh_coeffs=[];
     else
         min_coh=min_coh(nonnanix);
         D_A_mean=D_A_mean(nonnanix);
