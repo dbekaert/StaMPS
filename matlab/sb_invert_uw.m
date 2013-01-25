@@ -101,7 +101,7 @@ unwrap_ifg_index_sm=unwrap_ifg_index_sm(nzc_ix);
 save(phuwname,'ph_uw','unwrap_ifg_index_sm')
 save(phuwsbresname,'ph_res','sb_cov','sm_cov')
 
-if exist(strat_sb,'var')
+if exist('strat_sb','var')
     strat_corr=zeros(size(ph_uw),'single');
     strat_corr(:,nzc_ix)=lscov(G2,double(strat_sb'))';
     save(stratname,'strat')
