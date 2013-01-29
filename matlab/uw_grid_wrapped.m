@@ -8,6 +8,7 @@ function []=uw_grid_wrapped(ph_in,xy_in,pix_size,prefilt_win,goldfilt_flag,lowfi
 % 08/2009 AH: Goldstein alpha value added to calling parms
 % 02/2012 AH: save ij
 % 03/2012 AH: Allow for non-complex wrapped phase
+% 01/2013 AH: No gridding option (pix_size=0)
 % ============================================================
 
 fprintf('Resampling phase to grid...\n')
@@ -42,16 +43,24 @@ end
  
 xy_in(:,1)=[1:n_ps]';
 
-grid_x_min=min(xy_in(:,2));
-grid_y_min=min(xy_in(:,3));
+if pix_size==0
+    grid_x_min=1;
+    grid_y_min=1;
+    n_i=max(xy_in(:,3));
+    n_j=max(xy_in(:,2));
+    grid_ij=[xy_in(:,3),xy_in(:,2)];
+else
+    grid_x_min=min(xy_in(:,2));
+    grid_y_min=min(xy_in(:,3));
 
-grid_ij(:,1)=ceil((xy_in(:,3)-grid_y_min+1e-3)/pix_size);
-grid_ij(grid_ij(:,1)==max(grid_ij(:,1)),1)=max(grid_ij(:,1))-1;
-grid_ij(:,2)=ceil((xy_in(:,2)-grid_x_min+1e-3)/pix_size);
-grid_ij(grid_ij(:,2)==max(grid_ij(:,2)),2)=max(grid_ij(:,2))-1;
+    grid_ij(:,1)=ceil((xy_in(:,3)-grid_y_min+1e-3)/pix_size);
+    grid_ij(grid_ij(:,1)==max(grid_ij(:,1)),1)=max(grid_ij(:,1))-1;
+    grid_ij(:,2)=ceil((xy_in(:,2)-grid_x_min+1e-3)/pix_size);
+    grid_ij(grid_ij(:,2)==max(grid_ij(:,2)),2)=max(grid_ij(:,2))-1;
 
-n_i=max(grid_ij(:,1));
-n_j=max(grid_ij(:,2));
+    n_i=max(grid_ij(:,1));
+    n_j=max(grid_ij(:,2));
+end
 
 ph_grid=zeros(n_i,n_j,'single');
 
@@ -63,8 +72,13 @@ for i1=1:n_ifg
         ph_this=ph_in(:,i1);
     end 
     ph_grid(:)=0;
-    for i=1:n_ps     
-        ph_grid(grid_ij(i,1),grid_ij(i,2))=ph_grid(grid_ij(i,1),grid_ij(i,2))+ph_this(i);
+    
+    if pix_size==0
+        ph_grid((xy_in(:,2)-1)*n_i+xy_in(:,3))=ph_this;
+    else
+        for i=1:n_ps     
+            ph_grid(grid_ij(i,1),grid_ij(i,2))=ph_grid(grid_ij(i,1),grid_ij(i,2))+ph_this(i);
+        end
     end
   
     if i1==1
@@ -96,7 +110,11 @@ n_ps=n_ps_grid;
 disp(sprintf('   Number of resampled points: %d',n_ps))
 
 [nz_i,nz_j]=find(ph_grid~=0);
-xy=[[1:n_ps]',(nz_j-0.5)*pix_size,(nz_i-0.5)*pix_size];
+if pix_size==0
+    xy=xy_in;
+else
+    xy=[[1:n_ps]',(nz_j-0.5)*pix_size,(nz_i-0.5)*pix_size];
+end
 ij=[nz_i,nz_j];
 
 

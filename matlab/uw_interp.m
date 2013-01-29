@@ -4,7 +4,8 @@ function []=uw_interp();
 %   Andy Hooper May 2007
 %
 %   ============================================================================
-%   01/2012 AH: Speed up read/write for trianlgle 
+%   01/2012 AH: Speed up read/write for triangle 
+%   01/2013 AH: Replace dsearch by dsearchn only for versions 2012 onwards
 %   ============================================================================
 
 fprintf('Interpolating grid...\n')
@@ -46,9 +47,13 @@ z=[1:uw.n_ps];
 [nrow,ncol]=size(uw.nzix);
 
 [X,Y]=meshgrid(1:ncol,1:nrow);
-%Z=dsearch(x,y,ele(:,2:4),X,Y); % dsearch removed in MatlabR2012a
-Z=dsearchn([x,y],ele(:,2:4),[X(:),Y(:)]); %index from grid to pixel node
-Z = reshape(Z,nrow,ncol);
+matlab_version=version('-release');
+if str2num(matlab_version(1:4))<2012
+    Z=dsearch(x,y,ele(:,2:4),X,Y); % dsearch removed in MatlabR2012a
+else
+    Z=dsearchn([x,y],ele(:,2:4),[X(:),Y(:)]); %index from grid to pixel node
+    Z = reshape(Z,nrow,ncol);
+end
 Zvec=Z(:);
 grid_edges=[Zvec(1:end-nrow),Zvec(nrow+1:end)]; % col edges
 Zvec=reshape(Z',nrow*ncol,1);
