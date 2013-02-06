@@ -1,4 +1,4 @@
-function stamps(start_step,end_step,patches_flag,est_gamma_parm)
+function stamps_mc(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file)
 %STAMPS Stanford Method for Persistent Scatterers
 %   STAMPS(START_STEP,END_STEP,PATCHES_FLAG,EST_GAMMA_FLAG) Default is to run all steps.
 %   A subset of steps may be selected with START_STEP and/or END_STEP
@@ -14,6 +14,10 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm)
 %   PATCHES_FLAG Default 'y'. Set to 'n' to process all data as one patch
 %
 %   EST_GAMMA_PARM is an optional parameter passed to PS_EST_GAMMA_QUICK
+%
+%   PATCH_LIST_FILE is an optional argument specifying the file list of
+%   patches to be processed. Note that from step 5 and above one should use
+%   all patches to merge results.
 %
 %   If current directory is a single patch, stamps only operates in the
 %   current directory, but if current directory contains many patches,
@@ -31,6 +35,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm)
 %   03/2009 AH: smooth SCLA for unwrapping iteration
 %   03/2010 AH: move ps_cal_ifg_std to after merge step
 %   12/2012 AH: add gamma option
+%   12/2012 DB: add patch_list_file argument as option
 %   =================================================================
 
 nfill=40;
@@ -50,15 +55,15 @@ unwrap_prefilter_flag=getparm('unwrap_prefilter_flag');
 small_baseline_flag=getparm('small_baseline_flag');
 insar_processor=getparm('insar_processor');
 
-if nargin<1 
+if nargin<1 || isempty(start_step)==1
     start_step=1;
 end
 
-if nargin<2
+if nargin<2 || isempty(end_step)==1
     end_step=8;
 end
 
-if nargin<3
+if nargin<3 || isempty(patches_flag)==1
     if start_step<6
         patches_flag='y';
     else
@@ -66,13 +71,21 @@ if nargin<3
     end
 end
 
-if nargin<4
+if nargin<4 || isempty(est_gamma_parm)==1
     est_gamma_parm=0;
 end
 
+if nargin<5 || isempty(patch_list_file)     % [DB] allow for own specified patch list file
+    patch_list_file = 'patch.list';
+    new_patch_file = 0;
+else
+    % use own file
+    new_patch_file = 1;
+end
+
 if strcmpi(patches_flag,'y')
-    if exist('patch.list','file')
-        fid=fopen('patch.list');
+    if exist(patch_list_file,'file')
+        fid=fopen(patch_list_file);
         i=0;
         while 1
             nextline=fgetl(fid);
@@ -165,6 +178,11 @@ for i=1:length(patchdir)
 
     
     cd(currdir)
+end
+
+if start_step>=5 & new_patch_file==1
+    fprintf('\n\n For merging to the full dataset the complete platch list needs to be used. \n If this is the case type "return", else aboard and specifiy the full patch list. \n')
+    keyboard
 end
 
 if start_step<=5 & end_step >=5 
