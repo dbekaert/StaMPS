@@ -9,6 +9,7 @@
 # 06/2011 AH: Option to select processing
 # 12/2012 AH: Short and byteswap options
 # 12/2012 DB: Allow for a list to be given as input
+# 02/2013 AH: Short and byteswap options for small baselines
 # ===========================================================================
 # 
 # mt_extract_cands dophase dolonlat dodem docands precision byteswap mask_file patch_list
@@ -92,10 +93,9 @@ foreach patch(`cat $list`)
     echo "Patch:" $patch
 
     if ($docands == 1) then
-        # Select PS candidates 
-        if ($dirname == "SMALL_BASELINES") then
-            selsbc_patch_new $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da 
-        else
+        if ( -e $WORKDIR/selsbc.in) then # Select SB candidates 
+            selsbc_patch_new $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile
+        else # Select PS candidates 
             selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile
         endif
     endif

@@ -8,7 +8,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 %        (optional extra column, in which case first column is ignored)
 %   DAY = vector of image acquisition dates in days, relative to master
 %   IFGDAY_IX = M x 2 matrix giving index to master and slave date in DAY
-%        for each interferogram (can be empty for single master time series)
+%        for each interferogram 
 %   BPERP  = M x 1 vector giving perpendicular baselines 
 %   OPTIONS structure optionally containing following fields:
 %      la_flag    = look angle error estimation flag (def='y')
@@ -36,13 +36,9 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 % 11/2012 AH: Several new options
 % ============================================================
 tic;
-if nargin<3
+if nargin<4
     help uw_3d
     error('not enough arguments')
-end
-
-if nargin<4
-    ifgday_ix=[];
 end
 
 if nargin<5
@@ -149,11 +145,11 @@ end
 uw_grid_wrapped(ph,xy,options.grid_size,options.prefilt_win,options.goldfilt_flag,options.lowfilt_flag,options.gold_alpha);
 clear ph
 uw_interp;
-if single_master_flag==1
-    uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win,options.scf_flag,options.temp,options.n_temp_wraps);
-else
+%if single_master_flag==1
+%    uw_unwrap_space_time(day,options.unwrap_method,options.time_win,options.master_day,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win,options.scf_flag,options.temp,options.n_temp_wraps);
+%else
     uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win,options.scf_flag,options.temp,options.n_temp_wraps,options.max_bperp_for_temp_est);
-end
+%end
 uw_stat_costs(options.unwrap_method);
 [ph_uw,msd]=uw_unwrap_from_grid(xy,options.grid_size);
 

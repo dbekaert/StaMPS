@@ -43,6 +43,44 @@ using namespace std;
 // =======================================================================
 // Start of program 
 // =======================================================================
+int cshortswap( complex<short>* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  complex<short> f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[1];
+  b2[1] = b[0];
+  b2[2] = b[3];
+  b2[3] = b[2];
+  f[0]=f2;
+}
+
+int cfloatswap( complex<float>* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  complex<float> f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[3];
+  b2[1] = b[2];
+  b2[2] = b[1];
+  b2[3] = b[0];
+  b2[4] = b[7];
+  b2[5] = b[6];
+  b2[6] = b[5];
+  b2[7] = b[4];
+  f[0]=f2;
+}
+int longswap( int32_t* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  int32_t f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[3];
+  b2[1] = b[2];
+  b2[2] = b[1];
+  b2[3] = b[0];
+  f[0]=f2;
+}
 
 //int main(long  argc, char *argv[] ) {    
 int main(int  argc, char *argv[] ) {   // [MA]  long --> int for gcc 4.3.x 
@@ -51,7 +89,7 @@ try {
  
   if (argc < 3)
   {	  
-     cout << "Usage: selpsc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt maskfile " << endl << endl;
+     cout << "Usage: selpsc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt precision byteswap maskfile " << endl << endl;
      cout << "input parameters:" << endl;
      cout << "  parmfile (input) amplitude dispersion threshold" << endl;
      cout << "                   width of amplitude files (range bins)" << endl;
@@ -60,6 +98,8 @@ try {
      cout << "  pscands.1.ij   (output) PS candidate locations" << endl;
      cout << "  pscands.1.da   (output) PS candidate amplitude dispersion" << endl << endl;
      cout << "  mean_amp.flt (output) mean amplitude of image" << endl << endl;
+     cout << "  precision(input) s or f (default)" << endl;
+     cout << "  byteswap   (input) 1 for to swap bytes, 0 otherwise (default)" << endl;
      cout << "  maskfile   (input)  mask rows and columns (optional)" << endl;
      throw "";
   }   
@@ -69,7 +109,11 @@ try {
   if (argc < 4) 
      ijname="pscands.1.ij";
   else ijname = argv[3];   
-     
+
+  char jiname[256]; // float format big endian for gamma
+  strcpy (jiname,ijname);
+  strcat (jiname,".int");
+
 //  char *ampoutname;
 //  if (argc < 4) 
 //     ampoutname="pscands.1.amp";
@@ -86,12 +130,22 @@ try {
   if (argc < 6) 
      meanoutname="mean_amp.flt";
   else meanoutname = argv[5];   
+
+  const char *prec;
+  if (argc < 7)
+     prec="f";
+  else prec = argv[6];
+
+  int byteswap;
+  if (argc < 8)
+     byteswap=0;
+  else byteswap = atoi(argv[7]);
   
 //  char *maskfilename;
   const char *maskfilename;   // [MA] deprication fix
-  if (argc < 7) 
+  if (argc < 9) 
      maskfilename="";
-  else maskfilename = argv[6];   
+  else maskfilename = argv[8];   
      
      
   ifstream parmfile (argv[1], ios::in);
@@ -173,6 +227,16 @@ try {
   patchfile >> az_end;
   patchfile.close();
 
+  const int sizeoffloat=4; 
+  int sizeofelement; 
+  if (prec[0]=='s')
+  {
+      sizeofelement = sizeof(short);
+  }else sizeofelement = sizeof(float);
+
+  const int linebytes = width*sizeofelement*2;  // bytes per line in amplitude files (SLCs)
+
+
   filebuf *pbuf;
   long size;
   long numlines;
@@ -190,50 +254,62 @@ try {
   ifstream maskfile (maskfilename, ios::in);
   char mask_exists = 0;
   if (maskfile.is_open()) 
-  {	  
+  {	 
+      cout << "opening " << maskfilename << "...\n";
       mask_exists=1;
   }    
   
   ofstream ijfile(ijname,ios::out);
+  ofstream jifile(jiname,ios::out);
   ofstream daoutfile(daoutname,ios::out);
   ofstream meanoutfile(meanoutname,ios::out);
  
-  //complex<float>* buffer = new complex<float>[num_files*width]; // used to store 1 line of all amp files
-  complex<float>* buffer = new complex<float>[num_files*width*100]; // used to store 100 lines for all amp files
+  int LineInBuffer = 100;
 
-  char* maskline = new char[width];
-  for (int x=0; x<width; x++) // for each pixel in range
+//  complex<float>* buffer = new complex<float>[num_files*width*100]; // used to store 100 lines for all amp files
+  char* buffer = new char[num_files*linebytes*LineInBuffer]; // used to store 100 lines of all amp files
+  complex<float>* bufferf = reinterpret_cast<complex<float>*>(buffer);
+  complex<short>* buffers = reinterpret_cast<complex<short>*>(buffer);
+
+
+  char* maskline = new char[width*LineInBuffer];
+  for (int x=0; x<width*LineInBuffer; x++) // for each pixel in range
   {
       maskline[x] = 0;
   }
 
-  int linebytes = width*8;                      // bytes per line in amplitude files`
   //int y=0;                                    // amplitude files line number
   int y=az_start-1;                             // Changed by LI Gang to calc the start position of azimuth for each ampfile
   int pscid=0;                                  // PS candidate ID number
 
-  long long pos_start; 				// LI Gang to go to the start position of azimuth for each ampfile
+  long long pix_start; 				// start position in azimuth in values
+  long long pos_start; 				// start position of azimuth in bytes
+  pix_start= (long long)(y)*(long long)(width);
   pos_start = (long long)(y) * (long long)(linebytes);
   //end
   
-  int LineInBuffer = 100;
     
   for ( int i=0; i<num_files; i++)              // read in first line from each amp file
   {
       ampfile[i].seekg (pos_start, ios::beg);
-      ampfile[i].read (reinterpret_cast<char*>(&buffer[i*width*LineInBuffer]), linebytes*LineInBuffer);
+      ampfile[i].read (reinterpret_cast<char*>(&buffer[i*linebytes*LineInBuffer]), linebytes*LineInBuffer);
   } 
      
+  if (mask_exists==1) 
+  {
+     maskfile.seekg (pix_start, ios::beg);      // set pointer to start of patch in mask file
+  }
+
   while (! ampfile[1].eof() && y < az_end) 
   {
      if (mask_exists==1) 
      {
-         maskfile.read (maskline, width);
+         maskfile.read (maskline, width*LineInBuffer);
      }    
      if (y >= az_start-1)
-       {
-           for(int j=0; j<LineInBuffer; j++) //for each line in azimuth within buffer
-           {
+     {
+      for(int j=0; j<LineInBuffer; j++) //for each line in azimuth within buffer
+      {
        for (int x=rg_start-1; x<rg_end; x++) // for each pixel in range
        {
      
@@ -243,8 +319,34 @@ try {
 
         for (i=0; i<num_files/2; i++)        // for each amp file
 	{
-           float amp1=abs(buffer[(i*2)*width*LineInBuffer+j*width+x])/calib_factor[i*2]; // get amp value
-           float amp2=abs(buffer[(i*2+1)*width*LineInBuffer+j*width+x])/calib_factor[i*2+1]; // get amp value
+
+           complex<float> camp1, camp2; // get amp value
+           if (prec[0]=='s')
+           {
+               if (byteswap == 1)
+               {
+                  cshortswap(&buffers[(i*2)*width*LineInBuffer+j*width+x]);
+                  cshortswap(&buffers[(i*2+1)*width*LineInBuffer+j*width+x]);
+               }
+               camp1=buffers[(i*2)*width*LineInBuffer+j*width+x];
+               camp2=buffers[(i*2+1)*width*LineInBuffer+j*width+x];
+           }
+           else
+           {
+               camp1=bufferf[(i*2)*width*LineInBuffer+j*width+x]; // get amp value
+               camp2=bufferf[(i*2+1)*width*LineInBuffer+j*width+x]; // get amp value
+               if (byteswap == 1)
+               {
+                  cfloatswap(&camp1);
+                  cfloatswap(&camp2);
+               }
+           }
+
+           float amp1=abs(camp1)/calib_factor[i*2]; // get amp value
+           float amp2=abs(camp2)/calib_factor[i*2+1]; // get amp value
+
+//           float amp1=abs(buffer[(i*2)*width*LineInBuffer+j*width+x])/calib_factor[i*2]; 
+//           float amp2=abs(buffer[(i*2+1)*width*LineInBuffer+j*width+x])/calib_factor[i*2+1];
 	
 
 
@@ -262,7 +364,7 @@ try {
         }
         meanoutfile.write(reinterpret_cast<char*>(&sumamp),sizeof(float));	
 
-        if (maskline[x]==0 && sumamp > 0)
+        if (maskline[j*width+x]==0 && sumamp > 0)
         { 
 	    float D_a=sqrt(sumampdiffsq/(num_files/2))/(sumamp/num_files); 
             if (pick_higher==0 && D_a<D_thresh ||                 \
@@ -271,6 +373,13 @@ try {
                ++pscid;
 
                ijfile << pscid << " " << y << " " << x << "\n"; 
+
+               int32_t J=x;
+               int32_t I=y;
+               longswap(&J);
+               longswap(&I);
+               jifile.write(reinterpret_cast<char*>(&J), sizeof(int32_t));
+               jifile.write(reinterpret_cast<char*>(&I), sizeof(int32_t));
 
                daoutfile << D_a << "\n";
                //cout << "Da=" << D_a << "\n";
@@ -286,13 +395,13 @@ try {
 
      for ( int i=0; i<num_files; i++)           // read in next line from each amp file
      {
-        ampfile[i].read (reinterpret_cast<char*>(&buffer[i*width*LineInBuffer]), linebytes*LineInBuffer);
+        ampfile[i].read (reinterpret_cast<char*>(&buffer[i*linebytes*LineInBuffer]), linebytes*LineInBuffer);
      } 
      
      //y++;
      
      
-    cout << y << " lines processed with buffer contains" << LineInBuffer << "lines\n";
+    cout << y-az_start+1 << " lines processed. Buffer contains " << LineInBuffer << " lines\n";
   }  //while
   ijfile.close();
   //ampoutfile.close();

@@ -128,7 +128,11 @@ for i=1:length(patchdir)
         msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 1 ';
         fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
         if strcmpi(small_baseline_flag,'y')
-            sb_load_initial
+            if strcmpi(insar_processor,'gamma')
+                sb_load_initial_gamma;
+            else
+                sb_load_initial;
+            end
         else
             if strcmpi(insar_processor,'gamma')
                 ps_load_initial_gamma;

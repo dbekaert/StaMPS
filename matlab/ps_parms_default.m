@@ -170,7 +170,7 @@ if ~isfield(parms,'drop_ifg_index')
 end
 
 if ~isfield(parms,'unwrap_la_error_flag')
-    parms.unwrap_la_error_flag='n';
+    parms.unwrap_la_error_flag='y';
 end
 
 if ~isfield(parms,'unwrap_spatial_cost_func_flag')

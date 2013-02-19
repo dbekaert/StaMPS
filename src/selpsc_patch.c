@@ -12,7 +12,8 @@
 // 07/2010 A0 Update Need for Speed on patches
 // 08/2010 MA Code optimization
 // 01/2010 MCC Drop low amplitudes
-// 12/2012 AH Add byteswap option
+// 12/2012 AH Add byteswap and short options
+// 12/2012 AH Correct mask processing
 // ==============================================
 
 #include <string.h> 

@@ -219,7 +219,7 @@ scla_deramp = getparm('scla_deramp');
 
 if strcmpi(small_baseline_flag,'y') 
     unwrap_ifg_index_sb=setdiff([1:ps.n_ifg],drop_ifg_index);
-    if value_type(1)~='w' & value_type(1)~='p'
+    if ischar(value_type) & value_type(1)~='w' & value_type(1)~='p'
       warning('off','MATLAB:load:variableNotFound');
       phuw=load(phuwname,'unwrap_ifg_index_sm');
       warning('on','MATLAB:load:variableNotFound');

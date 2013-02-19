@@ -226,7 +226,8 @@ if strcmpi(unwrap_method,'2D')
     if strcmpi(temp_flag,'y')
         dph_space_uw=dph_space_uw+Kt*temp';   % equal to dph_space + integer cycles
     end
-    save('uw_space_time','dph_space_uw','spread');    
+    dph_noise=[];
+    save('uw_space_time','dph_space_uw','spread','dph_noise');    
 elseif strcmpi(unwrap_method,'3D_NO_DEF')
     dph_noise=angle(dph_space);
     dph_space_uw=angle(dph_space);        
