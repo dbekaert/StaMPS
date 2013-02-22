@@ -19,7 +19,7 @@ using namespace std;
 #include <fstream>  
 using namespace std;
 
-#include <string>  
+#include <string.h>  
 using namespace std;
      
 #include <complex>  
