@@ -64,6 +64,10 @@ end
 
 ph_grid=zeros(n_i,n_j,'single');
 
+if min(size(ph_grid))<prefilt_win
+    error(['Minimum dimension of the resampled grid (',num2str(min(size(ph_grid))),' pixels) is less than prefilter window size (',num2str(prefilt_win),')'])
+end
+
 
 for i1=1:n_ifg
     if isreal(ph_in)

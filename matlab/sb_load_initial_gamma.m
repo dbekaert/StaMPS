@@ -49,6 +49,8 @@ for i=1:n_ifg
     ifgday(i,2)=str2num(ifgs{i}(nb-12:nb-5));
 end
 
+save -ascii ../small_baselines.list ifgday
+
 year=floor(ifgday/10000);
 month=floor((ifgday-year*10000)/100);
 monthday=ifgday-year*10000-month*100;
@@ -93,7 +95,7 @@ for i=1:n_ifg
     %bpara=bc*sin(look)+bn*cos(look)
 end
 bperp=mean(bperp_mat)';
-bperp_mat=bperp_mat(:,[1:master_ix-1,master_ix+1:end]);
+%bperp_mat=bperp_mat(:,[1:master_ix-1,master_ix+1:end]);
 %bperp=[bperp(1:master_ix-1);0;bperp(master_ix:end)]; % insert master-master bperp (zero)
 %bperp_mat=repmat(single(bperp([1:master_ix-1,master_ix+1:end]))',n_ps,1);
 

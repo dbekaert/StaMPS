@@ -77,7 +77,8 @@ G2=G(unwrap_ifg_index,:);
 nzc_ix=sum(abs(G2))~=0; % index for non-zero columns
 G2=G2(:,nzc_ix);
 if rank(G2)<size(G2,2) 
-   error('There are isolated images (cannot be inverted w.r.t. master)')
+    save(phuwsbresname,'sb_cov')
+    error('There are isolated subsets (cannot be inverted w.r.t. master)')
 end
 
 ph_uw=zeros(ps.n_ps,ps.n_image,'single');
