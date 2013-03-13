@@ -3,6 +3,9 @@ function stamps_mc_header(start_step,end_step,est_gamma_parm,n_cores,patch_list_
 % Program mainly for the first 5 steps of Stamps that splits up the
 % parameter list based on the number of processing cores specified. An
 % upper bound is set by the cores available.
+% INPUTS:
+%
+%
 % By David Bekaert - PhD student - University of Leeds
 % December 2012
 % modifications:
