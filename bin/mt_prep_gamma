@@ -37,7 +37,7 @@ echo " "
 set nonomatch
 
 if ($#argv < 2) then
-    echo "usage: mt_prep_gamma yyyymmdd datadir da_thresh [rg_patches az_patches rg_overlap az_overlap]"
+    echo "usage: mt_prep_gamma yyyymmdd datadir da_thresh [rg_patches az_patches rg_overlap az_overlap maskfile]"
     echo "    yyyymmdd                 = master date"
     echo "    datadir                  = data directory (with expected structure)"
     echo "    da_thresh                = (delta) amplitude dispersion threshold"
