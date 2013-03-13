@@ -1,6 +1,14 @@
-function []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation)
+function []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation,list)
 %MT_ML_SELECT small baseline multilooked select
-%  []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation)
+%  []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation,list)
+%
+%   INPUTS: 
+%   - coh_thresh: Threshold coherence. By default this value is 0.25
+%   - image_fraction: fraction of images for a pixel that has met the
+%                     coh_thresh value. Between 0-1, default this is 0.3
+%   - weed_zero_elevation: default 'n' this is not done
+%   - list: txt file with ifgs folders that needs to be considered in the
+%           processing. By default all date folders are considered
 %
 %   Andy Hooper, July 2006
 %
@@ -10,19 +18,31 @@ function []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation)
 %   08/2009 AH: Multilook lon/lat as read in to save memory 
 %   08/2009 AH: Allow single master series  
 %   03/2011 AH: Compatibility changes for matlab R2010b
+%   12/2012 DB: Add compatibility with Matlab2012B, keep backward compatible
+%   12/2012 DB: Set empty for default value as well + print processing values
+%               Add syntax to the code
+%   12/2012 DB: Allow a list of folders (ifgs) to be specified to be considered
 %   =============================================================
 
-if nargin<1
+if nargin<1 || isempty(coh_thresh)
    coh_thresh=0.25;
 end
 
-if nargin<2
+if nargin<2 || isempty(image_fraction)
    image_fraction=0.3;
 end
 
-if nargin<3
+if nargin<3 || isempty(weed_zero_elevation)
     weed_zero_elevation='n';
 end
+
+if nargin<4 || isempty(list)   % [DB]
+    flag_all_ifgs = 1;
+else
+   flag_all_ifgs = 0;
+end
+
+save_v7_3=0;
 
 phname=['pscands.1.ph'];            % for each PS candidate, a float complex value for each ifg
 ijname=['pscands.1.ij'];            % ID# Azimuth# Range# 1 line per PS candidate
@@ -34,16 +54,26 @@ llname=['pscands.1.ll'];            % 2 float values (lon and lat) per PS candid
 daname=['pscands.1.da'];            % 1 float value per PS candidate
 hgtname=['pscands.1.hgt'];          % 1 float value per PS candidate
 laname=['look_angle.1.in'];         % grid of look angle values
-lonname=['./lon.raw'];                % longitudes
-latname=['./lat.raw'];                % latitudes
+lonname=['./lon.raw'];              % longitudes
+latname=['./lat.raw'];              % latitudes
 demradname=['./dem_radar_i.raw'];
 headingname=['heading.1.in'];       % satellite heading
 lambdaname=['lambda.1.in'];         % wavelength
 calname=['calamp.out'];             % amplitide calibrations
-widthname=['./width.txt'];            % width of interferograms
-lenname=['./len.txt'];                % length of interferograms
-looksname=['./looks.txt'];            % number of looks in range
-arname=['./ar.txt'];                  % aspect ratio (pixel size in range/azimuth)
+widthname=['./width.txt'];          % width of interferograms
+lenname=['./len.txt'];              % length of interferograms
+looksname=['./looks.txt'];          % number of looks in range
+arname=['./ar.txt'];                % aspect ratio (pixel size in range/azimuth)
+
+% Get matlab version as function arguments change with the matlab version
+matlab_version = version('-release');           % [DB] getting the matlab version
+matlab_version = str2num(matlab_version(1:4));  % [DB] the year
+
+
+% Giving an output of the selected values:
+fprintf(['coh_thresh : ' , num2str(coh_thresh) , '\n']);
+fprintf(['image_fraction : ' , num2str(image_fraction) , '\n']);
+fprintf(['weed_zero_elevation : ' , weed_zero_elevation , '\n']);
 
 
 fprintf('Selecting multilooked pixels...\n')
@@ -87,9 +117,19 @@ else
 end
 n_laz=floor(n_az/looks/ar);
 
-dirs=ls(['*/',cohname,'.raw']);
-dirs=strread(dirs,'%s');
-n_d=length(dirs);
+% allow a processing list of ifgs folders to be specified
+if flag_all_ifgs==1
+    dirs=ls(['*/',cohname,'.raw']);
+    dirs=strread(dirs,'%s');
+    n_d=length(dirs); 
+else
+    dirs = textread(list,'%s');
+    n_d = length(dirs); 
+    for k=1:n_d
+       dirs{k} = [dirs{k} filesep cohname,'.raw'];
+    end
+end
+    
 ix=logical(zeros(floor(n_az/looks/ar),floor(n_rg/looks),n_d));
 i1=0;
 rubbish=char([27,91,48,48,109]);
@@ -236,9 +276,19 @@ ix=ix(sort_ix);
 ij=[[1:n_ps]',I(sort_ix)*looks*ar-round(looks*ar/2),J(sort_ix)*looks-round(looks/2)];
 
 
-dirs=ls('-1',['*/cint.minrefdem_',num2str(looks),'l.raw']);
-dirs=strread(dirs,'%s');
-n_ifg=length(dirs);
+
+if flag_all_ifgs==1
+    dirs=ls('-1',['*/cint.minrefdem_',num2str(looks),'l.raw']);
+    dirs=strread(dirs,'%s');
+    n_ifg=length(dirs);
+else
+    dirs = textread(list,'%s');
+    n_ifg = length(dirs); 
+    for k=1:n_ifg
+       dirs{k} = [dirs{k} filesep 'cint.minrefdem_' num2str(looks) 'l.raw'];
+    end
+end
+
 ph=zeros(n_ps,n_ifg,'single');
 day1_yyyymmdd=zeros(n_ifg,1);
 day2_yyyymmdd=zeros(n_ifg,1);
@@ -294,7 +344,6 @@ monthday=master_day_yyyymmdd-year*10000-month*100;
 master_day=datenum(year,month,monthday);
 master_ix=sum(master_day>day)+1;
 n_image=size(day,1);
-
 psver=2;
 save psver psver
 
@@ -347,16 +396,23 @@ if single_master_flag~=0
 else
     ph_rc=ph;
 end
-save('rc2','ph_rc');
+
+if save_v7_3==1
+    save('rc2','ph_rc','-v7.3');
+else
+    save('rc2','ph_rc');  
+end
 
 updir=0;
 bperpdir=dir('bperp_*.1.in');
 [gridX,gridY]=meshgrid(linspace(0,n_rg,50),linspace(0,n_az,50));
 
+
 if isempty(bperpdir)
-    bperpdir=dir('../bperp_*.1.in');
-    updir=1;
+   bperpdir=dir('../bperp_*.1.in');
+   updir=1;
 end
+
 bperp_mat=zeros(n_ps,n_image,'single');
 for i=setdiff([1:n_image],master_ix);
     bperp_fname=['bperp_',datestr(day(i),'yyyymmdd'),'.1.in'];
@@ -368,14 +424,19 @@ for i=setdiff([1:n_image],master_ix);
     bp0=reshape(bp0,50,50)';
     bp1000=bperp_grid(2:2:end);
     bp1000=reshape(bp1000,50,50)';
-    bp0_ps=griddata(gridX,gridY,bp0,ij(:,3),ij(:,2),'linear',{'QJ'});
+    bp0_ps=griddata_version_control(gridX,gridY,bp0,ij(:,3),ij(:,2),'linear',matlab_version);                   % [DB] fix matlab2012 version and older
     %bp1000_ps=griddata(gridX,gridY,bp1000,ij(:,3),ij(:,2),'linear',{'QJ'});
     %bperp_mat(:,i)=bp0_ps+(bp1000_ps-bp0_ps).*hgt/1000;
     bperp_mat(:,i)=bp0_ps;
 end
-    bperp_mat=bperp_mat(:,ifgday_ix(:,2))-bperp_mat(:,ifgday_ix(:,1));
+bperp_mat=bperp_mat(:,ifgday_ix(:,2))-bperp_mat(:,ifgday_ix(:,1));
 
-save('bp2','bperp_mat')
+    
+if save_v7_3==1
+    save('bp2','bperp_mat','-v7.3');
+else
+    save('bp2','bperp_mat')
+end
 
 bperp=mean(bperp_mat)';
 if ~single_master_flag==0
