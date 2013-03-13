@@ -1,9 +1,21 @@
 #!/bin/tcsh -f
 #
 # Andy Hooper, 2009
-#
-foreach dir(`cat make_slcs.list`)
+# 18/01/13 Bekaert : allow the file list to be specified
+
+
+if ($#argv == 1) then # DB
+        set list = $argv[1]
+        echo Own list given
+        echo $list
+else
+	set list = make_slcs.list 
+endif
+
+foreach dir(`cat $list`)
    cd $dir 
    step_slc_envi_vor
    cd .. 
 end
+
+

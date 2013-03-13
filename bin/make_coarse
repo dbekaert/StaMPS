@@ -1,14 +1,25 @@
 #!/bin/tcsh -f
+#modification:
+# 4/12/12 Bekaert : allow the file list to be specified
 
 set nonomatch # MA
-
 set WORKDIR = $cwd
 
-if (! -e make_ifgs.list) then
-    \ls -d $WORKDIR/[1,2]*/slave.res | gawk 'BEGIN {FS="slave.res"} {print $1}'  > make_ifgs.list
+if ($#argv == 1) then # DB
+        set list = $argv[1]
+        echo Own list given
+        echo $list
+else
+        set list = make_ifgs.list
+        if (! -e $list) then
+                \ls -d $WORKDIR/[1,2]*/slave.res | gawk 'BEGIN {FS="slave.res"} {print $1}'  > make_ifgs.list
+        endif
+        echo List generated
+        echo $list
 endif
 
-foreach dir(`cat make_ifgs.list`)
+
+foreach dir(`cat $list`)
    echo "\n\nEntering : $dir \n"    # MA echo date
    cd $dir
    step_coarse
@@ -16,3 +27,4 @@ end
 
 cd $WORKDIR
 tail -n32 */coreg.out
+

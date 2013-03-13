@@ -3,11 +3,12 @@
 #
 # Andy Hooper, July 2006
 #
-# USAGE: make_small_baselines [skip_az_filt_flag] [skip_rg_filt_flag]
-#
+# USAGE: make_small_baselines [skip_az_filt_flag, 0 is default] [skip_rg_filt_flag, 0 is default] [file_SB_list]
+# 
 # ===========================================================================
 # 04/2009 AH: Add option to skip azimuth filtering 
 # 09/2009 AH: Add option to skip range filtering 
+# 12/2012 DB: Allow a processing list to be specified
 # ===========================================================================
 
 set PRG = `basename "$0"`
@@ -81,7 +82,17 @@ set masterdate = `\ls *_crop.slc | gawk '{print substr($0,1,8)}'`
 #cp -f $WORKDIR/small_baselines.list $SB_DIR
 set i = 0
 
-foreach slave(`cat $WORKDIR/small_baselines.list`)
+
+
+if ($#argv == 3) then # DB
+        set list = $argv[3]
+        echo List given as input
+        echo $list
+else
+	set list = small_baselines.list
+endif
+
+foreach slave(`cat $WORKDIR/$list`)
    echo $slave
    if ($i == 1) then
       set IFG_DIR = $SB_DIR/$master"_"$slave
