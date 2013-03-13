@@ -249,7 +249,7 @@
    StaMPS/MTI  Manual\\
      }}}}
      \vspace{5mm}
-     {\sffamily\Large{\textbf{Version 3.2}}}
+     {\sffamily\Large{\textbf{Version 3.2 : NOTE updating to version 3.3}}}
 \vspace{5mm}
 
 
@@ -493,7 +493,22 @@ Take note of the number of range looks.
 
 
 
-Choose your region of interest and note the first/last azimuth lines and first/last range pixels. You should try to pick an area that is included in all the slave images too, which may not be the case if you choose an area too close to the image edge. Multiply the line numbers by the number of azimuth looks and the pixel numbers by the number of range looks to get line/pixel numbers referenced to the SLC. 
+Choose your region of interest and note the first/last azimuth lines and first/last range pixels. You should try to pick an area that is included in all the slave images too, which may not be the case if you choose an area too close to the image edge. Multiply the line numbers by the number of azimuth looks and the pixel numbers by the number of range looks to get line/pixel numbers referenced to the SLC. Information on the aspect ratio and number of looks is provided in {\tt../looks.txt} and {\tt../ar.txt}. 
+
+
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}\textbf{Tip: } 
+Using XV: The displayed image is multi-looked. Select your region of interest and multiply the number of lines by the aspect ratio ({\tt ar.txt}) and the number of looks ({\tt looks.txt}) to get back to the original number of lines dimension. The orignal number of pixels follows by multiplying the number of pixels in the multi-looked image with the number of looks. 
+\end{small}
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
+
+
+
 
 %Choose area of interest and note first and last azimuth line numbers (multiplying by 20) e.g. 15000 and 20000 and first and last range pixel numbers (multiplying by 4) e.g. 2400 and 3400
 
@@ -740,7 +755,7 @@ Optionally, you can also check that the master crop is included within each slav
  \cs{make\_coreg}
  (long runtime) or \cs{make\_coreg\_simple}
 
-{\tt make\_coreg} coregisters all images with baseline $<$ 100 m directly to the master and coregisters those with larger baselines  to the 3 closest slave images with a smaller baseline. These default values can be changed by copying {\tt \$DORIS\_SCR/make\_coreg} to {\tt INSAR\_}\cc{master\_date}, editing the values at the top and running \cs{./make\_coreg}.
+{\tt make\_coreg} coregisters all images with baseline $<$ 100 m directly to the master and coregisters those with larger baselines  to the 3 closest slave images with a smaller baseline. These default values can be changed by copying {\tt \$STAMPS/bin/make\_coreg} to {\tt INSAR\_}\cc{master\_date}, editing the values at the top and running \cs{./make\_coreg}.
  
  {\tt make\_coreg\_simple} coregisters all images directly to the master. It therefore runs quicker than {\tt make\_coreg} but may fail in some instances for large baselines.
  
@@ -1197,8 +1212,8 @@ If PS processing has not been run, in the {\tt INSAR\_}\cc{master\_date} directo
  
  To determine which small baseline interferograms to make, in the {\tt INSAR\_}\cc{master\_date} directory run:\\
   \cs{matlab}\\
- $>>$\cs{sb\_find}\\
-Adjust the input parameters according to your data set. There should be no isolated clusters of images. More connections can be made by reducing {\tt rho\_min}, or individual connections can be added by editing {\tt small\_baselines.list}, which is created by {\tt sb\_find}. The connections in {\tt small\_baselines.list} can then be plotted with:\\
+ $>>$\cs{sb\_find (rho\_min , Ddiff\_max , Bdiff\_max)}\\
+Adjust the input parameters according to your data set, where \cs{rho\_min} is the minimum coherence based on the maximum temporal \cs{Ddiff\_max} and perpendicular \cs{Bdiff\_max} decorrelated baselines. There should be no isolated clusters of images. More connections can be made by reducing {\tt rho\_min}, or individual connections can be added by editing {\tt small\_baselines.list}, which is created by {\tt sb\_find}. The connections in {\tt small\_baselines.list} can then be plotted with:\\
 $>>$\cs{plot\_sb\_baselines}. 
  
  To create the small baseline interferograms listed in {\tt small\_baselines.list} in the {\tt INSAR\_}\cc{master\_date} directory, run:\\
@@ -1230,7 +1245,7 @@ Note that the first parameter is amplitude {\em difference} dispersion rather th
  $>>$\cs{stamps}
 
 
-When running this process, the amount of the computer load is probably much higher than  during PS processing. This may cause the program to stop due PC memory limitations. If this is the case, the number of patches should be increased, then rerun \cs{mt\_prep}.
+When running this process, the amount of the computer load is probably much higher than  during PS processing. This may cause the program to stop due PC memory limitations. If this is the case, the number of patches should be increased, then rerun \cs{mt\_prep}. In general patch sizes smaller $<$ 4 million SLC pixels are OK.
 
 
  Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. Step 7 includes extra processing to calculate the SCLA error from both small baseline and single master interferograms.
@@ -1258,7 +1273,7 @@ Step 7 is controlled by the following parameters:
  
  The residuals for each small baseline interferogram should be visually inspected, together with the wrapped and unwrapped phase for each (N.B., you will probably want to view only a few at a time using the {\tt IFG\_LIST} option of \cs{ps\_plot}) . Isolated residuals less than $\pi$ in magnitude are OK, but spatially-correlated residuals indicate an unwrapping problem in one or more interferograms. When this is the case, identify which interferogram(s) are incorrectly unwrapped (N.B., one badly unwrapped interferogram can cause non-zero residuals for many interferograms) and drop them from the unwrapping process, by setting {\tt drop\_ifg\_index} and rerunning Step 6.  
  
- You can view a baseline plot for all interferobrams not dropped with \cs{plot\_sb\_baselines}.
+ You can view a baseline plot for all interferograms not dropped with \cs{plot\_sb\_baselines}.
   \end{small}
 
  \vspace{0.5mm}
@@ -1549,8 +1564,12 @@ to display the image in matlab instead of using {\tt disrg}
 \item Option added to coregister all slaves directly to the master.
 \end{itemize}
 
-
-
+\section{Version 3.3}
+\begin{itemize}
+\item Update the manual with extra tips.
+\item Expand the Small Baselines chapter.
+\item Update the shell scripts to allow for batch processing.
+\end{itemize}
 
 
 \bibliography{allref}
