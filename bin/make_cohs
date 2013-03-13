@@ -4,7 +4,7 @@
 #
 # ===========================================================================
 # 01/2011 AH: Differentiate between small baseline and single master
-# 12/2012 DB: Allow for a list to be given as input
+# 12/2012 DB: Allow for a file (with folder dir or paths) to be given as input
 # ===========================================================================
 
 set WORKDIR = $cwd
@@ -26,13 +26,17 @@ if ($dirname == "SMALL_BASELINES") then
     echo "Small Baseline Processing"
     echo " "
     foreach dir(`cat $list`)
+       echo $dir
        cd $dir
        step_coh_sb
+       cd $WORKDIR
     end
 else
     foreach dir(`cat $list`)
+       echo $dir
        cd $dir
        step_coh
+       cd $WORKDIR
     end
 endif
 
