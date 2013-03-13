@@ -76,7 +76,7 @@ end
 if exist('hgt2.mat','file')
     dem = load('hgt2.mat');
 else
-    disp('dem height not existing yet, please run StaMPS(1,8) once')
+    disp('dem height not existing yet, please run StaMPS(1,7) once')
     exit
 end
 
@@ -124,7 +124,7 @@ for k = ifg : end_ifg
             % display fitted function
             plot(dem_range,strat_fun,'-r')
             hold off
-            strat_corr(:,k) = coef(1)*dem.hgt + coef(2);
+            strat_corr(:,k) = coef(1)*dem.hgt;
             
             if (plot_flag)
                 % plot results

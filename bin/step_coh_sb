@@ -5,6 +5,7 @@
 # 01/2011 AH: Allow for short integer SLCs
 # 01/2011 AH: Allow interferogram other than minrefdem
 # 12/2012 DB: Change the coherence.ras file name to include the number of looks
+# 03/2013 AH: For master, use amplitude of last result file not first 
 # ===========================================================================
 
 
@@ -32,7 +33,7 @@ endif
 @ azlooks = $looks * $ar
 @ width_looked = $width / $looks
 
-set master_slc = `grep -m1 'Data_output_file:' master.res | gawk '{print $2}'`
+set master_slc = `grep 'Data_output_file:' master.res | gawk 'END {print $2}'`
 if (`grep Data_output_format master.res | gawk 'END {print $2}'` == "complex_short") then
   if (! -e $master_slc.cr4) then
     echo "converting $master_slc to float"

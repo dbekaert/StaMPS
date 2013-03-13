@@ -9,6 +9,7 @@
 # 04/2009 AH: Add option to skip azimuth filtering 
 # 09/2009 AH: Add option to skip range filtering 
 # 12/2012 DB: Allow a processing list to be specified
+# 03/2013 AH: Drop simulated amplitude output onwards from master.res 
 # ===========================================================================
 
 set PRG = `basename "$0"`
@@ -100,7 +101,8 @@ foreach slave(`cat $WORKDIR/$list`)
           mkdir $IFG_DIR
       endif
       if ($master == $masterdate) then
-          cp $WORKDIR/master.res  $IFG_DIR/master.res
+          #cp $WORKDIR/master.res  $IFG_DIR/master.res
+          sed '/_Start_sim_amp/,$d' $WORKDIR/master.res > $IFG_DIR/master.res
       else
           sed -n '1,/_Start_crop:/p' $WORKDIR/$master/slave.res > $IFG_DIR/tmp_master.res
           sed -e '/resample/d' $IFG_DIR/tmp_master.res > $IFG_DIR/master.res
@@ -115,7 +117,8 @@ foreach slave(`cat $WORKDIR/$list`)
           sed -n '/_Start_precise_orbits/,/End_precise_orbits/p' $WORKDIR/$master/slave.res >> $IFG_DIR/master.res
       endif
       if ($slave == $masterdate) then
-          cp $WORKDIR/master.res $IFG_DIR/master.res
+          #cp $WORKDIR/master.res $IFG_DIR/master.res
+          sed '/_Start_sim_amp/,$d' $WORKDIR/master.res > $IFG_DIR/master.res
           set pslave = $master
       else
           set pslave = $slave
