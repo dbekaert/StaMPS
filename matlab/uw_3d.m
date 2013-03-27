@@ -24,6 +24,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 %      n_trial_wraps = no. phase cycles poss between neighbouring points due to la error (def=6)
 %      temp          = optional M x 1 vector of temperature difference for each ifg (def=[])
 %      n_temp_wraps  = no. phase cycles poss between neighbouring points due to temp diff (def=2)
+%      variance      = N x 1 matrix of variance values           
 %   PH_UW = unwrapped phase
 %
 %   Andy Hooper, Jun 2007
@@ -56,7 +57,7 @@ else
     single_master_flag=0;
 end
 
-valid_options={'la_flag','scf_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha','n_trial_wraps','temp','n_temp_wraps','max_bperp_for_temp_est'};
+valid_options={'la_flag','scf_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha','n_trial_wraps','temp','n_temp_wraps','max_bperp_for_temp_est','variance'};
 invalid_options=setdiff(fieldnames(options),valid_options);
 if length(invalid_options)>0
     error(['"',invalid_options{1}, '" is an invalid option'])
@@ -126,6 +127,10 @@ if ~isfield(options,'max_bperp_for_temp_est')
     options.max_bperp_for_temp_est=100;
 end
 
+if ~isfield(options,'variance')
+    options.variance=[];
+end
+
 if size(xy,2)==2
    xy(:,2:3)=xy(:,1:2);
 end
@@ -150,6 +155,6 @@ uw_interp;
 %else
     uw_sb_unwrap_space_time(day,ifgday_ix,options.unwrap_method,options.time_win,options.la_flag,bperp,options.n_trial_wraps,options.prefilt_win,options.scf_flag,options.temp,options.n_temp_wraps,options.max_bperp_for_temp_est);
 %end
-uw_stat_costs(options.unwrap_method);
+uw_stat_costs(options.unwrap_method,options.variance);
 [ph_uw,msd]=uw_unwrap_from_grid(xy,options.grid_size);
 

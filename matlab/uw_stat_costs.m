@@ -1,4 +1,4 @@
-function []=uw_stat_costs(unwrap_method,subset_ifg_index);
+function []=uw_stat_costs(unwrap_method,variance,subset_ifg_index);
 %UW_STAT_COSTS Find unwrapped solutions using MAP cost functions
 %
 %   Andy Hooper May 2007
@@ -10,6 +10,7 @@ function []=uw_stat_costs(unwrap_method,subset_ifg_index);
 %   01/2012 AH: Create snaphu.conf file internally
 %   01/2012 AH: Change noise estimation for 2D method
 %   02/2012 AH: Updated for 3D_NEW method
+%   03/2013 AH: Add variance option for 2D method
 %   ======================================================================
 
 
@@ -29,6 +30,10 @@ ui=load('uw_interp');
 ut=load('uw_space_time','dph_space_uw','dph_noise','spread');
 
 if nargin<2
+    variance=[];
+end
+
+if nargin<3
     subset_ifg_index=[1:size(uw.ph,2)];
 end
 
@@ -50,7 +55,20 @@ n_edges=hist(abs(grid_edges),[1:ui.n_edge])';
 if strcmpi(unwrap_method,'2D')
     edge_length=sqrt(diff(x(ui.edges(:,2:3)),[],2).^2+diff(y(ui.edges(:,2:3)),[],2).^2);
     %sigsq_noise=ones(ui.n_edge,1);
-    sigsq_noise=(1-exp(-edge_length*uw.pix_size/20000)); % cov of dph=C11+C22-2*C12 (assume APS only contributor)
+    if uw.pix_size==0
+        pix_size=5;  % if we don't know resolution
+    else
+        pix_size=uw.pix_size;
+    end
+    if isempty(variance)
+        sigsq_noise=zeros(size(edge_length));
+    else
+        sigsq_noise=variance(ui.edges(:,2))+variance(ui.edges(:,3));
+    end
+    sigsq_aps=(2*pi)^2; % fixed for now as one fringe
+    aps_range=20000; % fixed for now as 20 km
+    sigsq_noise=sigsq_noise+sigsq_aps*(1-exp(-edge_length*pix_size*3/aps_range)); % cov of dph=C11+C22-2*C12 (assume APS only contributor)
+    sigsq_noise=sigsq_noise/10; % scale it to keep in reasonable range
     dph_smooth=ut.dph_space_uw;
 else
     sigsq_noise=(std(ut.dph_noise,0,2)/2/pi).^2;
