@@ -1,0 +1,41 @@
+#!/bin/tcsh -f
+#
+# Coregisters the slave image directly to the master using a DEM
+# Hannes Bathke, Feb 2013
+#
+# ===================================================================
+# HB 02/2013 Start DEM assisted coregistration 
+# HB 03/2013 Import DEM information from timing.dorisin
+# ===================================================================
+
+set WORKDIR=".."
+
+if (! -e $WORKDIR/demassist.dorisin) then
+    sed -n '1,/step demassist/p' $DORIS_SCR/demassist.dorisin > $WORKDIR/demassist.dorisin
+    echo "DAC_OUT_DEM		dem_dac.raw" >> $WORKDIR/demassist.dorisin
+    echo "c DAC_OUT_DEMI	demi_dac.raw" >> $WORKDIR/demassist.dorisin
+    echo "c DAC_OUT_DEM_LP	demLP_dac.raw" >> $WORKDIR/demassist.dorisin
+    grep SAM_IN $WORKDIR/timing.dorisin | sed 's/SAM/DAC/' >> $WORKDIR/demassist.dorisin
+    echo "c" >> $WORKDIR/demassist.dorisin
+    echo "comment ___COMPUTE COREGISTRATION PARAMETERS___" >> $WORKDIR/demassist.dorisin
+    echo "c" >> $WORKDIR/demassist.dorisin
+    echo "CPM_THRESHOLD   0.25" >> $WORKDIR/demassist.dorisin
+    echo "CPM_DEGREE      2" >> $WORKDIR/demassist.dorisin
+    echo "c CPM_WEIGHT      bamler                          // none" >> $WORKDIR/demassist.dorisin
+    echo "c CPM_WEIGHT      linear                          // none" >> $WORKDIR/demassist.dorisin
+    echo "CPM_WEIGHT      quadratic                          // none" >> $WORKDIR/demassist.dorisin
+    echo "CPM_MAXITER     8000" >> $WORKDIR/demassist.dorisin
+    echo "c CPM_PLOT        BG" >> $WORKDIR/demassist.dorisin
+    echo "c" >> $WORKDIR/demassist.dorisin
+    echo "STOP" >> $WORKDIR/demassist.dorisin
+endif
+
+sed -n '1,/* End_comp_coregpm:/p' coreg.out > tmp_coreg.$$
+echo "*******************************************************************" >> tmp_coreg.$$
+mv tmp_coreg.$$ coreg.out
+
+doris $WORKDIR/demassist.dorisin >> step_demassist.log
+
+
+
+

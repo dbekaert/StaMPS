@@ -1,0 +1,64 @@
+c **********************************************************************
+c ***
+c **********************************************************************
+ c
+ c
+ comment  ___general options___
+ c
+c SCREEN          debug                         // level of output to standard out
+SCREEN          info                          // level of output to standard out
+MEMORY          3500                             // MB
+BEEP            error                		 // level of beeping
+OVERWRITE                                       // overwrite existing files
+BATCH                                           // non-interactive
+PREVIEW ON                                 // prevents copy of this file to log
+c
+
+PROCESS          FINE
+PROCESS          DEMASSIST
+PROCESS          COREGPM
+c                                               //
+ c                                              //
+ comment  ___the general io files___            //
+ c                                              //
+LOGFILE         log.out                         // log file
+M_RESFILE       master.res                      // parameter file
+S_RESFILE       slave.res                       // parameter file
+I_RESFILE       coreg.out                         // parameter file
+ c
+ comment ___FINE COREGISTRATION___
+ c
+FC_METHOD       oversample                          //
+c FC_METHOD       magfft                          //
+c FC_METHOD     magspace                        //
+FC_NWIN         2000                             // number of windows
+c FC_IN_POS       fc_pos.in                // file containing position of windows
+FC_WINSIZE      64 64                           // size of windows
+FC_ACC          8 8                             // search window, 2^n
+FC_INITOFF      coarsecorr                      // use result of coarse to compute first
+FC_OSFACTOR     32                              // oversampling factor
+c FC_PLOT         0.65 BG
+ c
+ comment ___step demassist___
+ c
+ DAC_IN_DEM		/Data1/coregtest/DEM/VanLake_area.dem
+ DAC_IN_FORMAT		I2
+ DAC_IN_SIZE		7200 14400
+ DAC_IN_DELTA		0.0002777777777777 
+ DAC_IN_UL		40.00000 41.00000
+ DAC_IN_NODATA		-9999
+ DAC_OUT_DEM		dem_dac.raw
+c DAC_OUT_DEMI		demi_dac.raw
+c DAC_OUT_DEM_LP	demLP_dac.raw
+ c
+ comment ___COMPUTE COREGISTRATION PARAMETERS___
+ c
+CPM_THRESHOLD   0.25
+CPM_DEGREE      2
+c CPM_WEIGHT      bamler                          // none
+c CPM_WEIGHT      linear                          // none
+CPM_WEIGHT      quadratic                          // none
+CPM_MAXITER     8000
+c CPM_PLOT        BG
+ c
+STOP
