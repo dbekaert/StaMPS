@@ -12,6 +12,7 @@ function []=sb_invert_uw()
 %   03/2010 AH: Save small baseline covariance
 %   07/2010 AH: Default small baseline covariance for multilooked case
 %   01/2013 AH: Invert topo-correlated atmosphere if calculated
+%   04/2013 AH: Remove inversion of topo-correlated atmosphere
 %   ======================================================================
 logit;
 
@@ -48,14 +49,14 @@ clear phuwsb
 
 ref_ps=ps_setref;
 
-if  exist([stratsbname,'.mat'],'file')
-    strat=load(stratsbname);
-    if size(strat.strat_corr,1)==ps.n_ps
-        strat_sb=strat.strat_corr(:,unwrap_ifg_index);
-        clear strat
-        strat_sb=strat_sb-repmat(mean(strat_sb(ref_ps,:)),ps.n_ps,1);
-    end
-end
+%if  exist([stratsbname,'.mat'],'file')
+%    strat=load(stratsbname);
+%    if size(strat.strat_corr,1)==ps.n_ps
+%        strat_sb=strat.strat_corr(:,unwrap_ifg_index);
+%        clear strat
+%        strat_sb=strat_sb-repmat(mean(strat_sb(ref_ps,:)),ps.n_ps,1);
+%    end
+%end
 
 ph_uw_sb=ph_uw_sb-repmat(mean(ph_uw_sb(ref_ps,:)),ps.n_ps,1);
 
@@ -102,10 +103,10 @@ unwrap_ifg_index_sm=unwrap_ifg_index_sm(nzc_ix);
 save(phuwname,'ph_uw','unwrap_ifg_index_sm')
 save(phuwsbresname,'ph_res','sb_cov','sm_cov')
 
-if exist('strat_sb','var')
-    strat_corr=zeros(size(ph_uw),'single');
-    strat_corr(:,nzc_ix)=lscov(G2,double(strat_sb'))';
-    save(stratname,'strat')
-end
+%if exist('strat_sb','var')
+%    strat_corr=zeros(size(ph_uw),'single');
+%    strat_corr(:,nzc_ix)=lscov(G2,double(strat_sb'))';
+%    save(stratname,'strat')
+%end
 
 logit(1);
