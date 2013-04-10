@@ -9,6 +9,7 @@ function []=plot_sb_baselines(ix)
 %   09/2010 AH: Add option to plot in MERGED directory
 %   09/2010 AH: For SMALL_BASELINES/MERGED don't plot dropped ifgs 
 %   12/2012 DB: Added meaning of ix to the syntax of the code
+%   04/2013 DB: Command variable
 %   ======================================================================
 
 
@@ -39,7 +40,7 @@ end
 sb=load('small_baselines.list');
 n_ifg=size(sb,1);
 if small_baseline_flag=='y' & isempty(ix) & exist('./parms.mat','file')
-    drop_ifg_index=getparm('drop_ifg_index',1);
+    drop_ifg_index=getparm('drop_ifg_index');
     if ~isempty(drop_ifg_index)
        ix=setdiff([1:n_ifg],drop_ifg_index);
     end
