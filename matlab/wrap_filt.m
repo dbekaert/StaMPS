@@ -8,8 +8,7 @@ function [ph_out,ph_out_low]=wrap_filt(ph,n_win,alpha,n_pad,low_flag)
 %   07/2006 AH: Added zero padding 
 %   02/2012 AH: Set magnitude to original values
 
-
-if nargin<4
+if nargin<4 | isempty(n_pad)
     n_pad=round(n_win*0.25);
 end
 

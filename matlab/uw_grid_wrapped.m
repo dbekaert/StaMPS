@@ -9,6 +9,7 @@ function []=uw_grid_wrapped(ph_in,xy_in,pix_size,prefilt_win,goldfilt_flag,lowfi
 % 02/2012 AH: save ij
 % 03/2012 AH: Allow for non-complex wrapped phase
 % 01/2013 AH: No gridding option (pix_size=0)
+% 04/2013 AH: Correct bug calling wrap_filt
 % ============================================================
 
 fprintf('Resampling phase to grid...\n')
@@ -96,7 +97,7 @@ for i1=1:n_ifg
         end
     end
     if strcmpi(goldfilt_flag,'y') | strcmpi(lowfilt_flag,'y')
-        [ph_this_gold,ph_this_low]=wrap_filt(ph_grid,prefilt_win,gold_alpha,lowfilt_flag);
+        [ph_this_gold,ph_this_low]=wrap_filt(ph_grid,prefilt_win,gold_alpha,[],lowfilt_flag);
         if strcmpi(lowfilt_flag,'y')
             ph_lowpass(:,i)=ph_this_low(nzix);
         end
