@@ -99,7 +99,7 @@ for i1=1:n_ifg
     if strcmpi(goldfilt_flag,'y') | strcmpi(lowfilt_flag,'y')
         [ph_this_gold,ph_this_low]=wrap_filt(ph_grid,prefilt_win,gold_alpha,[],lowfilt_flag);
         if strcmpi(lowfilt_flag,'y')
-            ph_lowpass(:,i)=ph_this_low(nzix);
+            ph_lowpass(:,i1)=ph_this_low(nzix);
         end
     end
     if strcmpi(goldfilt_flag,'y')
