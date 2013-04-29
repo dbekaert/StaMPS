@@ -95,6 +95,9 @@ function [h_fig,lims]=ps_plot(value_type,varargin)
 %    'a_l'  = topography correlated aps correction using linear correction
 %    'a_p'  = topography correlated aps correction using power law relationship
 %    'a_m'  = topography correlated aps correction using meris data
+%    'ifg i' = only for 'a_p' show the topopgraphy correlated aps correction
+%              for the ith interferogram for all spatial bands. Note that
+%              the definition of ifg_list changes the spatial bands for this option.
 %
 %   Andy Hooper, June 2006
 %
@@ -135,10 +138,14 @@ function [h_fig,lims]=ps_plot(value_type,varargin)
 %   04/2013 DB: Add colorbar axis extremes as output
 %   04/2013 DB: Include plotting of atmospheric correction from meris data
 %   04/2013 DB: Topo correlated aps correction using 'a_m','a_l','a_p' options 
+%   04/2013 DB: Adding the same velocity plot options for SB as for SM
+%   04/2013 DB: Bug fix for aps, include option to show aps_p for all bands
+%               for infividual interferograms, by including 'ifg i' option
 %   ======================================================================
 
 stdargin = nargin ; 
-parseplotprm  % check if 'ts' is specified
+parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_p', 'ifg i^th' is specified
+
 
 if stdargin<1
     help ps_plot
@@ -192,6 +199,13 @@ end
 if stdargin < 11
     lat_rg=[];
 end
+% checking if a valid option is slected for the aps_bands potting
+if aps_band_flag==1 && aps_flag~=2
+   error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" flag can be selected \n'])  
+end
+if aps_band_flag==1 && isempty(ifg_number)
+   error('myApp:argChk', ['Specify the ith interferogram for the spatial bands option as "ifg i" \n'])  
+end
 
 n_y=0;
 units='rad';
@@ -206,13 +220,21 @@ phuwsbname=['./phuw_sb',num2str(psver)];
 phuwsbresname=['./phuw_sb_res',num2str(psver)];
 scnname=['./scn',num2str(psver)];
 ifgstdname=['./ifgstd',num2str(psver)];
+apsbandsname = ['./tca_bands' num2str(psver) '.mat'];
+apsbandssbname = ['./tca_bands_sb' num2str(psver) '.mat'];
 apsname=['./tca',num2str(psver)];
 apssbname=['./tca_sb',num2str(psver)];
+
 sclaname=['./scla',num2str(psver)];
 sclasbname=['./scla_sb',num2str(psver)];
 sclasmoothname=['./scla_smooth',num2str(psver)];
 sclasbsmoothname=['./scla_smooth_sb',num2str(psver)];
 meanvname=['./mv',num2str(psver)];
+
+
+
+
+
 
 ps=load(psname);
 day=ps.day;
@@ -221,43 +243,146 @@ xy=ps.xy;
 lonlat=ps.lonlat;
 n_ps=ps.n_ps;
 n_ifg=ps.n_ifg;
-
 master_ix=sum(day<master_day)+1;
-
 ref_ps=0;    
-
 drop_ifg_index=getparm('drop_ifg_index');
 small_baseline_flag=getparm('small_baseline_flag');
 scla_deramp = getparm('scla_deramp');
-if strcmpi(small_baseline_flag,'y') 
-    unwrap_ifg_index_sb=setdiff([1:ps.n_ifg],drop_ifg_index);
-    if ischar(value_type) & value_type(1)~='w' & value_type(1)~='p' & exist([phuwname,'.mat'],'file')
-      warning('off','MATLAB:load:variableNotFound');
-      phuw=load(phuwname,'unwrap_ifg_index_sm');
-      warning('on','MATLAB:load:variableNotFound');
-      if isfield(phuw,'unwrap_ifg_index_sm');
-        unwrap_ifg_index=phuw.unwrap_ifg_index_sm;
-      else
-        unwrap_ifg_index=[1:ps.n_image];
-      end
-    else
-        unwrap_ifg_index=unwrap_ifg_index_sb;
-    end
 
-    if ischar(value_type)~=1 & isempty(ifg_list) % [DB] to plot data matrix which is not a valuetype
-        	ifg_list=unwrap_ifg_index_sb;
-    elseif ischar(value_type)==1 & length(value_type)>2 & (value_type(1:3)=='usb'|value_type(1:3)=='rsb') & isempty(ifg_list)
-                ifg_list=unwrap_ifg_index_sb;
+
+% Making dummy files with the data when displaying band filtered data
+if aps_band_flag==1 
+    % do not use the parm list to reject images as it is meant for ifgs.
+    drop_ifg_index = [];
+    % put the colorbar at the first chosen frequency band
+    if isempty(ifg_list)~=1
+        master_ix = ifg_list(1);
+    else
+        master_ix = 1;
     end
+    % getting the spatial extends of the bands
+    if exist('parms_aps.mat')==2
+        bands = getparm_aps('powerlaw_spatial_bands');
+    else
+        bands = [];
+    end
+    
+   
+    % the data        
+    if strcmp(small_baseline_flag,'y')
+        % keep only the ith ifg for aps
+        aps_bands = load(apsbandssbname);
+        eval(['ph_tropo_powerlaw =  aps_bands.ph_tropo_powerlaw_ifg_' num2str(ifg_number) ';']);
+        apssbname=['./tca_sb_temp',num2str(psver)];
+        save(apssbname,'ph_tropo_powerlaw');
+        delete_temp_files{1} = apssbname;
+            
+        % for phase        
+        n_bands = size(ph_tropo_powerlaw,2); 
+        counter = 2;
+        if strcmp(value_type(1:3),'usb')
+            % loading the phase
+            uw=load(phuwsbname);
+            ph_all=uw.ph_uw;
+            phuwsbname=['./phuw_sb_temp',num2str(psver)];
+            % selecting the interferogram for display
+            ph_uw = repmat(ph_all(:,ifg_number),1,n_bands);
+            save(phuwsbname,'ph_uw');
+            clear ph_uw   
+            delete_temp_files{counter} = phuwsbname;
+            counter = counter+1;
+        end
+
+        
+
+        
+       
+        
+    else
+        % keep only the ith ifg for aps
+        aps_bands = load(apsbandsname);
+        apsname=['./tca_temp',num2str(psver)];
+        eval(['ph_tropo_powerlaw =  aps_bands.ph_tropo_powerlaw_ifg_' num2str(ifg_number) ';']);
+        save(apsname,'ph_tropo_powerlaw');
+        delete_temp_files{1} = apsname;
+
+        % for phase        
+        n_bands = size(ph_tropo_powerlaw,2); 
+        counter = 2;
+        if strcmp(value_type(1),'u')
+            % loading the phase
+            uw=load(phuwname);
+            ph_all=uw.ph_uw;
+            phuwname=['./phuw_temp',num2str(psver)];
+            % selecting the interferogram for display
+            ph_uw = repmat(ph_all(:,ifg_number),1,n_bands);
+            save(phuwname,'ph_uw');
+            clear ph_uw   
+            delete_temp_files{counter} = phuwname;
+            counter = counter+1;
+        end
+        
+        keyboard
+        if strcmp(value_type(1),'u')
+            % loading the phase
+            uw=load(phuwname);
+            ph_all=uw.ph_uw;
+            phuwname=['./phuw_temp',num2str(psver)];
+            % selecting the interferogram for display
+            ph_uw = repmat(ph_all(:,ifg_number),1,n_bands);
+            save(phuwname,'ph_uw');
+            clear ph_uw   
+            delete_temp_files{counter} = phuwname;
+            counter = counter+1;
+        end
+        
+        
+        
+        
+    end
+   
+    fig_name_suffix = [' bandfiltered data of ifg ' num2str(ifg_number)];
+
 else
-    unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
+    fig_name_suffix = '';
+    bands = [];
 end
-if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='w') & isempty(ifg_list)
-    ifg_list=unwrap_ifg_index;
+
+
+if aps_band_flag==1 & isempty(ifg_list)
+    % Change the definition of ifg_list from ifgs to the different bands
+    ifg_list = [1:size(ph_tropo_powerlaw,2)];
+else
+    if strcmpi(small_baseline_flag,'y')
+        unwrap_ifg_index_sb=setdiff([1:ps.n_ifg],drop_ifg_index);
+        if ischar(value_type) & value_type(1)~='w' & value_type(1)~='p' & exist([phuwname,'.mat'],'file')
+          warning('off','MATLAB:load:variableNotFound');
+          phuw=load(phuwname,'unwrap_ifg_index_sm');
+          warning('on','MATLAB:load:variableNotFound');
+          if isfield(phuw,'unwrap_ifg_index_sm');
+            unwrap_ifg_index=phuw.unwrap_ifg_index_sm;
+          else
+            unwrap_ifg_index=[1:ps.n_image];
+          end
+        else
+            unwrap_ifg_index=unwrap_ifg_index_sb;
+        end
+        if ischar(value_type)~=1 & isempty(ifg_list) % [DB] to plot data matrix which is not a valuetype
+                    ifg_list=unwrap_ifg_index_sb;
+        elseif ischar(value_type)==1 & length(value_type)>2 & (value_type(1:3)=='usb'|value_type(1:3)=='rsb'| value_type(1:3)=='asb') & isempty(ifg_list)
+                    ifg_list=unwrap_ifg_index_sb;
+        end
+    else
+        unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
+    end
+    if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='w') & isempty(ifg_list)
+        ifg_list=unwrap_ifg_index;
+    end
+    if ischar(value_type)~=1 & size(value_type,2)<length(ifg_list)
+      ifg_list = [1:size(value_type,2)]';
+    end 
 end
-if ischar(value_type)~=1 & size(value_type,2)<length(ifg_list)
-  ifg_list = [1:size(value_type,2)]';
-end 
+
 
 
 if ischar(value_type)==1
@@ -523,6 +648,7 @@ switch(group_type)
             aps_corr = aps.strat_corr;
             fig_name = 'asb';
         end
+        fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         clear aps aps_corr
         ref_ps=ps_setref;
@@ -659,9 +785,13 @@ switch(group_type)
             aps_corr = aps.strat_corr;
             fig_name = 'u-a';
         end
-        ph_all=uw.ph_uw; 
+        
+        
+        ph_all=uw.ph_uw;
         ph_all=uw.ph_uw - aps_corr;
-        ph_all(:,master_ix)=0;
+        if aps_band_flag~=1
+            ph_all(:,master_ix)=0;
+        end
         clear uw aps aps_corr
         ref_ps=ps_setref;
     case {'u-d'}
@@ -718,6 +848,7 @@ switch(group_type)
             aps_corr = aps.strat_corr;
             fig_name = 'a';
         end
+        fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         clear aps aps_corr
         ref_ps=ps_setref;
@@ -899,8 +1030,10 @@ switch(group_type)
             unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
             ifg_list=[];
         end
+        
+        
         ph_uw=ph_uw(:,unwrap_ifg_index);
-        day=day(unwrap_ifg_index);
+        day=day(unwrap_ifg_index,:);
         
         %ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),n_ps,1);
         ph_uw=ph_uw-repmat(nanmean(ph_uw(ref_ps,:),1),n_ps,1);
@@ -970,6 +1103,64 @@ switch(group_type)
             ph_uw=ph_uw - scla.ph_scla;
             clear scla
             fig_name = 'v-d';
+               
+        case {'v-a'}
+            aps=load(apssbname);
+            if aps_flag==1 % linear correction
+                aps_corr = aps.ph_tropo_linear;
+                fig_name = 'v-a (linear)';
+            elseif aps_flag==2 % powerlaw correlation
+                aps_corr = aps.ph_tropo_powerlaw;
+                fig_name = 'v-a (powerlaw)';
+            elseif aps_flag==3 % meris correction
+                aps_corr = aps.ph_tropo_meris;
+                fig_name = 'v-a (meris)';
+            else % current implementation of aps correction
+                aps_corr = aps.strat_corr;
+                fig_name = 'v-a';
+            end
+            ph_uw=ph_uw - aps_corr;
+            clear scla aps aps_corr
+        case {'v-da'}
+            scla=load(sclasbname);
+            aps=load(apssbname);
+            if aps_flag==1 % linear correction
+                aps_corr = aps.ph_tropo_linear;
+                fig_name = 'v-da (linear)';
+            elseif aps_flag==2 % powerlaw correlation
+                aps_corr = aps.ph_tropo_powerlaw;
+                fig_name = 'v-da (powerlaw)';
+            elseif aps_flag==3 % meris correction
+                aps_corr = aps.ph_tropo_meris;
+                fig_name = 'v-da (meris)';
+            else % current implementation of aps correction
+                aps_corr = aps.strat_corr;
+                fig_name = 'v-da';
+            end
+            ph_uw=ph_uw - scla.ph_scla - aps_corr;
+            clear scla aps aps_corr
+        case {'v-dao'}
+            if strcmp('n',scla_deramp)
+                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+                return;
+            end
+            scla=load(sclasbname);
+            aps=load(apssbname);
+            if aps_flag==1 % linear correction
+                aps_corr = aps.ph_tropo_linear;
+                fig_name = 'v-dao (linear)';
+            elseif aps_flag==2 % powerlaw correlation
+                aps_corr = aps.ph_tropo_powerlaw;
+                fig_name = 'v-dao (powerlaw)';
+            elseif aps_flag==3 % meris correction
+                aps_corr = aps.ph_tropo_meris;
+                fig_name = 'v-dao (meris)';
+            else % current implementation of aps correction
+                aps_corr = aps.strat_corr;
+                fig_name = 'v-dao';
+            end
+            ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - aps_corr;
+            clear scla aps aps_corr
         case('v-o')
             scla=load(sclasbname);
             ph_uw=ph_uw - scla.ph_ramp;
@@ -1005,7 +1196,6 @@ switch(group_type)
             unwrap_ifg_index_sb=intersect(unwrap_ifg_index_sb,ifg_list);
             ifg_list=[];
         end
-        keyboard
         ph_uw=ph_uw(:,unwrap_ifg_index_sb);
         phuwres=load(phuwsbresname,'sb_cov');
         if isfield(phuwres,'sb_cov');
@@ -1085,7 +1275,6 @@ if isempty(ifg_list)
 end
 n_ifg_plot=length(ifg_list);
 
-
 xgap=0.1;
 ygap=0.2;
 [Y,X]=meshgrid([0.7:-1*ygap:0.1],[0.1:xgap:0.8]);
@@ -1159,11 +1348,8 @@ x_t=round((h_x-l_t)/h_x/2*n_j);
 y_t=round(h_t*1.2/h_y*n_i);
 
 
-
 ph_disp=ph_all(:,ifg_list);
-
 if isreal(ph_all)
-
     if ref_ifg~=0
         if ref_ifg==-1
             ph_disp=ph_disp-[ph_disp(:,1),ph_disp(:,1:end-1)];
@@ -1179,6 +1365,7 @@ if isreal(ph_all)
         for i=1:size(ph_disp,2)
             mean_ph(i)=mean(ref_ph(~isnan(ref_ph(:,i)),i),1);
         end
+        clear i
         ph_disp=ph_disp-repmat(mean_ph,n_ps,1);
     end
     
@@ -1205,6 +1392,7 @@ else
         for i=1:size(ph_disp,2)
             mean_ph(i)=sum(ref_ph(~isnan(ref_ph(:,i)),i));
         end
+        clear i
         ph_disp=ph_disp.*conj(repmat(mean_ph,n_ps,1));
     end
     lims=[-pi,pi];
@@ -1233,13 +1421,14 @@ else
 
 
   i_im=0;
+
   for i=ifg_list
     i_im=i_im+1;
     if n_ifg_plot>1
         h_axes = axes('position',[imX(i_im),imY(i_im),h_x,h_y]);
-	set(h_axes,'Xcolor',[1 1 1]);			% [DB] remove the contours of the axes figure
-	set(h_axes,'Ycolor',[1 1 1]);
-	clear h_axes
+        set(h_axes,'Xcolor',[1 1 1]);			% [DB] remove the contours of the axes figure
+        set(h_axes,'Ycolor',[1 1 1]);
+        clear h_axes
     end
     ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg);
     %plot_phase(ph_tc(:,i)*conj(ph_tc(ref_ix,i)));
@@ -1257,8 +1446,11 @@ else
         y_t=(0.5*h_t)/h_y*(ylim(2)-ylim(1))+ylim(1);
     end
     %xlabel([num2str((day(i)/365.25),3),'yr, ',num2str(round(bperp(i))),'m'])
-    if textsize~=0 & size(day,1)==size(ph_all,2)
+    if textsize~=0 & size(day,1)==size(ph_all,2) & aps_band_flag==0
         t=text(x_t,y_t,[datestr(day(i),'dd mmm yyyy')]);
+        set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
+    elseif textsize~=0 & size(bands,1)==size(ph_all,2) & aps_band_flag==1
+        t=text(x_t,y_t,[num2str(round((bands(i,1)/100))*100/1000) ' - ' num2str(round((bands(i,2)/100))*100/1000) ' km']);
         set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
     end
     
@@ -1281,22 +1473,22 @@ else
             limorder=ceil(-log10(diff(lims)))+2;
             plotlims=round(lims*10^limorder)/10^limorder;
         end
-	if n_ifg_plot>1
-        	set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
-	        h=xlabel(h,units);
-        	pos=get(h,'position');
-        	pos(2)=pos(2)/2.2;
-        	set(h,'position',pos,'FontSize',abs(textsize));
-	else
-                set(h,'ytick',[ylim(2)-64,ylim(2)],'yticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
-	        set(get(h,'ylabel'),'String',units,'FontSize',abs(textsize))  
+        if n_ifg_plot>1
+                set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
+                h=xlabel(h,units);
+                pos=get(h,'position');
+                pos(2)=pos(2)/2.2;
+                set(h,'position',pos,'FontSize',abs(textsize));
+        else
+                    set(h,'ytick',[ylim(2)-64,ylim(2)],'yticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
+                set(get(h,'ylabel'),'String',units,'FontSize',abs(textsize))  
 
-	end
+        end
     end
-
   end
 end
-    
+
+
 
 fprintf('Color Range: %g to %g %s\n',lims,units)
 
