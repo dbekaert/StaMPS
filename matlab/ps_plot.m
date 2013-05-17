@@ -1,4 +1,4 @@
-function [h_fig,lims]=ps_plot(value_type,varargin)
+function [h_fig,lims,ph_disp]=ps_plot(value_type,varargin)
 %function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,...
 %    cbar_flag,textsize,textcolor,lon_rg,lat_rg)
 % PS_PLOT plot ps values for selected ifgs
@@ -10,6 +10,7 @@ function [h_fig,lims]=ps_plot(value_type,varargin)
 %    In the case of velocities, +ve values are towards the satellite.
 %
 %    valid VALUE_TYPE's are:
+%    'hgt' for topography
 %    'w' for wrapped phase
 %    'w-d' for wrapped phase minus smoothed dem error
 %    'w-o' for wrapped phase minus orbital ramps
@@ -99,6 +100,17 @@ function [h_fig,lims]=ps_plot(value_type,varargin)
 %              for the ith interferogram for all spatial bands. Note that
 %              the definition of ifg_list changes the spatial bands for this option.
 %
+%   ADDITONAL DATA DISPLAY
+%     Plot in additional also other LOS data on top of the interferogram. 
+%     To use this functionality use the flag:  'ext PATH', with PATH the
+%     full path to the data location.
+%     At this path the data should be storred in date1_date2.mat files,
+%     where the dates are in YYYYMMDD format. The file itself should
+%     contain a lonlat, ph_disp (phase) variable. Note that not each
+%     interferogram needs a date. Note that in case a reference area is
+%     selected, it needs to have data coverage in all datasets.
+%
+%
 %   Andy Hooper, June 2006
 %
 %   ======================================================================
@@ -141,10 +153,19 @@ function [h_fig,lims]=ps_plot(value_type,varargin)
 %   04/2013 DB: Adding the same velocity plot options for SB as for SM
 %   04/2013 DB: Bug fix for aps, include option to show aps_p for all bands
 %               for infividual interferograms, by including 'ifg i' option
+%   04/2013 DB: Include an option to show in additional also other data
+%               like e.g. LOS GPS displacements
+%   04/2013 DB: Modify such that for bandfiltered data the external data
+%               for that date alone is shown.
+%   04/2013 DB: Fix the plotting of external data by minimizing the
+%               residual with the insar. Output the RMSE for each ifgs.
+%   05/2013 DB: Plot the ifg number for SB ifgs
+%   05/2013 DB: Allow inputdata to be saved.
+%   05/2013 DB: Option to plot topography
 %   ======================================================================
 
 stdargin = nargin ; 
-parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_p', 'ifg i^th' is specified
+parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_p', 'ifg i^th', 'ext PATH ' is specified
 
 
 if stdargin<1
@@ -199,13 +220,9 @@ end
 if stdargin < 11
     lat_rg=[];
 end
-% checking if a valid option is slected for the aps_bands potting
-if aps_band_flag==1 && aps_flag~=2
-   error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" flag can be selected \n'])  
-end
-if aps_band_flag==1 && isempty(ifg_number)
-   error('myApp:argChk', ['Specify the ith interferogram for the spatial bands option as "ifg i" \n'])  
-end
+% reference radius in case of external data to be plotted
+ref_radius_data=1000;
+
 
 n_y=0;
 units='rad';
@@ -224,6 +241,8 @@ apsbandsname = ['./tca_bands' num2str(psver) '.mat'];
 apsbandssbname = ['./tca_bands_sb' num2str(psver) '.mat'];
 apsname=['./tca',num2str(psver)];
 apssbname=['./tca_sb',num2str(psver)];
+hgtname=['./hgt',num2str(psver)];
+
 
 sclaname=['./scla',num2str(psver)];
 sclasbname=['./scla_sb',num2str(psver)];
@@ -414,6 +433,13 @@ end
 
 value_type=lower(value_type);
 switch(group_type)
+    case {'hgt'}
+        hgt = load(hgtname);
+        ph_all=hgt.hgt;
+        clear rc
+        fig_name = 'hgt';  
+        units='m';
+
     case {'w'}
         if exist(rcname,'file')
             rc=load(rcname);
@@ -426,7 +452,7 @@ switch(group_type)
             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
         end
         clear rc
-	fig_name = 'w';
+        fig_name = 'w';
      case {'w-d'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -1204,7 +1230,15 @@ switch(group_type)
             sb_cov=eye(length(unwrap_ifg_index_sb));
         end
         ifgday_ix=ps.ifgday_ix(unwrap_ifg_index_sb,:);
-        ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),n_ps,1);
+        % fix for aps data that has a nan value in the reference area
+        if sum(sum(isnan(ph_uw)))>0
+            for kk=1:size(ph_uw,2)
+                    ph_uw(:,kk)=ph_uw(:,kk)-repmat(mean(ph_uw(~isnan(ph_uw(:,kk)),kk),1),n_ps,1);
+            end
+        else
+            ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),n_ps,1);
+        end
+
         G=[ones(size(ifgday_ix(:,1))),day(ifgday_ix(:,2))-day(ifgday_ix(:,1))];
         lambda=getparm('lambda');
 
@@ -1266,6 +1300,7 @@ else
 	ph_all = value_type;
     ref_ps=ps_setref;
 	fig_name = 'data';
+    value_type = 'data';
     units='';
 end
 
@@ -1347,7 +1382,6 @@ h_t=1/50*abs(textsize)/10; % text height
 x_t=round((h_x-l_t)/h_x/2*n_j);
 y_t=round(h_t*1.2/h_y*n_i);
 
-
 ph_disp=ph_all(:,ifg_list);
 if isreal(ph_all)
     if ref_ifg~=0
@@ -1422,6 +1456,13 @@ else
 
   i_im=0;
 
+  
+  if ext_data_flag==1
+     ifg_data_RMSE=NaN([ps.n_ifg 1]) ;
+  end
+  if size(ifg_list,1)>1
+    ifg_list = ifg_list';
+  end
   for i=ifg_list
     i_im=i_im+1;
     if n_ifg_plot>1
@@ -1430,7 +1471,64 @@ else
         set(h_axes,'Ycolor',[1 1 1]);
         clear h_axes
     end
-    ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg);
+    % check if external data is requested to be plotted
+    if ext_data_flag==1
+        if aps_band_flag==1
+            % checking if there is data for this interferogram
+            loadname = [ext_data_path filesep datestr(ps.ifgday(ifg_number,1),'yyyymmdd') '_' datestr(ps.ifgday(ifg_number,2),'yyyymmdd') '.mat'];
+        else
+            % checking if there is data for this interferogram
+            loadname = [ext_data_path filesep datestr(ps.ifgday(i,1),'yyyymmdd') '_' datestr(ps.ifgday(i,2),'yyyymmdd') '.mat'];
+        end
+        if exist(loadname,'file')==2
+             ext_data = load(loadname);
+             
+             % Correct the data with respect to the minimization of teh
+             % residual between this dataset and the data
+             % convert to a local reference
+             n_data_points = size(ext_data.lonlat,1);
+             data_xy=llh2local(ext_data.lonlat',ps.ll0)*1000;
+             ps_xy=llh2local(ps.lonlat',ps.ll0)*1000;
+             
+             dist_sq=(repmat(ps_xy(1,:)',1,n_data_points) -repmat(data_xy(1,:),ps.n_ps,1)).^2+(repmat(ps_xy(2,:)',1,n_data_points) -repmat(data_xy(2,:),ps.n_ps,1)).^2; 
+             for kk=1:n_data_points      
+                 ref_data= (dist_sq(:,kk)<=ref_radius_data^2);
+                 if sum(ref_data)>0
+                    ifg_mean_data_point(kk,1) = mean(ph_disp(ref_data,i_im));
+                 else
+                    ifg_mean_data_point(kk,1) = NaN;  
+                 end
+             end
+             clear ref_data
+             if ~isempty(ifg_mean_data_point) && sum(isnan(ifg_mean_data_point))~=n_data_points
+                 % mean residual 
+                 ext_data.mean_residual = mean(ext_data.ph_disp(~isnan(ifg_mean_data_point),1)-ifg_mean_data_point(~isnan(ifg_mean_data_point)));
+                 % correct data phases
+                 ext_data.ph_disp(:,1) = ext_data.ph_disp(:,1)-ext_data.mean_residual;
+                 % computing the RMSE
+                 ext_data.residual = ext_data.ph_disp(~isnan(ifg_mean_data_point),1)-ifg_mean_data_point(~isnan(ifg_mean_data_point));
+                 ext_data.RMSE = sqrt(mean((ext_data.residual).^2));
+                 clear ifg_mean_data_point
+                 ifg_data_RMSE(i)=ext_data.RMSE;
+             else
+                fprintf(['No observation within the ref_radius_data, increase the size. \n']) 
+                fprintf(['External data not plotted for this interferogram. \n']) 
+                ext_data = [];
+             end
+             clear mean_data_point_residual
+             
+%              % correct the data with respect to the reference area
+%              point_ref = ps_setref(ext_data);
+%              ext_data.ph_disp(:,1) = ext_data.ph_disp(:,1)-mean(ext_data.ph_disp(point_ref,1));
+
+        else
+           ext_data = []; 
+        end
+    else
+       ext_data = []; 
+    end
+    
+    ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg,ext_data);
     %plot_phase(ph_tc(:,i)*conj(ph_tc(ref_ix,i)));
     box on
     if n_ifg_plot>1
@@ -1446,13 +1544,21 @@ else
         y_t=(0.5*h_t)/h_y*(ylim(2)-ylim(1))+ylim(1);
     end
     %xlabel([num2str((day(i)/365.25),3),'yr, ',num2str(round(bperp(i))),'m'])
-    if textsize~=0 & size(day,1)==size(ph_all,2) & aps_band_flag==0
-        t=text(x_t,y_t,[datestr(day(i),'dd mmm yyyy')]);
-        set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
-    elseif textsize~=0 & size(bands,1)==size(ph_all,2) & aps_band_flag==1
-        t=text(x_t,y_t,[num2str(round((bands(i,1)/100))*100/1000) ' - ' num2str(round((bands(i,2)/100))*100/1000) ' km']);
-        set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
-    end
+    
+        if textsize~=0 & size(day,1)==size(ph_all,2) & aps_band_flag==0 && strcmpi(small_baseline_flag,'n')
+            % text for SM ifgs
+            t=text(x_t,y_t,[datestr(day(i),'dd mmm yyyy')]);
+            set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
+        elseif textsize~=0 & ps.n_ifg==size(ph_all,2) & aps_band_flag==0 && strcmpi(small_baseline_flag,'y')
+            % text for SB ifgs
+            t=text(x_t,y_t,['      ifg ' num2str(i)]);
+            set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
+        elseif textsize~=0 & size(bands,1)==size(ph_all,2) & aps_band_flag==1
+            % text for band filtered data
+            t=text(x_t,y_t,[num2str(round((bands(i,1)/100))*100/1000) ' - ' num2str(round((bands(i,2)/100))*100/1000) ' km']);
+            set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
+        end
+    
     
     if cbar_flag==0 & (i==ref_ifg | (isempty(intersect(ref_ifg,ifg_list)) & i==ifg_list(1))) 
         if n_ifg_plot>1
@@ -1520,6 +1626,18 @@ if ts_flag == 1
 end
 
 
-    
-    
+if ext_data_flag==1
+    for k=1:size(ifg_data_RMSE,1)
+        if k==1
+            fprintf(['\nRMSE between interferogram(s) and external data \n'])
+        end
+        
+        if aps_band_flag==1
+            fprintf(['Band' num2str(k) ' : ' num2str(ifg_data_RMSE(k)) '\n'])
+        else
+            fprintf(['ifg ' num2str(k) ' \t ' datestr(ps.ifgday(k,1),'yyyymmdd') '-' datestr(ps.ifgday(k,2),'yyyymmdd') ' \t ' num2str(ifg_data_RMSE(k)) '\n'])
+        end
+    end
+end
 
+    

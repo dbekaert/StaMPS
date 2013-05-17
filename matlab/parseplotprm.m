@@ -26,9 +26,11 @@ aps_flag=0;             % when 0 default aps estimation
                         % when 3 meris correction aps
 aps_band_flag=0;        % when 1 plot the aps estimated band frequencies
 ifg_number = 0;         % the ifg number for the aps_band_flag
+ext_data_flag=0;        % when 1 there will be external data to be plotted.
+ext_data_path = [];     % path to the external data to be displayed
 plot_flag=1; 
 
-% search for char parameter like 'ts','a_l','a_m','a_p'
+% search for char parameter like 'ts','a_l','a_m','a_p' , 'ifg i^th', 'ext PATH'
 prmsrch=[];
 for k=1:Noptargin,   
    if strcmp(varargin{k},'ts')==1
@@ -47,13 +49,24 @@ for k=1:Noptargin,
        % aps topo correlated meris correction
        aps_flag=3;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_m') ]);
-       
-       
-   elseif size(varargin{k},2)>3  && strcmp(varargin{k}(1:3),'ifg')==1
+   elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
+           if size(varargin{k},2)==3
+              ifg_number=[];
+           else
+              ifg_number = str2num(varargin{k}(5:end));
+           end
            % display all bands for 'a_p' option for the ith interferogram
            aps_band_flag=1;
-           ifg_number = str2num(varargin{k}(5:end));
-           prmsrch=logical([prmsrch strcmp(varargin{k}(1:3),'ifg') ]);   
+           prmsrch=logical([prmsrch strcmp(varargin{k}(1:3),'ifg') ]);  
+   elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ext')==1
+           % Plot of external data
+           if size(varargin{k},2)==3
+               ext_data_path=[];
+           else
+              ext_data_path = varargin{k}(5:end);
+           end
+           ext_data_flag = 1;
+           prmsrch=logical([prmsrch strcmp(varargin{k}(1:3),'ext') ]);          
    else
        prmsrch=logical([prmsrch 0]);
    end     
@@ -85,7 +98,20 @@ if plot_flag < 0 && ts_flag==1
     disp('No time series plotting is possible with backgrounds option -1')
     break
 end
-
+% checking if a valid option is slected for the aps_bands potting
+if aps_band_flag==1 && aps_flag~=2
+   error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" flag can be selected. \n'])  
+end
+if aps_band_flag==1 && isempty(ifg_number)
+   error('myApp:argChk', ['Specify the ith interferogram for the spatial bands option as "ifg i". \n'])  
+end
+% checking when selected to plot external data, the path exists
+if aps_band_flag==1 && aps_flag~=2
+   error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" flag can be selected. \n'])  
+end
+if ext_data_flag==1 && exist(ext_data_path,'dir')~=7
+   error('myApp:argChk', ['External datapath does not exist. \n'])  
+end
 
 
 %%% debug

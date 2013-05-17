@@ -1,16 +1,24 @@
-function [ref_ps]=ps_setref()
+function [ref_ps]=ps_setref_ext_data(ps2)
 %PS_SETREF find reference PS
 %
 %   Andy Hooper, June 2006
 %
 %   07/2006 AH changed to use reference lon/lat if set
 %   02/2010 AH option to also use circular reference area
+%   04/2013 DB Allow for another ps2 to be specified
 
+if nargin<1
+    load psver
+    psname=['ps',num2str(psver)];
+    ps2=load(psname);
 
-load psver
-psname=['ps',num2str(psver)];
-
-ps2=load(psname);
+else
+    load psver
+    psname=['ps',num2str(psver)];
+    ps_temp=load(psname);
+    ps2.ll0 = ps_temp.ll0;
+    ps2.n_ps = size(ps2.lonlat,1);
+end
 
 [ref_lon,parmname]=getparm('ref_x');
 if strcmp(parmname,'ref_x')
@@ -32,11 +40,15 @@ else
 end
 
 if isempty(ref_ps)
+   if nargin ==1
+       fprintf('None of your external data points have a reference, all are set as reference. \n')
+   end
    ref_ps=[1:ps2.n_ps]';
 end
 
-disp([num2str(length(ref_ps)),' ref PS selected'])
-
+if nargin <1
+    disp([num2str(length(ref_ps)),' ref PS selected'])
+end
 
 
 

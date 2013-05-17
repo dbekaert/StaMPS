@@ -1,4 +1,4 @@
-function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg)
+function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 % PS_PLOT_IFG plot phase of a PS interferogram
 %    PS_PLOT_IFG(PHASE,BACKGROUND,LIMS)
 %
@@ -27,6 +27,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg)
 %   02/2010 AH: Plot reference centre if circular
 %   09/2010 AH: Add back option to plot scatterer as multiple pixels
 %   06/2011 AH: Fix bug so only patch amplitudes plotted for PATCH dirs
+%   04/2013 DB: Allow for plotting of additonal data, e.g. LOS GPS
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -54,6 +55,13 @@ end
 
 if nargin < 5
     lat_rg=[];
+end
+
+if nargin<6 || isempty(ext_data)
+   plot_ext_data =0;
+   ext_data = [];
+else
+   plot_ext_data =1;
 end
 
 if nargin < 2
@@ -493,7 +501,7 @@ elseif bg_flag==6     % xy axes
 
 else    
     
- 	for i=1 : length(in_ph)
+ 	for i=1:length(in_ph)
         if ~(isnan(col_ix(i)))
             p=plot(ps.xy(i,2),ps.xy(i,3),'.');
 		    set(p,'color',c(col_ix(i),:));   
@@ -502,8 +510,29 @@ else
     axis equal
     axis tight
 end
-
 ph_lims=[max_ph,min_ph];
+
+% plotting of external data when requested
+if plot_ext_data==1
+    col_ix2=round(((ext_data.ph_disp(:,1)-min_ph)*63/ph_range)+1);
+   
+    ix1 = find(col_ix2<2);
+    ix2 = find(col_ix2>size(c,1));
+    col_ix2(ix1) = 2;
+    col_ix2(ix2) = size(c,1);
+    ix = [ix1 ; ix2];
+    ix_good = [1:size(col_ix2,1)]';
+    ix_good(ix)=[];
+    
+    if ~isempty(ix)
+        p=scatter3(ext_data.lonlat(ix,1),ext_data.lonlat(ix,2),ext_data.ph_disp(ix,1),13,c(col_ix2(ix),:),'filled','o');
+        set(p,'MarkerEdgeColor','k')
+    end
+
+    p=scatter3(ext_data.lonlat(ix_good,1),ext_data.lonlat(ix_good,2),ext_data.ph_disp(ix_good,1),13,c(col_ix2(ix_good),:),'filled','sq');
+    set(p,'MarkerEdgeColor','k')
+end
+
 
 hold off
 colormap(c);

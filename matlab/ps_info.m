@@ -22,7 +22,6 @@ pmname=['pm',num2str(psver)];
 small_baseline_flag=getparm('small_baseline_flag');
 
 ps=load(psname);
-keyboard
 if strcmpi(small_baseline_flag,'y')
     G=zeros(ps.n_ifg,ps.n_image);
     for i=1:ps.n_ifg
