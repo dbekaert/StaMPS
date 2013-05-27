@@ -17,13 +17,13 @@ if (! -e $WORKDIR/master_crop_geo.in) then
     cp $DORIS_SCR/master_crop_geo.in $WORKDIR
 endif
 if (! -e $WORKDIR/looks.txt) then
-    set looks = 4
+    set looks = 10
     echo $looks > $WORKDIR/looks.txt
 else
     set looks = `cat $WORKDIR/looks.txt`
 endif
 if (! -e $WORKDIR/ar.txt) then
-    set ar = 5
+    set ar = 1
     echo $ar > $WORKDIR/ar.txt
 else
     set ar = `cat $WORKDIR/ar.txt`
@@ -46,8 +46,8 @@ cpxfiddle -w$width -fci2 -qnormal -M$looks/$azlooks -ofloat master.slc > image.s
 
 @ lwidth = $width / $looks
 
-echo "Number of azimuth looks is" $azlooks "\n"
-echo "Number of range looks is" $looks "\n"
-echo "Looked filewidth is" $lwidth "\n"
+echo "Number of azimuth looks is" $azlooks 
+echo "Number of range looks is" $looks 
+echo "Looked filewidth is" $lwidth 
 
 #rm -f master.slc

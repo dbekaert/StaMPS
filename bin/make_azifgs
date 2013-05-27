@@ -1,0 +1,17 @@
+#!/bin/tcsh -f
+
+set WORKDIR = $cwd
+
+if (! -e make_ifgs.list) then
+    \ls -d $WORKDIR/[1,2]*/coreg.out | gawk 'BEGIN {FS="coreg.out"} {print $1}'  > make_ifgs.list
+endif
+
+
+step_master_splitaz
+foreach dir(`cat make_ifgs.list`)
+   echo "\n\n[Entering] : ${dir}\n"
+   cd $dir
+   step_azifg
+   cd $WORKDIR
+end
+

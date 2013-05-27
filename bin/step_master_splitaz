@@ -1,0 +1,16 @@
+#!/bin/tcsh -f
+#
+# Andy Hooper, 2006
+# 
+set WORKDIR = $cwd
+
+set first = `grep 'First_pixel ' $WORKDIR/master.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  $WORKDIR/master.res | gawk 'END {print $4}'`
+set fdc = `grep 'Xtrack_f_DC_constant' $WORKDIR/master.res | gawk 'END {print $5}'`
+set prf = `grep 'Pulse_Repetition_Frequency'  $WORKDIR/master.res | gawk 'END {print $4}'`
+set format = `grep -m1 'Data_output_format:'  $WORKDIR/master.res | gawk 'END {print $2}'`
+set masterslc = `grep -m1 'Data_output_file:'  $WORKDIR/master.res | gawk 'END {print $2}'`
+
+@ width = ($last - $first) + 1
+echo "splitaz $masterslc $format $width $fdc $prf $masterslc.azint" > matbgparms.txt
+matlab -nodesktop -nosplash -nodisplay < $STAMPS/matlab/batchjob.m 

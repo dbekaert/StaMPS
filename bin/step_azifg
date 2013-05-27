@@ -1,0 +1,35 @@
+#!/bin/tcsh -f
+#
+# Andy Hooper, 2006
+# 
+set WORKDIR = '..'
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+set first = `grep 'First_pixel ' slave.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  slave.res | gawk 'END {print $4}'`
+set fdc = `grep 'Xtrack_f_DC_constant' slave.res | gawk 'END {print $5}'`
+set prf = `grep 'Pulse_Repetition_Frequency'  slave.res | gawk 'END {print $4}'`
+set format = 'complex_real4' 
+set masterslc = `grep -m1 'Data_output_file:'  master.res | gawk 'END {print $2}'`
+
+@ width = ($last - $first) + 1
+echo "splitaz slave_res.slc $format $width $fdc $prf slave_res.slc.azint" > matbgparms.txt
+matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/batchjob.m 
+
+cpxsum slave_res.slc.azint $masterslc.azint cint.azint.raw $width cr4 -1
+
+cpxfiddle -w$width -fcr4 -qmixed -M$looks/$azlooks -osunraster -e0.2 -s1.8 cint.azint.raw > cint.azint_{$looks}l.ras
+
