@@ -3,14 +3,16 @@
 %   Andy Hooper, June 2006
 %
 %   modifications:
-%   11/2010 MA: initial support for 'ts' option 
-%   04/2013 DB: include support of topocorrelated aps 'a_m' for merris, 
-%               'a_l' for linear, and 'a_p' for powerlaw option
-%   04/2013 DB: include bandfilter option 'ifg i'
+%   11/2010 MA: Initial support for 'ts' option.
+%   04/2013 DB: Include support of topocorrelated aps 'a_m' for merris, 
+%               'a_l' for linear, and 'a_p' for powerlaw option.
+%   04/2013 DB: Include bandfilter option 'ifg i'.
+%   05/2013 DB: Allow ext data path to be a folder or a file.
+%   06/2013 DB: Allos units to be specified 
 
 % list of arguments for ps_plot excluding value type
 arglist={'plot_flag','lims','ref_ifg','ifg_list','n_x','cbar_flag',...
-    'textsize','textcolor','lon_rg','lat_rg'};  % excluding value_type
+    'textsize','textcolor','lon_rg','lat_rg','units'};  % excluding value_type
 
 %varargin  % debug
 %stdargin=nargin ; 
@@ -109,9 +111,9 @@ end
 if aps_band_flag==1 && aps_flag~=2
    error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" flag can be selected. \n'])  
 end
-if ext_data_flag==1 && exist(ext_data_path,'dir')~=7
-   error('myApp:argChk', ['External datapath does not exist. \n'])  
-end
+% if ext_data_flag==1 && (exist(ext_data_path,'dir')~=7 || exist(ext_data_path,'file')~=2)
+%    error('myApp:argChk', ['External datapath folder/file does not exist. \n'])  
+% end
 
 
 %%% debug

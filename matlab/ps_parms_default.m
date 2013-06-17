@@ -25,6 +25,7 @@ function ps_parms_default()
 %   11/2010 AH: (sb_)recalc_index replaced by (sb_)scla_drop_index
 %   06/2011 AH: add weed_neighbours 
 %   12/2012 AH: add insar_processor
+%   06/2013 DB: add parameters to include tropopshere in scla estimation
 %   ======================================================================
 
 
@@ -321,6 +322,13 @@ end
 
 if ~isfield(parms,'insar_processor')
     parms.insar_processor='doris'; % 
+end
+
+if ~isfield(parms,'subtr_tropo')
+    parms.subtr_tropo='n';         % remove tropospheric estimate
+end
+if ~isfield(parms,'tropo_method')
+    parms.tropo_method='a_l';       % method for tropopsheric estimate
 end
 
 parmfields=fieldnames(parms);

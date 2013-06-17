@@ -1,4 +1,4 @@
-function [h_fig,lims,ph_disp]=ps_plot(value_type,varargin)
+function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,...
 %    cbar_flag,textsize,textcolor,lon_rg,lat_rg)
 % PS_PLOT plot ps values for selected ifgs
@@ -101,14 +101,21 @@ function [h_fig,lims,ph_disp]=ps_plot(value_type,varargin)
 %              the definition of ifg_list changes the spatial bands for this option.
 %
 %   ADDITONAL DATA DISPLAY
-%     Plot in additional also other LOS data on top of the interferogram. 
-%     To use this functionality use the flag:  'ext PATH', with PATH the
-%     full path to the data location.
-%     At this path the data should be storred in date1_date2.mat files,
-%     where the dates are in YYYYMMDD format. The file itself should
-%     contain a lonlat, ph_disp (phase) variable. Note that not each
-%     interferogram needs a date. Note that in case a reference area is
-%     selected, it needs to have data coverage in all datasets.
+%     Plot in additional also other geocoded information, e.g stations or 
+%     LOS data on top of the interferograms. To use this functionality use 
+%     the flag:  'ext PATH', with PATH the full path to the data location.
+%     To display identical information in each interferogram include a mat file
+%     on this path. In case the to be displayed data varies depending on
+%     the ifg dates, then only specify the path. At this path the data should 
+%     be storred in date1_date2.mat files, where the dates are in YYYYMMDD format. 
+%     The file itself should contain at least a lonlat variable. When also a 
+%     ph_disp (phase) variable is given the markers will be collored acordingly. 
+%     NOTE: - Not each interferogram date needs to have a file asociated with it.
+%           - External ph_disp data are fixed to the ifgs by minimizing the mean residual.
+%           - In case a reference area is selected, it needs to have data coverage in all datasets.
+%           - Markers are given as by default by collored squares. In case
+%             they were saturated by the colorbar they become circular
+%             markers.
 %
 %
 %   Andy Hooper, June 2006
@@ -162,6 +169,9 @@ function [h_fig,lims,ph_disp]=ps_plot(value_type,varargin)
 %   05/2013 DB: Plot the ifg number for SB ifgs
 %   05/2013 DB: Allow inputdata to be saved.
 %   05/2013 DB: Option to plot topography
+%   05/2013 DB: When full filepath is given, plot same ext data for each ifgs
+%               and output the RMSE information.
+%   06/2013 DB: Allow units to be specified and fix wrong unit for 'o' option
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -220,12 +230,14 @@ end
 if stdargin < 11
     lat_rg=[];
 end
+
+if stdargin < 12
+    units=[];
+end
 % reference radius in case of external data to be plotted
 ref_radius_data=1000;
 
-
 n_y=0;
-units='rad';
 
 load psver
 psname=['./ps',num2str(psver)];
@@ -342,18 +354,7 @@ if aps_band_flag==1
         end
         
         keyboard
-        if strcmp(value_type(1),'u')
-            % loading the phase
-            uw=load(phuwname);
-            ph_all=uw.ph_uw;
-            phuwname=['./phuw_temp',num2str(psver)];
-            % selecting the interferogram for display
-            ph_uw = repmat(ph_all(:,ifg_number),1,n_bands);
-            save(phuwname,'ph_uw');
-            clear ph_uw   
-            delete_temp_files{counter} = phuwname;
-            counter = counter+1;
-        end
+       
         
         
         
@@ -366,6 +367,7 @@ else
     fig_name_suffix = '';
     bands = [];
 end
+
 
 
 if aps_band_flag==1 & isempty(ifg_list)
@@ -402,7 +404,9 @@ else
     end 
 end
 
-
+if isempty(units) && ischar(value_type)==1
+      units='rad'; 
+end
 
 if ischar(value_type)==1
 group_type=value_type;
@@ -545,6 +549,7 @@ switch(group_type)
         clear phuw
         ref_ps=ps_setref;
         fig_name = 'u';
+        units='rad';
     case {'usb'}
         uw=load(phuwsbname);
         ph_all=uw.ph_uw;
@@ -573,12 +578,20 @@ switch(group_type)
         fig_name = 'usb-d';
     case {'usb-o'}
         uw=load(phuwsbname);
-        scla=load(sclasbname);
-        ph_all=uw.ph_uw - scla.ph_ramp;
+        
+        % deramping ifgs
+        if exist(sclasbname,'file')~=2
+            ph_all=uw.ph_uw;
+            [ph_all] = ps_deramp(ps,ph_all);
+        else
+            scla=load(sclasbname);       
+            ph_all=uw.ph_uw - scla.ph_ramp;
+        end
         clear uw scla
         ref_ps=ps_setref;
         textsize=0;
         fig_name = 'usb-o';
+        units='rad';
     case {'usb-do'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
@@ -587,7 +600,6 @@ switch(group_type)
         ref_ps=ps_setref;
         textsize=0;
         fig_name = 'usb-do';
-        
     case {'usb-a'}
         uw=load(phuwsbname);
         aps=load(apssbname);
@@ -606,6 +618,30 @@ switch(group_type)
         end
         ph_all=uw.ph_uw - aps_corr;
         clear uw aps aps_corr
+        ref_ps=ps_setref;
+        textsize=0;
+     case {'usb-ao'}
+        uw=load(phuwsbname);
+        aps=load(apssbname);
+        if aps_flag==1 % linear correction
+            aps_corr = aps.ph_tropo_linear;
+            fig_name = 'usb-ao (linear)';
+        elseif aps_flag==2 % powerlaw correlation
+            aps_corr = aps.ph_tropo_powerlaw;
+            fig_name = 'usb-ao (powerlaw)';
+        elseif aps_flag==3 % meris correction
+            aps_corr = aps.ph_tropo_meris;
+            fig_name = 'usb-ao (meris)';
+        else % current implementation of aps correction
+            aps_corr = aps.strat_corr;
+            fig_name = 'usb-ao';
+        end
+        ph_all=uw.ph_uw - aps_corr;
+        clear uw aps aps_corr
+
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
+       
         ref_ps=ps_setref;
         textsize=0;
     case {'usb-da'}
@@ -676,9 +712,34 @@ switch(group_type)
         end
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
-        clear aps aps_corr
         ref_ps=ps_setref;
         textsize=0;
+     case {'asb-o'}
+        aps=load(apssbname);
+        if aps_flag==1 % linear correction
+            aps_corr = aps.ph_tropo_linear;
+            fig_name = 'asb-o (linear)';
+        elseif aps_flag==2 % powerlaw correlation
+            aps_corr = aps.ph_tropo_powerlaw;
+            fig_name = 'asb-o (powerlaw)';
+        elseif aps_flag==3 % meris correction
+            aps_corr = aps.ph_tropo_meris;
+            fig_name = 'asb-o (meris)';
+        else % current implementation of aps correction
+            aps_corr = aps.strat_corr;
+            fig_name = 'asb-o';
+        end
+        fig_name = [fig_name fig_name_suffix];
+        ph_all=aps_corr;
+        clear aps aps_corr
+        
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
+        
+        ref_ps=ps_setref;
+        textsize=0;       
+        
+        
     case {'u-dms'}
         uw=load(phuwname);
         scn=load(scnname);
@@ -811,8 +872,6 @@ switch(group_type)
             aps_corr = aps.strat_corr;
             fig_name = 'u-a';
         end
-        
-        
         ph_all=uw.ph_uw;
         ph_all=uw.ph_uw - aps_corr;
         if aps_band_flag~=1
@@ -914,7 +973,6 @@ switch(group_type)
         ph_all=scla.ph_ramp;
         clear scla
         ref_ps=ps_setref;
-        units='rad/m';
         fig_name = 'o';
     case {'v'}
         uw=load(phuwname);
@@ -973,6 +1031,28 @@ switch(group_type)
             end
             ph_uw=ph_uw - aps_corr;
             clear scla aps aps_corr
+            
+        case {'v-ao'}
+            aps=load(apsname);
+            if aps_flag==1 % linear correction
+                aps_corr = aps.ph_tropo_linear;
+                fig_name = 'v-ao (linear)';
+            elseif aps_flag==2 % powerlaw correlation
+                aps_corr = aps.ph_tropo_powerlaw;
+                fig_name = 'v-ao (powerlaw)';
+            elseif aps_flag==3 % meris correction
+                aps_corr = aps.ph_tropo_meris;
+                fig_name = 'v-ao (meris)';
+            else % current implementation of aps correction
+                aps_corr = aps.strat_corr;
+                fig_name = 'v-ao';
+            end
+            ph_uw=ph_uw - aps_corr;
+            clear scla aps aps_corr  
+            
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
+             
         case {'v-da'}
             scla=load(sclaname);
             aps=load(apsname);
@@ -1147,6 +1227,28 @@ switch(group_type)
             end
             ph_uw=ph_uw - aps_corr;
             clear scla aps aps_corr
+            
+         case {'v-ao'}
+            aps=load(apssbname);
+            if aps_flag==1 % linear correction
+                aps_corr = aps.ph_tropo_linear;
+                fig_name = 'v-a (linear)';
+            elseif aps_flag==2 % powerlaw correlation
+                aps_corr = aps.ph_tropo_powerlaw;
+                fig_name = 'v-a (powerlaw)';
+            elseif aps_flag==3 % meris correction
+                aps_corr = aps.ph_tropo_meris;
+                fig_name = 'v-a (meris)';
+            else % current implementation of aps correction
+                aps_corr = aps.strat_corr;
+                fig_name = 'v-a';
+            end
+            ph_uw=ph_uw - aps_corr;
+            clear scla aps aps_corr
+            
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
+            
         case {'v-da'}
             scla=load(sclasbname);
             aps=load(apssbname);
@@ -1301,7 +1403,6 @@ else
     ref_ps=ps_setref;
 	fig_name = 'data';
     value_type = 'data';
-    units='';
 end
 
 
@@ -1455,11 +1556,7 @@ else
 
 
   i_im=0;
-
-  
-  if ext_data_flag==1
-     ifg_data_RMSE=NaN([ps.n_ifg 1]) ;
-  end
+  ifg_data_RMSE=NaN([size(ph_disp,2) 1]) ;
   if size(ifg_list,1)>1
     ifg_list = ifg_list';
   end
@@ -1473,53 +1570,65 @@ else
     end
     % check if external data is requested to be plotted
     if ext_data_flag==1
-        if aps_band_flag==1
-            % checking if there is data for this interferogram
-            loadname = [ext_data_path filesep datestr(ps.ifgday(ifg_number,1),'yyyymmdd') '_' datestr(ps.ifgday(ifg_number,2),'yyyymmdd') '.mat'];
+  
+        if exist(ext_data_path,'file')==2
+            % this is an individual file identical for each ifgs
+            loadname=ext_data_path;
         else
-            % checking if there is data for this interferogram
-            loadname = [ext_data_path filesep datestr(ps.ifgday(i,1),'yyyymmdd') '_' datestr(ps.ifgday(i,2),'yyyymmdd') '.mat'];
+            % The path is specified
+            if aps_band_flag==1
+                % checking if there is data for this interferogram
+                loadname = [ext_data_path filesep datestr(ps.ifgday(ifg_number,1),'yyyymmdd') '_' datestr(ps.ifgday(ifg_number,2),'yyyymmdd') '.mat'];
+            else
+                % checking if there is data for this interferogram
+                loadname = [ext_data_path filesep datestr(ps.ifgday(i,1),'yyyymmdd') '_' datestr(ps.ifgday(i,2),'yyyymmdd') '.mat'];
+            end
         end
         if exist(loadname,'file')==2
+             % loading of the data 
              ext_data = load(loadname);
              
-             % Correct the data with respect to the minimization of teh
-             % residual between this dataset and the data
-             % convert to a local reference
-             n_data_points = size(ext_data.lonlat,1);
-             data_xy=llh2local(ext_data.lonlat',ps.ll0)*1000;
-             ps_xy=llh2local(ps.lonlat',ps.ll0)*1000;
              
-             dist_sq=(repmat(ps_xy(1,:)',1,n_data_points) -repmat(data_xy(1,:),ps.n_ps,1)).^2+(repmat(ps_xy(2,:)',1,n_data_points) -repmat(data_xy(2,:),ps.n_ps,1)).^2; 
-             for kk=1:n_data_points      
-                 ref_data= (dist_sq(:,kk)<=ref_radius_data^2);
-                 if sum(ref_data)>0
-                    ifg_mean_data_point(kk,1) = mean(ph_disp(ref_data,i_im));
-                 else
-                    ifg_mean_data_point(kk,1) = NaN;  
+             % Checking if there is a ph_disp variable stored in the files 
+             if isfield(ext_data,{'ph_disp'})
+                 % Correct the data with respect to the minimization of the
+                 % residual between this dataset and the data
+                 % convert to a local reference
+                 n_data_points = size(ext_data.lonlat,1);
+                 data_xy=llh2local(ext_data.lonlat',ps.ll0)*1000;
+                 ps_xy=llh2local(ps.lonlat',ps.ll0)*1000;
+
+                 dist_sq=(repmat(ps_xy(1,:)',1,n_data_points) -repmat(data_xy(1,:),ps.n_ps,1)).^2+(repmat(ps_xy(2,:)',1,n_data_points) -repmat(data_xy(2,:),ps.n_ps,1)).^2; 
+                 for kk=1:n_data_points      
+                     ref_data= (dist_sq(:,kk)<=ref_radius_data^2);
+                     if sum(ref_data)>0
+                        ifg_mean_data_point(kk,1) = mean(ph_disp(ref_data,i_im));
+                     else
+                        ifg_mean_data_point(kk,1) = NaN;  
+                     end
                  end
-             end
-             clear ref_data
-             if ~isempty(ifg_mean_data_point) && sum(isnan(ifg_mean_data_point))~=n_data_points
-                 % mean residual 
-                 ext_data.mean_residual = mean(ext_data.ph_disp(~isnan(ifg_mean_data_point),1)-ifg_mean_data_point(~isnan(ifg_mean_data_point)));
-                 % correct data phases
-                 ext_data.ph_disp(:,1) = ext_data.ph_disp(:,1)-ext_data.mean_residual;
-                 % computing the RMSE
-                 ext_data.residual = ext_data.ph_disp(~isnan(ifg_mean_data_point),1)-ifg_mean_data_point(~isnan(ifg_mean_data_point));
-                 ext_data.RMSE = sqrt(mean((ext_data.residual).^2));
-                 clear ifg_mean_data_point
-                 ifg_data_RMSE(i)=ext_data.RMSE;
-             else
-                fprintf(['No observation within the ref_radius_data, increase the size. \n']) 
-                fprintf(['External data not plotted for this interferogram. \n']) 
-                ext_data = [];
-             end
-             clear mean_data_point_residual
-             
-%              % correct the data with respect to the reference area
-%              point_ref = ps_setref(ext_data);
-%              ext_data.ph_disp(:,1) = ext_data.ph_disp(:,1)-mean(ext_data.ph_disp(point_ref,1));
+                 clear ref_data
+                 if ~isempty(ifg_mean_data_point) && sum(isnan(ifg_mean_data_point))~=n_data_points
+                     % mean residual 
+                     ext_data.mean_residual = mean(ext_data.ph_disp(~isnan(ifg_mean_data_point),1)-ifg_mean_data_point(~isnan(ifg_mean_data_point)));
+                     % correct data phases
+                     ext_data.ph_disp(:,1) = ext_data.ph_disp(:,1)-ext_data.mean_residual;
+                     % computing the RMSE
+                     ext_data.residual = ext_data.ph_disp(~isnan(ifg_mean_data_point),1)-ifg_mean_data_point(~isnan(ifg_mean_data_point));
+                     ext_data.RMSE = sqrt(mean((ext_data.residual).^2));
+                     clear ifg_mean_data_point
+                     ifg_data_RMSE(i)=ext_data.RMSE;
+                 else
+                    fprintf(['No observation within the ref_radius_data, increase the size. \n']) 
+                    fprintf(['External data not plotted for this interferogram. \n']) 
+                    ext_data = [];
+                 end
+                 clear mean_data_point_residual
+
+    %              % correct the data with respect to the reference area
+    %              point_ref = ps_setref(ext_data);
+    %              ext_data.ph_disp(:,1) = ext_data.ph_disp(:,1)-mean(ext_data.ph_disp(point_ref,1));
+            end
 
         else
            ext_data = []; 
@@ -1527,6 +1636,7 @@ else
     else
        ext_data = []; 
     end
+    
     
     ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg,ext_data);
     %plot_phase(ph_tc(:,i)*conj(ph_tc(ref_ix,i)));
@@ -1562,13 +1672,15 @@ else
     
     if cbar_flag==0 & (i==ref_ifg | (isempty(intersect(ref_ifg,ifg_list)) & i==ifg_list(1))) 
         if n_ifg_plot>1
+            
+           
             h=colorbar('South');
-	    xlim=get(h,'xlim');
-	    set(h,'xlim',[xlim(2)-64,xlim(2)])
+            xlim=get(h,'xlim');
+            set(h,'xlim',[xlim(2)-64,xlim(2)])
 
         else
             %h=colorbar('SouthOutside');
-	    h = colorbar('peer',gca);
+            h = colorbar('peer',gca);
             ylim=get(h,'ylim');
             set(h,'ylim',[ylim(2)-64,ylim(2)])
         end
@@ -1586,7 +1698,7 @@ else
                 pos(2)=pos(2)/2.2;
                 set(h,'position',pos,'FontSize',abs(textsize));
         else
-                    set(h,'ytick',[ylim(2)-64,ylim(2)],'yticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
+                set(h,'ytick',[ylim(2)-64,ylim(2)],'yticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
                 set(get(h,'ylabel'),'String',units,'FontSize',abs(textsize))  
 
         end
@@ -1633,9 +1745,13 @@ if ext_data_flag==1
         end
         
         if aps_band_flag==1
-            fprintf(['Band' num2str(k) ' : ' num2str(ifg_data_RMSE(k)) '\n'])
+            fprintf(['Band' num2str(k) ' : ' num2str(ifg_data_RMSE(k)) '\n']);
         else
-            fprintf(['ifg ' num2str(k) ' \t ' datestr(ps.ifgday(k,1),'yyyymmdd') '-' datestr(ps.ifgday(k,2),'yyyymmdd') ' \t ' num2str(ifg_data_RMSE(k)) '\n'])
+            if size(ifg_data_RMSE,1)==ps.n_ifg
+                fprintf(['ifg ' num2str(k) ' \t ' datestr(ps.ifgday(k,1),'yyyymmdd') '-' datestr(ps.ifgday(k,2),'yyyymmdd') ' \t ' num2str(ifg_data_RMSE(k)) '\n']);
+            else
+                 fprintf(['dataset ' num2str(k) ' \t ' num2str(ifg_data_RMSE(k)) '\n']);               
+            end
         end
     end
 end
