@@ -249,7 +249,7 @@
    StaMPS/MTI  Manual\\
      }}}}
      \vspace{5mm}
-     {\sffamily\Large{\textbf{Version 3.2 : NOTE updating to version 3.3}}}
+     {\sffamily\Large{\textbf{Version 3.3}}}
 \vspace{5mm}
 
 
@@ -262,9 +262,9 @@
 
 %\begin{flushright}
 \begin{center}
-{\sffamily\textbf{Andy Hooper, Karsten Spaans, David Bekaert, Miguel Caro Cuenca, Mahmut Ar{\i}kan, Anneleen Oyen}}\\
+{\sffamily\textbf{Andy Hooper, David Bekaert, Karsten Spaans}}\\
 \vspace{4mm}
-{\sffamily\textbf{24th November, 2010}}
+{\sffamily\textbf{1th September, 2013}}
 %\end{flushright}
 \end{center}
 
@@ -274,14 +274,14 @@
 
     %\begin{minipage}[b]{1.0\linewidth}      
       \begin{minipage}[b]{0.3\linewidth}
-        \includegraphics[width=\linewidth]{./figs/TUDelft_logo}
+        \includegraphics[width=\linewidth]{./figs/Leeds_University_logo.eps}
       \end{minipage}\hfill
       \begin{minipage}[b]{0.67\linewidth}
         \begin{flushright}
           {\sffamily
-          \textbf{Delft Institute of Earth Observation and Space Systems}\\\textbf{Delft University of Technology}\\
-          Kluyverweg 1, 2629 HS, Delft\\
-          The Netherlands}
+          \textbf{School of Earth and Environment}\\\textbf{University of Leeds}\\
+          LS2-9JT Leeds\\
+          United Kingdom}
         \end{flushright}
       \end{minipage}
 
@@ -324,9 +324,9 @@
 
 \chapter{Introduction}
 
-StaMPS/MTI is made available for non-commercial applications only and can be downloaded from \url{http://radar.tudelft.nl/~ahooper/stamps}
+StaMPS/MTI is made available for non-commercial applications only and can be downloaded from \textbf{\url{http://homepages.see.leeds.ac.uk/~earahoo/stamps/}}
 
-StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland and Delft University of Technology. There are also contributions from users of the package based at other institutions.
+StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland, Delft University of Technology, and the University of Leeds. There are also contributions from users of the package based at other institutions.
 
 This manual provides a guide to running StaMPS/MTI, but does not  explain all the processing. For some details on the inner workings, see \citet{HooperA2010b,HooperA2008,HooperA2007a,HooperA2004,HooperA2006}.
  %Hooper and Zebker (2007) and Hooper, Ph.D Thesis. 
@@ -336,7 +336,7 @@ This manual provides a guide to running StaMPS/MTI, but does not  explain all th
 
 
 
-There are two pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1 and TerraSAR-X data, if starting with SLCs.
+There are two pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1/2, TerraSAR-X and \textbf{COSMO-SkyMed} data, if starting with SLCs.
 
 
 
@@ -366,8 +366,8 @@ and entries that are specific to the data set being processed and require modifi
 
 
  Install StaMPS/MTI: \\
- \cs{ tar -xvf StaMPS\_v3.2.tar\\
- cd StaMPS\_v3.2/src\\
+ \textbf{\cs{ tar -xvf StaMPS\_v3.3.tar}\\
+ cd StaMPS\_v3.3/src\\
  make\\
  make install}
 
@@ -414,7 +414,7 @@ Envisat instrument calibration files (INS) can be downloaded from:\\
  
  \section{Snaphu}
  The optimisation routines of snaphu are used by the 3-D unwrapping code and can be downloaded from:\\
-  \url{http://www-star.stanford.edu/sar_group/snaphu}.
+  \textbf{\url{http://www.stanford.edu/group/radar/softwareandlinks/sw/snaphu/}}.
 
 
 
@@ -474,6 +474,8 @@ This will create a directory named {\tt SLC} in the \cc{processing\_path} direct
  \cs{step\_slc\_ers} or \cs{step\_slc\_envi} (use \cs{\_V2.2} suffix if necessary)\\
  To use DORIS orbits (Envisat only):\\
  \cs{step\_slc\_envi\_vor}\\ 
+ \textbf{For Envisat wide-swath (DORIS orbits):}\\
+\textbf{ \cs{step\_slc\_envi\_ws}}\\  
  For ALOS data:\\
   \cs{step\_slc\_alos}\\
  %\cs{multilook} \cc{master\_date}\cs{.slc} \cc{5612 }
@@ -528,7 +530,7 @@ Edit {\tt../roi.proc} and change the following:\\
 
  %\cs{remake\_slcs}\\
  %\cs{cd} \cc{master\_date}\\
- \cs{step\_slc\_alos}, \cs{step\_slc\_ers},  \cs{step\_slc\_ers\_envi} or \cs{step\_slc\_envi} (attach \cs{\_V2.2} suffix if necessary).\\
+ \cs{step\_slc\_alos}, \cs{step\_slc\_ers},  \cs{step\_slc\_ers\_envi}, \textbf{\cs{step\_slc\_envi\_vor}}, \cs{step\_slc\_envi} (attach \cs{\_V2.2} suffix if necessary), or \textbf{\cs{step\_slc\_envi\_ws}}.\\
  %\cs{multilook} \cc{master\_date}\cs{.slc} \cc{5612 }
 %(or whatever is the filewidth)\\
  %\cs{dismph} \cc{master\_date}\cs{.slc.4looks} \cc{1403 }
@@ -551,8 +553,8 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
 
  %\cs{$\backslash$ls -d [1,2]* $>$ make\_slcs.list}\\
  %\cs{vi make\_slcs.list} and remove the entry for \cc{master\_date}\\
-\cs{make\_slcs\_alos}, \cs{make\_slcs\_ers}, \cs{make\_slcs\_ers\_envi}, 
- \cs{make\_slcs\_envi} (attach \cs{\_V2.2} suffix if necessary), or  \cs{make\_slcs\_envi\_vor}. This will create SLCs for all directories listed in {\tt make\_slcs.list}, which by default contains all data directories except the master.
+\cs{make\_slcs\_alos}, \cs{make\_slcs\_ers}, \cs{make\_slcs\_ers\_envi}, \textbf{\cs{make\_slcs\_envi\_vor}},
+ \cs{make\_slcs\_envi} (attach \cs{\_V2.2} suffix if necessary), or  \textbf{\cs{make\_slcs\_envi\_ws}}. This will create SLCs for all directories listed in {\tt make\_slcs.list}, which by default contains all data directories except the master.
 
 
 
@@ -567,20 +569,20 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
 {\em If you created SLCs with ROI\_PAC using raw data, skip Section: \ref{sec:slcread}.}
 
 \section{\label{sec:slcread}Reading and Cropping}
-Currently, scripts exist for (reading and cropping single look complex (SLC) products from ERS, Envisat, RADARSAT-1 and TerraSAR-X satellites.
+Currently, scripts exist for (reading and cropping single look complex (SLC) products from ERS, Envisat, RADARSAT-1/\textbf{2}, TerraSAR-X and \textbf{COSMO-SkyMed} satellites.
 
- In your processing directory, for example, under /d2/iceland\_volcanoes/\\
+In your processing directory, for example, under /d2/iceland\_volcanoes/\\
 \cs{link\_slcs }   \cc{ data\_path }  
 (where \cc{data\_path} is the FULL path to your source data )
 
-This will create a directory named {\tt SLC} in the current directory, with a subdirectory for each image named \cc{yyyymmdd}. Within each subdirectory, symbolic links will be created to the slc files (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001}, {\tt  LEA\_01.001}, and {\tt VDF\_DAT.001}. For Envisat  data the link name must be {\tt image.slc}. For TerraSAR-X data, the link names must be {\tt image.slc} and {\tt leader.xml}. \\
+This will create a directory named {\tt SLC} in the current directory, with a subdirectory for each image named \cc{yyyymmdd}. Within each subdirectory, symbolic links will be created to the slc files (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001}, {\tt  LEA\_01.001}, and {\tt VDF\_DAT.001}. For Envisat and \textbf{COSMO-SkyMed} data the link name must be {\tt image.slc}. For TerraSAR-X and \textbf{RADARSAT-2} data, the link names must be {\tt image.slc} and {\tt leader.xml}. \\
 
 
 Choose a master based on minimising perpendicular, Doppler and temporal baselines (see \citet{HooperA2007a}). Substitute your master date in the format {\tt yyyymmdd} wherever \cc{master\_date} appears below.
 
 
  \cs{cd} \cc{master\_date}\\
- \cs{step\_read\_whole\_}\cc{XXX} (where \cc{XXX} is `\cs{ERS}', `\cs{Envisat}', `\cs{RSAT}', or `\cs{TSX}')
+ \cs{step\_read\_whole\_}\cc{XXX} (where \cc{XXX} is `\cs{ERS}', `\cs{Envisat}', `\cs{RSAT}', \textbf{`\cs{RSAT2}'}, `\cs{TSX}', or \textbf{`\cs{CSK}'})
  
  Take note of the number of range looks.
  
@@ -1058,7 +1060,7 @@ Processing is controlled by the following parameters:
  \footnotesize
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
-{\tt unwrap\_method} &	 {\tt `3D'} & Unwrapping method. \\
+{\tt unwrap\_method} &	 {\tt `3D'} &  Unwrapping method. \textbf{****MORE options need to be included and explained, ref to a paper?****} \\
 {\tt unwrap\_prefilter\_flag} &  {\tt `y'} & Prefilter phase before unwrapping to reduce noise. Other option (not generally recommended) {\tt `n'}.\\
 {\tt unwrap\_patch\_phase} &  {\tt `n'} & Use the patch phase from Step 3 as prefiltered phase. If set to {\tt `n'} (recommended), PS phase is filtered using a Goldstein adaptive phase filter.\\
 {\tt unwrap\_grid\_size} & 200 & Resampling grid spacing. If {\tt unwrap\_prefilter\_flag} is set to {\tt `y'}, phase is resampled to a grid with this spacing.\\
@@ -1246,6 +1248,34 @@ Note that the first parameter is amplitude {\em difference} dispersion rather th
 
 
 When running this process, the amount of the computer load is probably much higher than  during PS processing. This may cause the program to stop due PC memory limitations. If this is the case, the number of patches should be increased, then rerun \cs{mt\_prep}. In general patch sizes smaller $<$ 4 million SLC pixels are OK.
+
+\textbf{For small baselines processing, some of the parameters have different default values compared to PS processing:}\\
+\footnotesize
+\begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
+\textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
+{\tt select\_method} &
+	 {\tt `DENSITY'} &	Other option {\tt `PERCENT'}. \\
+{\tt density\_rand} &
+	 {\tt 2} &	 Maximum acceptable spatial density (per km$^2$) of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `DENSITY'}.\\
+{\tt percent\_rand} &
+	 {\tt 1} &	Maximum acceptable percentage of selected pixels with random phase. Only applies if {\tt select\_method} is set to {\tt `PERCENT'} \\ 
+ {\tt weed\_standard\_dev} &	 {\tt inf} &	Threshold standard deviation. For each pixel, the phase noise standard deviation for all pixel pairs including the pixel is calculated, If the minimum standard deviation is greater than the threshold, the pixel is dropped. If set to {\tt 10}, no noise-based weeding is performed\\
+{\tt unwrap\_method} &	 {\tt `3D\_QUICK'} &  Unwrapping method. \textbf{****MORE options need to be included and explained, ref to a paper?****} \\
+{\tt merge\_resample\_size} &	 {\tt 100} & Coarser posting (in m) to resample to. If set to {\tt 0}, no resampling is applied.\\
+ \end{tabular} 
+ \normalsize
+
+
+
+
+
+
+
+
+
+
+
+
 
 
  Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. Step 7 includes extra processing to calculate the SCLA error from both small baseline and single master interferograms.
@@ -1566,9 +1596,15 @@ to display the image in matlab instead of using {\tt disrg}
 
 \section{Version 3.3}
 \begin{itemize}
-\item Update the manual with extra tips.
-\item Expand the Small Baselines chapter.
-\item Update the shell scripts to allow for batch processing.
+\item Update the manual with extra tips and current websites.
+\item Expand the manual on small baselines.
+\item Batch processing by specifiying processing list in interferogram shell scripts.
+\item SLC compatibility for RADARSAT-2 and COSMO-SkyMed.
+\item Raw data Envisat WS capability 
+\item Matlab 2011/2012 compatibility
+\item Fix bug in ps\_info
+\item Improved unwrapping and new unwrapping options.
+\item Improved processing efficiency.
 \end{itemize}
 
 
@@ -1576,7 +1612,7 @@ to display the image in matlab instead of using {\tt disrg}
 
 
 Links to PDF files for  the references above can be found at:\\
- \url{http://radar.tudelft.nl/~ahooper/pubs.html}
+\textbf{\url{http://www.see.leeds.ac.uk/people/a.hooper}}
 
 
 
