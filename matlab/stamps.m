@@ -36,6 +36,7 @@ function stamps_mc(start_step,end_step,patches_flag,est_gamma_parm,patch_list_fi
 %   03/2010 AH: move ps_cal_ifg_std to after merge step
 %   12/2012 AH: add gamma option
 %   12/2012 DB: add patch_list_file argument as option
+%   09/2013 DB: update the stamps version number 
 %   =================================================================
 
 nfill=40;
@@ -43,9 +44,9 @@ fillstr=[repmat('#',1,nfill),'\n'];
 skipstr='\n';
 msgstr=fillstr;
 
-msgstr(round(nfill)/2-11:round(nfill/2)+12)=' StaMPS/MTI Version 4.0 ';
+msgstr(round(nfill)/2-11:round(nfill/2)+12)=' StaMPS/MTI Version 3.3 ';
 fprintf([skipstr,fillstr,msgstr]);
-msgstr(round(nfill)/2-11:round(nfill/2)+12)=' Andy Hooper, Mar 2012  ';
+msgstr(round(nfill)/2-11:round(nfill/2)+12)=' Andy Hooper, Sep 2013  ';
 fprintf([msgstr,fillstr,skipstr]);
 
 
