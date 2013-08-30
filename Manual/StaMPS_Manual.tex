@@ -324,7 +324,10 @@
 
 \chapter{Introduction}
 
-StaMPS/MTI is made available for non-commercial applications only and can be downloaded from \textbf{\url{http://homepages.see.leeds.ac.uk/~earahoo/stamps/}}
+StaMPS/MTI is made available for non-commercial applications only and can be downloaded from \url{http://homepages.see.leeds.ac.uk/~earahoo/stamps/}\\
+
+When using this software please reference \cite{HooperA2012}: \\
+Hooper A; Bekaert D; Spaans K; Arikan M (2012) \textit{Recent advances in SAR interferometry time series analysis for measuring crustal deformation}, Tectonophysics, 514-517, pp.1-13. doi: 10.1016/j.tecto.2011.10.013\\
 
 StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland, Delft University of Technology, and the University of Leeds. There are also contributions from users of the package based at other institutions.
 
@@ -336,7 +339,7 @@ This manual provides a guide to running StaMPS/MTI, but does not  explain all th
 
 
 
-There are two pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1/2, TerraSAR-X and \textbf{COSMO-SkyMed} data, if starting with SLCs.
+There are two pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1/2, TerraSAR-X and COSMO-SkyMed data, if starting with SLCs.
 
 
 
@@ -366,10 +369,10 @@ and entries that are specific to the data set being processed and require modifi
 
 
  Install StaMPS/MTI: \\
- \textbf{\cs{ tar -xvf StaMPS\_v3.3.tar}\\
+ \cs{ tar -xvf StaMPS\_v3.3.tar}\\
  cd StaMPS\_v3.3/src\\
  make\\
- make install}
+ make install
 
 \section{Configuration}
 Edit {\tt StaMPS\_CONFIG.tcsh} or {\tt StaMPS\_CONFIG.bash} (depending on which shell you prefer to use) to point to the correct directories for your set-up (you will need additional programs installed, see below).\\
@@ -414,7 +417,7 @@ Envisat instrument calibration files (INS) can be downloaded from:\\
  
  \section{Snaphu}
  The optimisation routines of snaphu are used by the 3-D unwrapping code and can be downloaded from:\\
-  \textbf{\url{http://www.stanford.edu/group/radar/softwareandlinks/sw/snaphu/}}.
+  \url{http://www.stanford.edu/group/radar/softwareandlinks/sw/snaphu/}.
 
 
 
@@ -474,8 +477,8 @@ This will create a directory named {\tt SLC} in the \cc{processing\_path} direct
  \cs{step\_slc\_ers} or \cs{step\_slc\_envi} (use \cs{\_V2.2} suffix if necessary)\\
  To use DORIS orbits (Envisat only):\\
  \cs{step\_slc\_envi\_vor}\\ 
- \textbf{For Envisat wide-swath (DORIS orbits):}\\
-\textbf{ \cs{step\_slc\_envi\_ws}}\\  
+ For Envisat wide-swath (DORIS orbits):\\
+ \cs{step\_slc\_envi\_ws}\\  
  For ALOS data:\\
   \cs{step\_slc\_alos}\\
  %\cs{multilook} \cc{master\_date}\cs{.slc} \cc{5612 }
@@ -530,7 +533,7 @@ Edit {\tt../roi.proc} and change the following:\\
 
  %\cs{remake\_slcs}\\
  %\cs{cd} \cc{master\_date}\\
- \cs{step\_slc\_alos}, \cs{step\_slc\_ers},  \cs{step\_slc\_ers\_envi}, \textbf{\cs{step\_slc\_envi\_vor}}, \cs{step\_slc\_envi} (attach \cs{\_V2.2} suffix if necessary), or \textbf{\cs{step\_slc\_envi\_ws}}.\\
+ \cs{step\_slc\_alos}, \cs{step\_slc\_ers},  \cs{step\_slc\_ers\_envi}, \cs{step\_slc\_envi\_vor}, \cs{step\_slc\_envi} (attach \cs{\_V2.2} suffix if necessary), or \cs{step\_slc\_envi\_ws}.\\
  %\cs{multilook} \cc{master\_date}\cs{.slc} \cc{5612 }
 %(or whatever is the filewidth)\\
  %\cs{dismph} \cc{master\_date}\cs{.slc.4looks} \cc{1403 }
@@ -553,8 +556,8 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
 
  %\cs{$\backslash$ls -d [1,2]* $>$ make\_slcs.list}\\
  %\cs{vi make\_slcs.list} and remove the entry for \cc{master\_date}\\
-\cs{make\_slcs\_alos}, \cs{make\_slcs\_ers}, \cs{make\_slcs\_ers\_envi}, \textbf{\cs{make\_slcs\_envi\_vor}},
- \cs{make\_slcs\_envi} (attach \cs{\_V2.2} suffix if necessary), or  \textbf{\cs{make\_slcs\_envi\_ws}}. This will create SLCs for all directories listed in {\tt make\_slcs.list}, which by default contains all data directories except the master.
+\cs{make\_slcs\_alos}, \cs{make\_slcs\_ers}, \cs{make\_slcs\_ers\_envi}, \cs{make\_slcs\_envi\_vor},
+ \cs{make\_slcs\_envi} (attach \cs{\_V2.2} suffix if necessary), or  \cs{make\_slcs\_envi\_ws}. This will create SLCs for all directories listed in {\tt make\_slcs.list}, which by default contains all data directories except the master.
 
 
 
@@ -569,20 +572,20 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
 {\em If you created SLCs with ROI\_PAC using raw data, skip Section: \ref{sec:slcread}.}
 
 \section{\label{sec:slcread}Reading and Cropping}
-Currently, scripts exist for (reading and cropping single look complex (SLC) products from ERS, Envisat, RADARSAT-1/\textbf{2}, TerraSAR-X and \textbf{COSMO-SkyMed} satellites.
+Currently, scripts exist for (reading and cropping single look complex (SLC) products from ERS, Envisat, RADARSAT-1/2, TerraSAR-X and COSMO-SkyMed satellites.
 
 In your processing directory, for example, under /d2/iceland\_volcanoes/\\
 \cs{link\_slcs }   \cc{ data\_path }  
 (where \cc{data\_path} is the FULL path to your source data )
 
-This will create a directory named {\tt SLC} in the current directory, with a subdirectory for each image named \cc{yyyymmdd}. Within each subdirectory, symbolic links will be created to the slc files (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001}, {\tt  LEA\_01.001}, and {\tt VDF\_DAT.001}. For Envisat and \textbf{COSMO-SkyMed} data the link name must be {\tt image.slc}. For TerraSAR-X and \textbf{RADARSAT-2} data, the link names must be {\tt image.slc} and {\tt leader.xml}. \\
+This will create a directory named {\tt SLC} in the current directory, with a subdirectory for each image named \cc{yyyymmdd}. Within each subdirectory, symbolic links will be created to the slc files (and leader/volume files if they exist). For ERS and RADARSAT-1 data the link names must be {\tt DAT\_01.001}, {\tt  LEA\_01.001}, and {\tt VDF\_DAT.001}. For Envisat and COSMO-SkyMed data the link name must be {\tt image.slc}. For TerraSAR-X and RADARSAT-2 data, the link names must be {\tt image.slc} and {\tt leader.xml}. \\
 
 
 Choose a master based on minimising perpendicular, Doppler and temporal baselines (see \citet{HooperA2007a}). Substitute your master date in the format {\tt yyyymmdd} wherever \cc{master\_date} appears below.
 
 
  \cs{cd} \cc{master\_date}\\
- \cs{step\_read\_whole\_}\cc{XXX} (where \cc{XXX} is `\cs{ERS}', `\cs{Envisat}', `\cs{RSAT}', \textbf{`\cs{RSAT2}'}, `\cs{TSX}', or \textbf{`\cs{CSK}'})
+ \cs{step\_read\_whole\_}\cc{XXX} (where \cc{XXX} is `\cs{ERS}', `\cs{Envisat}', `\cs{RSAT}', `\cs{RSAT2}', `\cs{TSX}', or `\cs{CSK}')
  
  Take note of the number of range looks.
  
@@ -1249,7 +1252,7 @@ Note that the first parameter is amplitude {\em difference} dispersion rather th
 
 When running this process, the amount of the computer load is probably much higher than  during PS processing. This may cause the program to stop due PC memory limitations. If this is the case, the number of patches should be increased, then rerun \cs{mt\_prep}. In general patch sizes smaller $<$ 4 million SLC pixels are OK.
 
-\textbf{For small baselines processing, some of the parameters have different default values compared to PS processing:}\\
+For small baselines processing, some of the parameters have different default values compared to PS processing:\\
 \footnotesize
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
@@ -1612,7 +1615,7 @@ to display the image in matlab instead of using {\tt disrg}
 
 
 Links to PDF files for  the references above can be found at:\\
-\textbf{\url{http://www.see.leeds.ac.uk/people/a.hooper}}
+\url{http://www.see.leeds.ac.uk/people/a.hooper}
 
 
 

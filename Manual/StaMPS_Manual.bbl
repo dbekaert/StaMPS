@@ -1,4 +1,4 @@
-\begin{thebibliography}{7}
+\begin{thebibliography}{8}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 
 \bibitem[{{\it Ar{\i}kan et~al.\/}(2010){\it Ar{\i}kan, Hooper, and
@@ -28,6 +28,12 @@ Hooper, A., H.~Zebker, P.~Segall, and B.~Kampes, A new method for measuring
 Hooper, A., P.~Segall, and H.~Zebker, Persistent scatterer {InSAR} for crustal
   deformation analysis, with application to {V}olc\'{a}n {A}lcedo,
   {G}al\'{a}pagos, {\it J. Geophys. Res.\/}, {\it 112\/}, 2007.
+
+\bibitem[{{\it Hooper et~al.\/}(2012){\it Hooper, Bekaert, Spaans, and
+  Arikan\/}}]{HooperA2012}
+Hooper, A., D.~Bekaert, K.~Spaans, and M.~Arikan, Recent advances in sar
+  interferometry time series analysis for measuring crustal deformation, {\it
+  Tectonophysics\/}, {\it 514 -– 517\/}, 1 -- 13, 2012.
 
 \bibitem[{{\it Hooper\/}(2006)}]{HooperA2006}
 Hooper, A.~J., Persistent scatterer radar interferometry for crustal
