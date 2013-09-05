@@ -38,16 +38,6 @@ phaser_sum=sum(phaser);
 C_trial=angle(phaser_sum);
 coh_trial=abs(phaser_sum)/sum(abs(cpxphase));
 
-% coh_diff=diff(coh_trial);
-% coh_max_ix=[];
-% for i=2:length(coh_diff)
-%     if coh_diff(i)<0 & coh_diff(i-1)>0
-%         coh_max_ix=[coh_max_ix,i];
-%     end
-% end 
-%
-% coh_max=coh_trial(coh_max_ix); % maximum value of coherence
-
 [dummy,coh_high_max_ix]=max(coh_trial); % only select highest
 
 K0=pi/4/bperp_range*trial_mult(coh_high_max_ix);

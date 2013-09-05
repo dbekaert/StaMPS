@@ -194,9 +194,6 @@ end
 
 if use_small_baselines==0 
     ifg_vcm_use=eye(size(ph,2)); % don't know true var/cov because of non-lin motion and APS
-%    n_vcm=length(ifg_vcm_use)-1;
-%    A=[eye(n_vcm),zeros(n_vcm,1)]+[zeros(n_vcm,1),-eye(n_vcm)];
-%    ifg_vcm_use=A*ifg_vcm_use*A';
 else
     ifg_vcm_use=ifg_vcm(unwrap_ifg_index,unwrap_ifg_index);
 end

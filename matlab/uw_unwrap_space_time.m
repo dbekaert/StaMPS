@@ -186,14 +186,9 @@ else
         weight_factor=weight_factor/sum(weight_factor);
             
         dph_mean=sum(dph_space.*repmat(weight_factor,ui.n_edge,1),2);
-        %dph_mean_adj=angle(dph_space.*repmat(conj(dph_mean),1,uw.n_ifg)); % subtract weighted mean
         dph_mean_adj=mod(dph_space_angle-repmat(angle(dph_mean),1,uw.n_ifg)+pi,2*pi)-pi;
         G=[ones(uw.n_ifg,1),time_diff'];
         m=lscov(G,double(dph_mean_adj)',weight_factor);
-        %dph_mean_adj=angle(exp(j*(dph_mean_adj-(G*m)'))); % subtract first estimate
-        %dph_mean_adj=mod(dph_mean_adj-(G*m)'+pi,2*pi)-pi; % subtract first estimate
-        %m2=lscov(G,double(dph_mean_adj)',weight_factor);
-        %dph_smooth(:,i1)=dph_mean.*exp(1i*(m(1,:)'+m2(1,:)')); % add back weighted mean
         dph_smooth(:,i1)=dph_mean.*exp(1i*(m(1,:)')); % add back weighted mean
     end
     dph_noise=angle(dph_space.*conj(dph_smooth));
@@ -246,15 +241,6 @@ else
         std_noise2=std(dph_noise2,0,2);
         dph_noise2(std_noise2>1.3,:)=nan;
         shaky_ix=isnan(std_noise) | std_noise>std_noise2; % spatial smoothing works better index
-%         shaky_nodes=ui.edges(shaky_ix,[2:3]);
-%         shaky_nodes=sort(shaky_nodes(:));
-%         not_uniq_ix= diff(shaky_nodes)==0;
-%         shaky_nodes=shaky_nodes(not_uniq_ix);
-%         shaky_nodes=unique(shaky_nodes);
-%         for i=1:length(shaky_nodes)
-%             shaky_edges=(ui.edges(:,2)==shaky_nodes(i)|ui.edges(:,3)==shaky_nodes(i));
-%             shaky_ix(shaky_edges)=true; % for nodes with >1 shaky edges, set all edges to shaky
-%         end
         fprintf('   %d arcs smoothed in time, %d in space (elapsed time=%ds)\n',ui.n_edge-sum(shaky_ix),sum(shaky_ix),round(toc))        
         dph_noise(shaky_ix,:)=dph_noise2(shaky_ix,:);
         dph_space_uw(shaky_ix,:)=dph_smooth_uw2(shaky_ix,:)+dph_noise2(shaky_ix,:);

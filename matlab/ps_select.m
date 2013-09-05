@@ -25,7 +25,7 @@ function []=ps_select(reest_flag,plot_flag)
 %   01/2013 AH: Set default threshold if not enough random pixels
 %   ======================================================================
 logit;
-fprintf('Selecting stable-phase pixels...\n')
+logit('Selecting stable-phase pixels...')
 
 if nargin<1
     reest_flag=0;  
@@ -195,7 +195,8 @@ else
  end
 end
 
-fprintf('Initial gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f\n',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A))
+
+logit(sprintf('Initial gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A)))
 
 if  plot_flag==1 
     figure
@@ -210,7 +211,7 @@ end
 
 ix=find(pm.coh_ps>coh_thresh); % select those below threshold
 n_ps=length(ix);
-fprintf('%d PS selected initially\n',n_ps)
+logit(sprintf('%d PS selected initially',n_ps))
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% reject part-time PS
@@ -224,7 +225,7 @@ if gamma_stdev_reject>0
     clear ph_res_cpx
     ix=ix(coh_std<gamma_stdev_reject);
     n_ps=length(ix);
-    fprintf('%d PS left after pps rejection\n',n_ps)
+    logit(sfprintf('%d PS left after pps rejection',n_ps))
 end
 
 
@@ -233,9 +234,9 @@ if reest_flag~=1
   if reest_flag~=2 % reestimate coh with the PS removed from filtered patch
     for i=1:length(drop_ifg_index);
       if strcmpi(small_baseline_flag,'y')
-        fprintf('%s-%s is dropped from noise re-estimation\n',datestr(ps.ifgday(drop_ifg_index(i),1)),datestr(ps.ifgday(drop_ifg_index(i),2)))
+        logit(sprintf('%s-%s is dropped from noise re-estimation',datestr(ps.ifgday(drop_ifg_index(i),1)),datestr(ps.ifgday(drop_ifg_index(i),2))))
       else
-        fprintf('%s is dropped from noise re-estimation\n',datestr(ps.day(drop_ifg_index(i))))
+        logit(sprintf('%s is dropped from noise re-estimation',datestr(ps.day(drop_ifg_index(i)))))
       end
     end
     pm=rmfield(pm,{'ph_res'});
@@ -291,7 +292,7 @@ if reest_flag~=1
 
         ph_patch2(i,:)=squeeze(ph_filt(ps_bit_i,ps_bit_j,:));
         if i/10000==floor(i/10000)
-            fprintf('%d patches re-estimated\n',i)
+            logit(sprintf('%d patches re-estimated',i))
         end
 
     end
@@ -315,7 +316,7 @@ if reest_flag~=1
             coh_ps2(i)=nan;
         end
         if i/10000==floor(i/10000)
-            fprintf('%d coherences re-estimated\n',i)
+            logit(sprintf('%d coherences re-estimated',i))
         end
     end
   else % reest_flag==2, use previously recalculated coh 
@@ -391,12 +392,12 @@ if reest_flag~=1
         end
     end
 
-    fprintf('Reestimation gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f\n',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A))
+    logit(sprintf('Reestimation gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A)))
 
     bperp_range=max(bperp)-min(bperp);
     keep_ix=coh_ps2>coh_thresh & abs(pm.K_ps(ix)-K_ps2)<2*pi/bperp_range;
     clear pm
-    fprintf('%d ps selected after re-estimation of coherence\n',sum(keep_ix))
+    logit(sprintf('%d ps selected after re-estimation of coherence',sum(keep_ix)))
     clear pm
 
 else % reest_flag==1, skip re-estimation

@@ -46,7 +46,7 @@ msgstr=fillstr;
 
 msgstr(round(nfill)/2-11:round(nfill/2)+12)=' StaMPS/MTI Version 3.3 ';
 fprintf([skipstr,fillstr,msgstr]);
-msgstr(round(nfill)/2-11:round(nfill/2)+12)=' Andy Hooper, Sep 2013  ';
+msgstr(round(nfill)/2-11:round(nfill/2)+12)=' Beta version, Sep 2013 ';
 fprintf([msgstr,fillstr,skipstr]);
 
 
@@ -123,7 +123,7 @@ msgstr=fillstr;
 
 for i=1:length(patchdir)
     cd(patchdir(i).name)
-    fprintf('%s\n',pwd)
+    logit(sprintf('\nProcessing PATCH %s',pwd))
     
     if start_step==1
         msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 1 ';

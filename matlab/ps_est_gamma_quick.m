@@ -240,7 +240,7 @@ while loop_end_sw==0
                 coh_ps(i)=0;
             end
             if i/100000==floor(i/100000)
-                logit(sprintf('%d PS processed',i))
+                logit(sprintf('%d PS processed',i),2)
             end
         end
         

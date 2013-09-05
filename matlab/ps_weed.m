@@ -20,7 +20,7 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   12/2012 AH: weed very small heights if weed_zero_elevation='y'
 %   ===================================================================
 logit;
-fprintf('Weeding selected pixels...\n')
+logit('Weeding selected pixels...')
 
 if nargin<1
     all_da_flag=0;
@@ -161,7 +161,7 @@ end
 n_ps_low_D_A=length(ix2);
 n_ps=n_ps_low_D_A + n_ps_other;
 ix_weed=logical(ones(n_ps,1));
-disp([num2str(n_ps_low_D_A),' low D_A PS, ',num2str(n_ps_other),' high D_A PS']);
+logit([num2str(n_ps_low_D_A),' low D_A PS, ',num2str(n_ps_other),' high D_A PS']);
 
 
 
@@ -180,7 +180,7 @@ if no_weed_adjacent==0
         neigh_ix(ij_shift(i,1)-1:ij_shift(i,1)+1,ij_shift(i,2)-1:ij_shift(i,2)+1)=neigh_this;
         
         if i/100000==floor(i/100000)
-            disp([num2str(i),' PS processed'])
+            logit([num2str(i),' PS processed'],2)
             save log step_name i
             !sync
         end
@@ -195,7 +195,7 @@ if no_weed_adjacent==0
             neigh_ps{my_neigh_ix}=[neigh_ps{my_neigh_ix},i];
         end    
         if i/100000==floor(i/100000)
-            disp([num2str(i),' PS processed'])
+            logit([num2str(i),' PS processed'],2)
             save log step_name i
             !sync
         end
@@ -223,7 +223,7 @@ if no_weed_adjacent==0
             ix_weed(same_ps(low_coh_ix))=0;
         end
         if i/100000==floor(i/100000)
-            disp([num2str(i),' PS processed'])
+            logit([num2str(i),' PS processed'],2)
             save log step_name i
             !sync
         end
@@ -232,7 +232,7 @@ if no_weed_adjacent==0
 	
 
 
-    disp([num2str(sum(ix_weed)),' PS kept after dropping adjacent pixels']);
+    logit([num2str(sum(ix_weed)),' PS kept after dropping adjacent pixels']);
 
 end
 
@@ -259,7 +259,7 @@ end
 
     if ~isempty(dups)
         xy_weed=xy2(ix_weed,:);
-        fprintf('%d PS with duplicate lon/lat dropped\n\n',length(dups)')
+        logit(sprintf('%d PS with duplicate lon/lat dropped\n',length(dups)'))
     end
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
 
@@ -305,15 +305,15 @@ if no_weed_noisy==0
     n_use=length(ifg_index);
     for i=1:length(drop_ifg_index)
         if strcmpi(small_baseline_flag,'y')
-            fprintf('%s-%s dropped from noise estimation\n',datestr(ps.ifgday(drop_ifg_index(i),2)),datestr(ps.ifgday(drop_ifg_index(i),2)));
+            logit(sprintf('%s-%s dropped from noise estimation',datestr(ps.ifgday(drop_ifg_index(i),2)),datestr(ps.ifgday(drop_ifg_index(i),2))));
         else
-            fprintf('%s dropped from noise estimation\n',datestr(day(drop_ifg_index(i))));
+            logit(sprintf('%s dropped from noise estimation',datestr(day(drop_ifg_index(i)))));
         end
     end
 
     if ~strcmpi(small_baseline_flag,'y')
 
-      fprintf('Estimating noise for all arcs...\n')
+      logit(sprintf('Estimating noise for all arcs...'))
 
       dph_smooth=zeros(n_edge,n_use,'single');
       dph_smooth2=zeros(n_edge,n_use,'single');
@@ -351,26 +351,18 @@ if no_weed_noisy==0
     end
 
 
-    fprintf('Estimating max noise for all pixels...\n')
+    logit(sprintf('Estimating max noise for all pixels...'))
     ps_std=inf(n_ps,1,'single');
     ps_max=inf(n_ps,1,'single');
     for i=1:n_edge
        ps_std(edges(i,2:3))=min([ps_std(edges(i,2:3)),[edge_std(i);edge_std(i)]],[],2);
        ps_max(edges(i,2:3))=min([ps_max(edges(i,2:3)),[edge_max(i);edge_max(i)]],[],2);
     end
-    %for i=1:n_ps
-    %  edge_ix=[find(edges(:,2)==i);find(edges(:,3)==i)];
-    %  ps_std(i)=min(edge_std(edge_ix)); % least noisy 
-    %  ps_max(i)=min(edge_max(edge_ix)); % least noisy 
-    %  if i/10000==floor(i/10000)
-    %      fprintf('   %d PS of %d processed\n',i,n_ps)
-    %  end
-    %end
     ix_weed2=ps_std<weed_standard_dev&ps_max<weed_max_noise;
     ix_weed(ix_weed)=ix_weed2;
     n_ps=sum(ix_weed);
 
-    disp([num2str(n_ps),' PS kept after dropping noisy pixels']);
+    logit([num2str(n_ps),' PS kept after dropping noisy pixels']);
 end
 
 weedname=['weed',num2str(psver)];
