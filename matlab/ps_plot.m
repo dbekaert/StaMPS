@@ -1660,6 +1660,24 @@ end
 
 fprintf('Color Range: %g to %g %s\n',lims,units)
 
+if ext_data_flag==1
+    for k=1:size(ifg_data_RMSE,1)
+        if k==1
+            fprintf(['\nRMSE between interferogram(s) and external data \n'])
+        end
+        
+        if aps_band_flag==1
+            fprintf(['Band' num2str(k) ' : ' num2str(ifg_data_RMSE(k)) '\n']);
+        else
+            if size(ifg_data_RMSE,1)==ps.n_ifg
+                fprintf(['ifg ' num2str(k) ' \t ' datestr(ps.ifgday(k,1),'yyyymmdd') '-' datestr(ps.ifgday(k,2),'yyyymmdd') ' \t ' num2str(ifg_data_RMSE(k)) '\n']);
+            else
+                 fprintf(['dataset ' num2str(k) ' \t ' num2str(ifg_data_RMSE(k)) '\n']);               
+            end
+        end
+    end
+end
+
 if ts_flag == 1
   figure(h_fig);
   clear all % clean up to save memory
@@ -1688,22 +1706,6 @@ if ts_flag == 1
 end
 
 
-if ext_data_flag==1
-    for k=1:size(ifg_data_RMSE,1)
-        if k==1
-            fprintf(['\nRMSE between interferogram(s) and external data \n'])
-        end
-        
-        if aps_band_flag==1
-            fprintf(['Band' num2str(k) ' : ' num2str(ifg_data_RMSE(k)) '\n']);
-        else
-            if size(ifg_data_RMSE,1)==ps.n_ifg
-                fprintf(['ifg ' num2str(k) ' \t ' datestr(ps.ifgday(k,1),'yyyymmdd') '-' datestr(ps.ifgday(k,2),'yyyymmdd') ' \t ' num2str(ifg_data_RMSE(k)) '\n']);
-            else
-                 fprintf(['dataset ' num2str(k) ' \t ' num2str(ifg_data_RMSE(k)) '\n']);               
-            end
-        end
-    end
-end
+
 
     
