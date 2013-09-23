@@ -12,6 +12,7 @@ function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag
 %   03/2012 AH: version updated for subsets of full network
 %   10/2012 AH: Bug corrected in 3D_FULL
 %   11/2012 AH: Add temperature option and scf_flag
+%   09/2013 DB: Fix compatibility issue with matlab 2009
 %   ======================================================================
 % 
 %
@@ -31,9 +32,9 @@ master_ix=find(day==0);
 [nrow,ncol]=size(ui.Z);
 
 day_pos_ix=find(day>0);
-[~,I]=min(day(day_pos_ix));
+[temp,I]=min(day(day_pos_ix));
 dph_space=((uw.ph(ui.edges(:,3),:).*conj(uw.ph(ui.edges(:,2),:))));
-clear uw
+clear uw temp
 
 dph_space=dph_space./abs(dph_space);
 ifreq_ij=[];
