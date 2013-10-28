@@ -3,71 +3,77 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %    cbar_flag,textsize,textcolor,lon_rg,lat_rg)
 % PS_PLOT plot ps values for selected ifgs
 %    PS_PLOT(VALUE_TYPE,BACKGROUND,PHASE_LIMS,REF_IFG,IFG_LIST,N_X,...
-%            CBAR_FLAG,TEXTSIZE,TEXTCOLOR,LON_RG,LAT_RG)
+%            CBAR_FLAG,TEXTSIZE,TEXTCOLOR,LON_RG,LAT_RG,UNITS) 
 %
 %    In the case of phase, +ve values imply displacement away from the satellite
 %       when the master is earlier than the slave.
 %    In the case of velocities, +ve values are towards the satellite.
 %
 %    valid VALUE_TYPE's are:
+%    'hgt' for topography
 %    'w' for wrapped phase
 %    'w-d' for wrapped phase minus smoothed dem error
 %    'w-o' for wrapped phase minus orbital ramps
 %      also 'w-dm','w-do','w-dmo'
-%    'p' for spatially filtered wrapped phase
+%    'p' for spatially filtered wrapped phase 
 %    'u' for unwrapped phase
-%    'u-d' for unwrapped phase minus dem error
-%    'u-m' for unwrapped phase minus and master AOE
-%    'u-o' for unwrapped phase minus orbital ramps
-%    'u-a' for unwrapped phase minus topo-correlated atmosphere
-%      also 'u-dm','u-do','u-da','u-dmo','u-dma','u-dms','u-dmao','u-dmos'
+%    'u-d' for unwrapped phase minus dem error  
+%    'u-m' for unwrapped phase minus and master AOE  
+%    'u-o' for unwrapped phase minus orbital ramps 
+%    'u-a' for unwrapped phase minus stratisfied topo-correlated atmosphere
+%          see flags below for type 'a_l', 'a_p', 'a_m' or 'a_e'.
+%      also 'u-dm','u-do','u-da','u-ao','u-dmo','u-dma','u-dms','u-dmao','u-dmos'
 %    'usb' for unwrapped phase of small baseline ifgs
-%    'usb-d'
-%    'usb-o'
-%    'usb-a'
+%    'usb-d' 
+%    'usb-o' 
+%    'usb-a' 
 %      also 'usb-do' ,'usb-da','usb-dao'
 %    'rsb' residual between unwrapped phase of sb ifgs and inverted
+%    'a' for stratisfied topo-correlated atmosphere see flags below for
+%    type 'a_l', 'a_p', 'a_m', 'a_e'.
+%    'asb' for stratisfied topo-correlated atmosphere of small baselines.
+%        see flags below for type 'a_l', 'a_p' or 'a_m'.
 %    'd' for spatially correlated DEM error (rad/m)
 %    'm' for AOE phase due to master
-%    'o' for orbital ramps
+%    'o' for orbital ramps 
 %    's' for atmosphere and orbit error (AOE) phase due to slave
 %    'v' mean LOS velocity (MLV) in mm/yr
-%    'v-d'
-%    'v-o'
-%    'v-a'
-%      also 'v-do','v-da',v-dao'
+%    'v-d' 
+%    'v-o' 
+%    'v-a' 
+%      also 'v-do','v-da',v-dao' 
 %    'vs' standard deviation of MLV (mm/yr)
 %    'vs-d'
-%    'vs-o'
-%      also 'vs-do'
+%    'vs-o' 
+%      also 'vs-do' 
 %    'vdrop' MLV calculated from all but current ifg (mm/yr)
-%    'vdrop-d'
-%    'vdrop-o'
-%      also 'vdrop-do'
-%
+%    'vdrop-d' 
+%    'vdrop-o' 
+%      also 'vdrop-do' 
+% 
 %    When the wrapped interferograms are small baseline, 'v' and 'd' plots
-%    are calulated from the unwraped small baseline interferograms by
+%    are calulated from the unwraped small baseline interferograms by 
 %    default. To force use of the single master interferograms, capitalise
 %    e.g. ps_plot('V-D')
-%
+%    
 %    BACKGROUND = -1 outputs the data to a .mat file instead of plotting
-%                 0, black background, lon/lat axes
+%                 0, black background, lon/lat axes 
 %                 1, white background, lon/lat axes (default)
 %                 2, shaded relief topo, lon/lat axes
 %                 3, 3D topo, lon/lat axes
 %                 4, mean amplitude image
 %                 5, mean amplitude image, brightness showing through PS
 %                 6, white background, xy axis (rotated lon/lat)
-%
-%    PHASE_LIMS = 1x2 vector with colormap limits (or 0 for default)
-%                 defaults to the range of the plotted phase
+%                           
+%    PHASE_LIMS = 1x2 vector with colormap limits (or 0 for default) 
+%                 defaults to the range of the plotted phase 
 %
 %    REF_IFG = number of interferogram to reference to - defaults to 0 (master)
 %              -1 for incremental referencing
 %
 %    IFG_LIST = list of interferograms to plot - defaults to [] (all)
 %
-%    N_X = maximum number of images to plot per row
+%    N_X = maximum number of images to plot per row 
 %          defaults to 0 (find optimum based on image size)
 %
 %    CBAR_FLAG = colorbar flag - defaults to 0 (plot on master, if plotted)
@@ -85,6 +91,32 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %
 %    'ts'   = produce time series plot on user click over velocity plots.
 %             the position of this switch is not important.
+%
+%    Topography correlated correlation options
+%    'a_l'  = topography correlated aps correction using linear correction
+%    'a_p'  = topography correlated aps correction using power law relationship
+%    'a_m'  = topography correlated aps correction using MERIS data
+%    'a_e'  = topography correlated aps correction using ERA-I data
+%    'ifg i' = only for 'a_p' show the topopgraphy correlated aps correction
+%              for the ith interferogram for all spatial bands. Note that
+%              the definition of ifg_list changes the spatial bands for this option.
+%
+%   ADDITONAL DATA DISPLAY
+%     Plot in additional also other geocoded information, e.g stations or 
+%     LOS data on top of the interferograms. To use this functionality use 
+%     the flag:  'ext PATH', with PATH the full path to the data location.
+%     To display identical information in each interferogram include a mat file
+%     on this path. In case the to be displayed data varies depending on
+%     the ifg dates, then only specify the path. At this path the data should 
+%     be storred in date1_date2.mat files, where the dates are in YYYYMMDD format. 
+%     The file itself should contain at least a lonlat variable. When also a 
+%     ph_disp (phase) variable is given the markers will be collored acordingly. 
+%     NOTE: - Not each interferogram date needs to have a file asociated with it.
+%           - External ph_disp data are fixed to the ifgs by minimizing the mean residual.
+%           - In case a reference area is selected, it needs to have data coverage in all datasets.
+%           - Markers are given as by default by collored squares. In case
+%             they were saturated by the colorbar they become circular
+%             markers.
 %
 %
 %   Andy Hooper, June 2006
@@ -122,10 +154,31 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %   12/2012 AH: plot raw phase if psver=1
 %   01/2013 DB: Fix plotting of data in case of SB directory
 %   01/2013 AH: Add topo-correlated atmosphere options
+%   04/2013 DB: Add figure handle as output
+%   04/2013 DB: Add colorbar axis extremes as output
+%   04/2013 DB: Include plotting of atmospheric correction from meris data
+%   04/2013 DB: Topo correlated aps correction using 'a_m','a_l','a_p' options 
+%   04/2013 DB: Adding the same velocity plot options for SB as for SM
+%   04/2013 DB: Bug fix for aps, include option to show aps_p for all bands
+%               for infividual interferograms, by including 'ifg i' option
+%   04/2013 DB: Include an option to show in additional also other data
+%               like e.g. LOS GPS displacements
+%   04/2013 DB: Modify such that for bandfiltered data the external data
+%               for that date alone is shown.
+%   04/2013 DB: Fix the plotting of external data by minimizing the
+%               residual with the insar. Output the RMSE for each ifgs.
+%   05/2013 DB: Plot the ifg number for SB ifgs
+%   05/2013 DB: Allow inputdata to be saved.
+%   05/2013 DB: Option to plot topography
+%   05/2013 DB: When full filepath is given, plot same ext data for each ifgs
+%               and output the RMSE information.
+%   06/2013 DB: Allow units to be specified and fix wrong unit for 'o' option
+%   09/2013 DB: Added extra options and fix warning for bandfilter option
+%   10/2013 DB: Included ERA-I tca option
 %   ======================================================================
 
 stdargin = nargin ; 
-parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_p', 'ifg i^th', 'ext PATH ' is specified
+parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_e', 'a_p', 'ifg i^th', 'ext PATH ' is specified
 
 
 if stdargin<1
@@ -275,7 +328,11 @@ if aps_band_flag==1
         end
 
         
-
+        if strcmp(value_type(1),'usb') || strcmp(value_type(1),'asb')
+        else
+            % other options still need to be included
+            keyboard
+        end
         
        
         
@@ -303,8 +360,11 @@ if aps_band_flag==1
             counter = counter+1;
         end
         
-        keyboard
-       
+        if strcmp(value_type(1),'u') || strcmp(value_type(1),'a')
+        else
+            % other options still need to be included
+            keyboard
+        end
         
         
         
@@ -562,7 +622,10 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'usb-a (meris)';
-        else % current implementation of aps correction
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'usb-a (era)';
+        else% current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'usb-a';
         end
@@ -582,6 +645,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'usb-ao (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'usb-ao (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'usb-ao';
@@ -607,6 +673,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'usb-da (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'usb-da (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'usb-da';
@@ -628,6 +697,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'usb-dao (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'usb-dao (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'usb-dao';
@@ -656,6 +728,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'asb (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'asb (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'asb';
@@ -675,6 +750,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'asb-o (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'asb-o (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'asb-o';
@@ -736,6 +814,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'u-da (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'u-da (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'u-da';
@@ -758,6 +839,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'u-dma (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'u-dma (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'u-dma';
@@ -784,6 +868,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'u-dmao (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'u-dmao (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'u-dmao';
@@ -818,6 +905,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'u-a (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'u-a (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'u-a';
@@ -829,6 +919,70 @@ switch(group_type)
         end
         clear uw aps aps_corr
         ref_ps=ps_setref;
+     case {'u-ao'}
+        uw=load(phuwname);
+        aps=load(apsname);
+        if aps_flag==1 % linear correction
+            aps_corr = aps.ph_tropo_linear;
+            fig_name = 'u-ao (linear)';
+        elseif aps_flag==2 % powerlaw correlation
+            aps_corr = aps.ph_tropo_powerlaw;
+            fig_name = 'u-ao (powerlaw)';
+        elseif aps_flag==3 % meris correction
+            aps_corr = aps.ph_tropo_meris;
+            fig_name = 'u-ao (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'u-ao (era)';
+        else % current implementation of aps correction
+            aps_corr = aps.strat_corr;
+            fig_name = 'u-ao';
+        end
+        ph_all=uw.ph_uw;
+        ph_all=uw.ph_uw - aps_corr;
+        if aps_band_flag~=1
+            ph_all(:,master_ix)=0;
+        end
+        
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
+        
+        clear uw aps aps_corr
+        ref_ps=ps_setref;
+        
+    case {'u-dao'}
+        uw=load(phuwname);
+        aps=load(apsname);
+        scla=load(sclaname);
+        
+        if aps_flag==1 % linear correction
+            aps_corr = aps.ph_tropo_linear;
+            fig_name = 'u-dao (linear)';
+        elseif aps_flag==2 % powerlaw correlation
+            aps_corr = aps.ph_tropo_powerlaw;
+            fig_name = 'u-dao (powerlaw)';
+        elseif aps_flag==3 % meris correction
+            aps_corr = aps.ph_tropo_meris;
+            fig_name = 'u-dao (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'u-dao (era)';
+        else % current implementation of aps correction
+            aps_corr = aps.strat_corr;
+            fig_name = 'u-dao';
+        end
+        ph_all=uw.ph_uw;
+        ph_all=uw.ph_uw - aps_corr - scla.ph_scla;
+        if aps_band_flag~=1
+            ph_all(:,master_ix)=0;
+        end
+        
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
+        
+        clear uw aps aps_corr scla
+        ref_ps=ps_setref;     
+        
     case {'u-d'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -879,6 +1033,9 @@ switch(group_type)
         elseif aps_flag==3 % meris correction
             aps_corr = aps.ph_tropo_meris;
             fig_name = 'a (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'a (era)';
         else % current implementation of aps correction
             aps_corr = aps.strat_corr;
             fig_name = 'a';
@@ -887,6 +1044,36 @@ switch(group_type)
         ph_all=aps_corr;
         clear aps aps_corr
         ref_ps=ps_setref;
+        
+   case {'a-o'}
+        aps=load(apsname);
+        %ph_all=exp(j*ph_scn);
+        if aps_flag==1 % linear correction
+            aps_corr = aps.ph_tropo_linear;
+            fig_name = 'a-o (linear)';
+        elseif aps_flag==2 % powerlaw correlation
+            aps_corr = aps.ph_tropo_powerlaw;
+            fig_name = 'a-o (powerlaw)';
+        elseif aps_flag==3 % meris correction
+            aps_corr = aps.ph_tropo_meris;
+            fig_name = 'a-o (meris)';
+        elseif aps_flag==4 % ERA-I correction
+            aps_corr = aps.ph_tropo_era;
+            fig_name = 'a-o (era)';
+        else % current implementation of aps correction
+            aps_corr = aps.strat_corr;
+            fig_name = 'a-o';
+        end
+        fig_name = [fig_name fig_name_suffix];
+        ph_all=aps_corr;
+        
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
+        
+        clear aps aps_corr
+        ref_ps=ps_setref;
+        
+        
     case {'s'}
         scn=load(scnname);
         %ph_all=exp(j*ph_scn);
@@ -975,6 +1162,9 @@ switch(group_type)
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
                 fig_name = 'v-a (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-a (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
                 fig_name = 'v-a';
@@ -993,6 +1183,9 @@ switch(group_type)
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
                 fig_name = 'v-ao (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-ao (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
                 fig_name = 'v-ao';
@@ -1015,6 +1208,9 @@ switch(group_type)
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
                 fig_name = 'v-da (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-da (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
                 fig_name = 'v-da';
@@ -1037,6 +1233,9 @@ switch(group_type)
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
                 fig_name = 'v-dao (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-dao (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
                 fig_name = 'v-dao';
@@ -1171,6 +1370,9 @@ switch(group_type)
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
                 fig_name = 'v-a (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-a (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
                 fig_name = 'v-a';
@@ -1182,16 +1384,19 @@ switch(group_type)
             aps=load(apssbname);
             if aps_flag==1 % linear correction
                 aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-a (linear)';
+                fig_name = 'v-ao (linear)';
             elseif aps_flag==2 % powerlaw correlation
                 aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-a (powerlaw)';
+                fig_name = 'v-ao (powerlaw)';
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-a (meris)';
+                fig_name = 'v-ao (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-ao  (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
-                fig_name = 'v-a';
+                fig_name = 'v-ao';
             end
             ph_uw=ph_uw - aps_corr;
             clear scla aps aps_corr
@@ -1211,6 +1416,9 @@ switch(group_type)
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
                 fig_name = 'v-da (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-da (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
                 fig_name = 'v-da';
@@ -1233,6 +1441,9 @@ switch(group_type)
             elseif aps_flag==3 % meris correction
                 aps_corr = aps.ph_tropo_meris;
                 fig_name = 'v-dao (meris)';
+            elseif aps_flag==4 % ERA-I correction
+                aps_corr = aps.ph_tropo_era;
+                fig_name = 'v-dao (era)';
             else % current implementation of aps correction
                 aps_corr = aps.strat_corr;
                 fig_name = 'v-dao';
@@ -1656,10 +1867,6 @@ else
   end
 end
 
-
-
-fprintf('Color Range: %g to %g %s\n',lims,units)
-
 if ext_data_flag==1
     for k=1:size(ifg_data_RMSE,1)
         if k==1
@@ -1677,6 +1884,8 @@ if ext_data_flag==1
         end
     end
 end
+
+fprintf('Color Range: %g to %g %s\n',lims,units)
 
 if ts_flag == 1
   figure(h_fig);
