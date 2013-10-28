@@ -32,7 +32,9 @@ ext_data_flag=0;        % when 1 there will be external data to be plotted.
 ext_data_path = [];     % path to the external data to be displayed
 plot_flag=1; 
 
-% search for char parameter like 'ts','a_l','a_m','a_p' , 'ifg i^th', 'ext PATH'
+
+
+% search for char parameter like 'ts','a_l','a_m','a_p', 'a_e' , 'ifg i^th', 'ext PATH'
 prmsrch=[];
 for k=1:Noptargin,   
    if strcmp(varargin{k},'ts')==1
@@ -51,6 +53,10 @@ for k=1:Noptargin,
        % aps topo correlated meris correction
        aps_flag=3;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_m') ]);
+   elseif strcmp(varargin{k},'a_e')==1
+       % aps topo correlated meris correction
+       aps_flag=4;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_e') ]);
    elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
            if size(varargin{k},2)==3
               ifg_number=[];
@@ -126,4 +132,5 @@ end
 %if ts_flag==0
 %    disp('no ts_flag')
 %end
+
 
