@@ -57,6 +57,14 @@ for k=1:Noptargin,
        % aps topo correlated meris correction
        aps_flag=4;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_e') ]);
+   elseif strcmp(varargin{k},'a_ed')==1
+       % aps topo correlated meris correction
+       aps_flag=5;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_ed') ]);
+   elseif strcmp(varargin{k},'a_ew')==1
+       % aps topo correlated meris correction
+       aps_flag=6;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_ew') ]);
    elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
            if size(varargin{k},2)==3
               ifg_number=[];

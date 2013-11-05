@@ -30,7 +30,7 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %      also 'usb-do' ,'usb-da','usb-dao'
 %    'rsb' residual between unwrapped phase of sb ifgs and inverted
 %    'a' for stratisfied topo-correlated atmosphere see flags below for
-%    type 'a_l', 'a_p', 'a_m', 'a_e'.
+%    type 'a_l', 'a_p', 'a_m', 'a_e' ('a_ed' for dry and 'a_ew' for wet).
 %    'asb' for stratisfied topo-correlated atmosphere of small baselines.
 %        see flags below for type 'a_l', 'a_p' or 'a_m'.
 %    'd' for spatially correlated DEM error (rad/m)
@@ -175,10 +175,11 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %   06/2013 DB: Allow units to be specified and fix wrong unit for 'o' option
 %   09/2013 DB: Added extra options and fix warning for bandfilter option
 %   10/2013 DB: Included ERA-I tca option
+%   11/2013 DB: Incorporate the inversion of the troposphere from SB to PS
 %   ======================================================================
 
 stdargin = nargin ; 
-parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_e', 'a_p', 'ifg i^th', 'ext PATH ' is specified
+parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_e' ('a_ed' for dry and 'a_ew' for wet), 'a_p', 'ifg i^th', 'ext PATH ' is specified
 
 
 if stdargin<1
@@ -445,7 +446,21 @@ elseif strcmpi(group_type(1),'d')
 end
 
 
+
 value_type=lower(value_type);
+
+% Check if the tropopsheric needs to be inverted from SB to PS
+if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a'))
+    sb_invert_aps(aps_flag);
+end
+if isempty(strfind(value_type,'usb')) 
+    if ~isempty(strfind(value_type,'u')) || ~isempty(strfind(group_type,'v'))
+         if ~isempty(strfind(value_type,'a'))
+            sb_invert_aps(aps_flag);
+        end
+    end
+end
+
 switch(group_type)
     case {'hgt'}
         hgt = load(hgtname);
@@ -613,22 +628,8 @@ switch(group_type)
     case {'usb-a'}
         uw=load(phuwsbname);
         aps=load(apssbname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'usb-a (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'usb-a (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'usb-a (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'usb-a (era)';
-        else% current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'usb-a';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['usb-a' fig_name_tca];
         ph_all=uw.ph_uw - aps_corr;
         clear uw aps aps_corr
         ref_ps=ps_setref;
@@ -636,50 +637,22 @@ switch(group_type)
      case {'usb-ao'}
         uw=load(phuwsbname);
         aps=load(apssbname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'usb-ao (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'usb-ao (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'usb-ao (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'usb-ao (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'usb-ao';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['usb-ao' fig_name_tca];
         ph_all=uw.ph_uw - aps_corr;
         clear uw aps aps_corr
 
         % deramping ifgs
         [ph_all] = ps_deramp(ps,ph_all);
-       
         ref_ps=ps_setref;
         textsize=0;
     case {'usb-da'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
         aps=load(apssbname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'usb-da (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'usb-da (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'usb-da (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'usb-da (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'usb-da';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['usb-da' fig_name_tca];
+ 
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr;
         clear uw scla aps aps_corr
         ref_ps=ps_setref;
@@ -688,22 +661,8 @@ switch(group_type)
         uw=load(phuwsbname);
         scla=load(sclasbname);
         aps=load(apssbname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'usb-dao (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'usb-dao (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'usb-dao (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'usb-dao (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'usb-dao';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['usb-dao' fig_name_tca];
         ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp - aps_corr;
         clear uw scla aps aps_corr
         ref_ps=ps_setref;
@@ -719,44 +678,16 @@ switch(group_type)
         fig_name = 'rsb';  
     case {'asb'}
         aps=load(apssbname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'asb (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'asb (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'asb (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'asb (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'asb';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);    
+        fig_name = ['asb' fig_name_tca];
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         ref_ps=ps_setref;
         textsize=0;
      case {'asb-o'}
         aps=load(apssbname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'asb-o (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'asb-o (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'asb-o (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'asb-o (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'asb-o';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['asb-o' fig_name_tca];
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         clear aps aps_corr
@@ -805,22 +736,8 @@ switch(group_type)
         uw=load(phuwname);
         scla=load(sclaname);
         aps=load(apsname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'u-da (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'u-da (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'u-da (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'u-da (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'u-da';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-da' fig_name_tca];
         ph_all=uw.ph_uw; 
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr;
         ph_all(:,master_ix)=0;
@@ -830,22 +747,8 @@ switch(group_type)
         uw=load(phuwname);
         scla=load(sclaname);
         aps=load(apsname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'u-dma (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'u-dma (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'u-dma (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'u-dma (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'u-dma';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-dma' fig_name_tca];
         ph_all=uw.ph_uw; 
         ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - aps_corr;
         ph_all(:,master_ix)=0;
@@ -859,22 +762,8 @@ switch(group_type)
             disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
             return;
         end
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'u-dmao (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'u-dmao (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'u-dmao (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'u-dmao (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'u-dmao';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-dmao' fig_name_tca];
         ph_all=uw.ph_uw; 
         ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp - aps_corr;
         ph_all(:,master_ix)=0;
@@ -896,22 +785,8 @@ switch(group_type)
     case {'u-a'}
         uw=load(phuwname);
         aps=load(apsname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'u-a (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'u-a (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'u-a (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'u-a (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'u-a';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-a' fig_name_tca];
         ph_all=uw.ph_uw;
         ph_all=uw.ph_uw - aps_corr;
         if aps_band_flag~=1
@@ -922,22 +797,8 @@ switch(group_type)
      case {'u-ao'}
         uw=load(phuwname);
         aps=load(apsname);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'u-ao (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'u-ao (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'u-ao (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'u-ao (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'u-ao';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-ao' fig_name_tca];
         ph_all=uw.ph_uw;
         ph_all=uw.ph_uw - aps_corr;
         if aps_band_flag~=1
@@ -954,23 +815,8 @@ switch(group_type)
         uw=load(phuwname);
         aps=load(apsname);
         scla=load(sclaname);
-        
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'u-dao (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'u-dao (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'u-dao (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'u-dao (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'u-dao';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-dao' fig_name_tca];
         ph_all=uw.ph_uw;
         ph_all=uw.ph_uw - aps_corr - scla.ph_scla;
         if aps_band_flag~=1
@@ -997,7 +843,13 @@ switch(group_type)
             disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
             return;
         end
-        ph_all=uw.ph_uw - scla.ph_ramp;
+        
+        if ~isfield(scla,'ph_ramp')
+             % deramping ifgs
+             [ph_all] = ps_deramp(ps,uw.ph_uw );
+        else
+          ph_all=uw.ph_uw - scla.ph_ramp;
+        end
         clear uw scla
         ref_ps=ps_setref;
         fig_name = 'u-o';
@@ -1008,7 +860,12 @@ switch(group_type)
             disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
             return;
         end
-        ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp;
+        if ~isfield(scla,'ph_ramp')
+             % deramping ifgs
+             [ph_all] = ps_deramp(ps,uw.ph_uw - scla.ph_scla);
+        else
+            ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp;
+        end
         clear uw scla
         ref_ps=ps_setref;
         fig_name = 'u-do';
@@ -1024,22 +881,8 @@ switch(group_type)
     case {'a'}
         aps=load(apsname);
         %ph_all=exp(j*ph_scn);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'a (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'a (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'a (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'a (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'a';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['a' fig_name_tca];
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         clear aps aps_corr
@@ -1048,22 +891,8 @@ switch(group_type)
    case {'a-o'}
         aps=load(apsname);
         %ph_all=exp(j*ph_scn);
-        if aps_flag==1 % linear correction
-            aps_corr = aps.ph_tropo_linear;
-            fig_name = 'a-o (linear)';
-        elseif aps_flag==2 % powerlaw correlation
-            aps_corr = aps.ph_tropo_powerlaw;
-            fig_name = 'a-o (powerlaw)';
-        elseif aps_flag==3 % meris correction
-            aps_corr = aps.ph_tropo_meris;
-            fig_name = 'a-o (meris)';
-        elseif aps_flag==4 % ERA-I correction
-            aps_corr = aps.ph_tropo_era;
-            fig_name = 'a-o (era)';
-        else % current implementation of aps correction
-            aps_corr = aps.strat_corr;
-            fig_name = 'a-o';
-        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['a-o' fig_name_tca];
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         
@@ -1153,43 +982,15 @@ switch(group_type)
              fig_name = 'v-dos';
         case {'v-a'}
             aps=load(apsname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-a (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-a (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-a (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-a (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-a';
-            end
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-a' fig_name_tca];  
             ph_uw=ph_uw - aps_corr;
             clear scla aps aps_corr
             
         case {'v-ao'}
             aps=load(apsname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-ao (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-ao (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-ao (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-ao (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-ao';
-            end
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-ao' fig_name_tca];
             ph_uw=ph_uw - aps_corr;
             clear scla aps aps_corr  
             
@@ -1199,22 +1000,8 @@ switch(group_type)
         case {'v-da'}
             scla=load(sclaname);
             aps=load(apsname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-da (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-da (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-da (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-da (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-da';
-            end
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-da' fig_name_tca];
             ph_uw=ph_uw - scla.ph_scla - aps_corr;
             clear scla aps aps_corr
         case {'v-dao'}
@@ -1224,23 +1011,14 @@ switch(group_type)
             end
             scla=load(sclaname);
             aps=load(apsname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-dao (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-dao (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-dao (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-dao (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-dao';
-            end
-            ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - aps_corr;
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-dao' fig_name_tca];
+
+%             ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - aps_corr;
+            ph_uw=ph_uw - scla.ph_scla - aps_corr;
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
+            
             clear scla aps aps_corr
         case {'v-ds'}
             scla=load(sclaname);
@@ -1361,43 +1139,15 @@ switch(group_type)
                
         case {'v-a'}
             aps=load(apssbname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-a (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-a (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-a (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-a (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-a';
-            end
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-a' fig_name_tca];
             ph_uw=ph_uw - aps_corr;
             clear scla aps aps_corr
             
          case {'v-ao'}
             aps=load(apssbname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-ao (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-ao (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-ao (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-ao  (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-ao';
-            end
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-ao' fig_name_tca];
             ph_uw=ph_uw - aps_corr;
             clear scla aps aps_corr
             
@@ -1407,22 +1157,8 @@ switch(group_type)
         case {'v-da'}
             scla=load(sclasbname);
             aps=load(apssbname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-da (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-da (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-da (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-da (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-da';
-            end
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-da' fig_name_tca];
             ph_uw=ph_uw - scla.ph_scla - aps_corr;
             clear scla aps aps_corr
         case {'v-dao'}
@@ -1432,23 +1168,14 @@ switch(group_type)
             end
             scla=load(sclasbname);
             aps=load(apssbname);
-            if aps_flag==1 % linear correction
-                aps_corr = aps.ph_tropo_linear;
-                fig_name = 'v-dao (linear)';
-            elseif aps_flag==2 % powerlaw correlation
-                aps_corr = aps.ph_tropo_powerlaw;
-                fig_name = 'v-dao (powerlaw)';
-            elseif aps_flag==3 % meris correction
-                aps_corr = aps.ph_tropo_meris;
-                fig_name = 'v-dao (meris)';
-            elseif aps_flag==4 % ERA-I correction
-                aps_corr = aps.ph_tropo_era;
-                fig_name = 'v-dao (era)';
-            else % current implementation of aps correction
-                aps_corr = aps.strat_corr;
-                fig_name = 'v-dao';
-            end
-            ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - aps_corr;
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-dao' fig_name_tca];
+       
+%             ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - aps_corr;
+            ph_uw=ph_uw - scla.ph_scla - aps_corr;
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
+            
             clear scla aps aps_corr
         case('v-o')
             scla=load(sclasbname);
