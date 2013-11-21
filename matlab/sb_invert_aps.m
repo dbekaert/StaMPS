@@ -3,13 +3,15 @@ function []=sb_invert_aps(aps_flag)
 %
 %   Bekaert David, November 2013   - University of Leeds
 %
+% modifications:
+% 11/2013   DB  Include WRF model and change dry to hydrostatic
 
 logit;
 
 load psver
 psname=['./ps',num2str(psver)];
-apssbname=['./tca_sb',num2str(psver)];
-apsname=['./tca',num2str(psver)];
+apssbname=['./tca_sb',num2str(psver) '.mat'];
+apsname=['./tca',num2str(psver) '.mat'];
 
 
 if nargin<1
@@ -54,8 +56,6 @@ if ~isempty(aps_flag)
     aps_corr=zeros(ps.n_ps,ps.n_image,'single');
     aps_corr(:,nzc_ix)=lscov(G2,double(aps_corr_sb'))';
     
-    
-    
     if aps_flag==1 % linear correction
         ph_tropo_linear = aps_corr;       
         if exist(apsname,'file')==2
@@ -85,11 +85,11 @@ if ~isempty(aps_flag)
             save(apsname,'ph_tropo_era')       
         end
     elseif aps_flag==5 % ERA-I correction
-        ph_tropo_era_dry = aps_corr;
+        ph_tropo_era_hydro = aps_corr;
         if exist(apsname,'file')==2
-            save(apsname,'-append','ph_tropo_era_dry')
+            save(apsname,'-append','ph_tropo_era_hydro')
         else
-            save(apsname,'ph_tropo_era_dry')       
+            save(apsname,'ph_tropo_era_hydro')       
         end
     elseif aps_flag==6 % ERA-I correction
         ph_tropo_era_wet = aps_corr;
@@ -97,6 +97,27 @@ if ~isempty(aps_flag)
             save(apsname,'-append','ph_tropo_era_wet')
         else
             save(apsname,'ph_tropo_era_wet')       
+        end
+    elseif aps_flag==7 % WRF correction
+        ph_tropo_wrf = aps_corr;
+        if exist(apsname,'file')==2
+            save(apsname,'-append','ph_tropo_wrf')
+        else
+            save(apsname,'ph_tropo_wrf')       
+        end
+    elseif aps_flag==8 % WRF correction
+        ph_tropo_wrf_hydro = aps_corr;
+        if exist(apsname,'file')==2
+            save(apsname,'-append','ph_tropo_wrf_hydro')
+        else
+            save(apsname,'ph_tropo_wrf_hydro')       
+        end
+    elseif aps_flag==9 % WRF correction
+        ph_tropo_wrf_wet = aps_corr;
+        if exist(apsname,'file')==2
+            save(apsname,'-append','ph_tropo_wrf_wet')
+        else
+            save(apsname,'ph_tropo_wrf_wet')       
         end
     end
 end

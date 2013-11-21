@@ -30,9 +30,9 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %      also 'usb-do' ,'usb-da','usb-dao'
 %    'rsb' residual between unwrapped phase of sb ifgs and inverted
 %    'a' for stratisfied topo-correlated atmosphere see flags below for
-%    type 'a_l', 'a_p', 'a_m', 'a_e' ('a_ed' for dry and 'a_ew' for wet).
+%    type 'a_l', 'a_p', 'a_m', 'a_e' ('a_eh' for hydrostatic and 'a_ew' for wet), 'a_w' ('a_wh' for hydrostatic and 'a_ww' for wet).
 %    'asb' for stratisfied topo-correlated atmosphere of small baselines.
-%        see flags below for type 'a_l', 'a_p' or 'a_m'.
+%        see flags below for type 'a_l', 'a_p', 'a_m', 'a_e' and 'a_w'.
 %    'd' for spatially correlated DEM error (rad/m)
 %    'm' for AOE phase due to master
 %    'o' for orbital ramps 
@@ -97,6 +97,7 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %    'a_p'  = topography correlated aps correction using power law relationship
 %    'a_m'  = topography correlated aps correction using MERIS data
 %    'a_e'  = topography correlated aps correction using ERA-I data
+%    'a_w'  = topography correlated aps correction using WRF model data
 %    'ifg i' = only for 'a_p' show the topopgraphy correlated aps correction
 %              for the ith interferogram for all spatial bands. Note that
 %              the definition of ifg_list changes the spatial bands for this option.
@@ -176,10 +177,11 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %   09/2013 DB: Added extra options and fix warning for bandfilter option
 %   10/2013 DB: Included ERA-I tca option
 %   11/2013 DB: Incorporate the inversion of the troposphere from SB to PS
+%   11/2013 DB: Including WRF atmospheric option
 %   ======================================================================
 
 stdargin = nargin ; 
-parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_e' ('a_ed' for dry and 'a_ew' for wet), 'a_p', 'ifg i^th', 'ext PATH ' is specified
+parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_e' ('a_eh' for hydrostatic and 'a_ew' for wet), 'a_w' ('a_wh' for hydrostatic and 'a_ww' for wet), 'a_p', 'ifg i^th', 'ext PATH ' is specified
 
 
 if stdargin<1
@@ -448,9 +450,8 @@ end
 
 
 value_type=lower(value_type);
-
 % Check if the tropopsheric needs to be inverted from SB to PS
-if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a'))
+if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a')) && isempty(strfind(value_type,'sb'))
     sb_invert_aps(aps_flag);
 end
 if isempty(strfind(value_type,'usb')) 

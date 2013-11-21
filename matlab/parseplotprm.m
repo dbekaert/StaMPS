@@ -54,17 +54,30 @@ for k=1:Noptargin,
        aps_flag=3;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_m') ]);
    elseif strcmp(varargin{k},'a_e')==1
-       % aps topo correlated meris correction
+       % aps topo correlated ERA-I  correction
        aps_flag=4;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_e') ]);
-   elseif strcmp(varargin{k},'a_ed')==1
-       % aps topo correlated meris correction
+   elseif strcmp(varargin{k},'a_eh')==1
+       % aps hydrostatic ERA-I correction
        aps_flag=5;
-       prmsrch=logical([prmsrch strcmp(varargin{k},'a_ed') ]);
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_eh') ]);
    elseif strcmp(varargin{k},'a_ew')==1
-       % aps topo correlated meris correction
+       % aps topo correlated ERA-I correction
        aps_flag=6;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_ew') ]);
+   elseif strcmp(varargin{k},'a_w')==1
+       % aps topo correlated WRF correction
+       aps_flag=7;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_w') ]);
+   elseif strcmp(varargin{k},'a_wh')==1
+       % aps hydrostatic WRF correction
+       aps_flag=8;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_wh') ]);
+   elseif strcmp(varargin{k},'a_ww')==1
+       % aps topo correlated WRF correction
+       aps_flag=9;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_ww') ]);
+       
    elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
            if size(varargin{k},2)==3
               ifg_number=[];
