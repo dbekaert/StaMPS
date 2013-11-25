@@ -1,4 +1,6 @@
 function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
+
+
 % PS_PLOT_IFG plot phase of a PS interferogram
 %    PS_PLOT_IFG(PHASE,BACKGROUND,LIMS)
 %
@@ -28,6 +30,9 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   09/2010 AH: Add back option to plot scatterer as multiple pixels
 %   06/2011 AH: Fix bug so only patch amplitudes plotted for PATCH dirs
 %   04/2013 DB: Allow for plotting of additonal data, e.g. LOS GPS
+%   05/2013 DB: More flexibility for ext data option
+%   05/2013 DB: Fix issues with colorbar for external data plotting option
+%   11/2013 DB: Add gray as colorbar option
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -75,7 +80,6 @@ else
 end
 
 marker_size=8; 
-cla
 
 
 load psver
@@ -94,6 +98,7 @@ pixel_aspect_ratio=abs(mean_x_post/mean_y_post);
 
 lonlat(:,1)=lonlat(:,1)+lonlat_offset(1);
 lonlat(:,2)=lonlat(:,2)+lonlat_offset(2);
+
 
 if ~isempty(lon_rg)
     ix=lonlat(:,1)>=lon_rg(1)&lonlat(:,1)<=lon_rg(2);
@@ -117,41 +122,47 @@ min_ph=0;
 max_ph=0;
 
 if ~isempty(in_ph)
-if ~isempty(col_rg)
-    min_ph=min(col_rg);
-    max_ph=max(col_rg);
-else
-    if isreal(in_ph)
-        min_ph=min(in_ph);
-        max_ph=max(in_ph);
-    end
-end
-ph_range=max_ph-min_ph;
-
-if ~isreal(in_ph) | ph_range==0
-    if ph_range==0
-        min_ph=-pi;
-        max_ph=+pi;
-        ph_range=2*pi;
-    end
-    in_ph=angle(in_ph);
-    c=hsv(64);
-else
-    if strncmpi(plot_color_scheme,'inflation',9)
-        c=flipud(jet(64));
+    if ~isempty(col_rg)
+        min_ph=min(col_rg);
+        max_ph=max(col_rg);
     else
-        c=jet(64);
+        if isreal(in_ph)
+            min_ph=min(in_ph);
+            max_ph=max(in_ph);
+        end
     end
-end
+    ph_range=max_ph-min_ph;
 
-col_ix=round(((in_ph-min_ph)*63/ph_range)+1);
+    if ~isreal(in_ph) | ph_range==0
+        if ph_range==0
+            min_ph=-pi;
+            max_ph=+pi;
+            ph_range=2*pi;
+        end
+        in_ph=angle(in_ph);
+        c=hsv(64);
+    else
+        if strncmpi(plot_color_scheme,'gray',4)
+            c=flipud(gray(64));  
+        elseif strncmpi(plot_color_scheme,'inflation',9)
+            c=flipud(jet(64));
+        else
+            c=jet(64);
+        end
+    end
 
-col_ix(col_ix>64)=64;
-col_ix(col_ix<1)=1;
+    col_ix=round(((in_ph-min_ph)*63/ph_range)+1);
+
+    col_ix(col_ix>64)=64;
+    col_ix(col_ix<1)=1;
 else
     c=hsv(64);
 end
+
+% duplicating the color for the plotting of extenal data
+c_original = c;
 hold on
+
 
 if bg_flag==4 % plot on amplitude image
 
@@ -268,7 +279,6 @@ elseif bg_flag==5 % plot on amplitude image, let amp show through color
     axis tight
     
 elseif floor(bg_flag)==2
-    
     demfile='dem.mat';
     if ~exist(demfile,'file')
         demfile='../dem.mat';
@@ -512,30 +522,52 @@ else
 end
 ph_lims=[max_ph,min_ph];
 
+
+
+
+
+
+
+%%%% this is the part where I plot the external data.
+
+
+
 % plotting of external data when requested
 if plot_ext_data==1
-    col_ix2=round(((ext_data.ph_disp(:,1)-min_ph)*63/ph_range)+1);
-   
-    ix1 = find(col_ix2<2);
-    ix2 = find(col_ix2>size(c,1));
-    col_ix2(ix1) = 2;
-    col_ix2(ix2) = size(c,1);
-    ix = [ix1 ; ix2];
-    ix_good = [1:size(col_ix2,1)]';
-    ix_good(ix)=[];
     
-    if ~isempty(ix)
-        p=scatter3(ext_data.lonlat(ix,1),ext_data.lonlat(ix,2),ext_data.ph_disp(ix,1),13,c(col_ix2(ix),:),'filled','o');
+    % Checking if there is a ph_disp variable stored in the files 
+    if isfield(ext_data,{'ph_disp'})
+        
+        
+        % plotting phase data
+        col_ix2=round(((ext_data.ph_disp(:,1)-min_ph)*63/ph_range)+1);
+
+        % accounting for values that are outside the extremes of the insar
+        ix1 = find(col_ix2<2);
+        ix2 = find(col_ix2>size(c_original,1));
+        col_ix2(ix1) = 2;
+        col_ix2(ix2) = size(c_original,1);
+        ix = [ix1 ; ix2];
+        ix_good = [1:size(col_ix2,1)]';
+        ix_good(ix)=[];
+
+        % plotting those values that are saturated by o marker
+        if ~isempty(ix)
+            p=scatter3(ext_data.lonlat(ix,1),ext_data.lonlat(ix,2),ext_data.ph_disp(ix,1),13,c_original(col_ix2(ix),:),'filled','o');
+            set(p,'MarkerEdgeColor','k')
+        end
+        % plotting non-saturated values by square markers
+        p=scatter3(ext_data.lonlat(ix_good,1),ext_data.lonlat(ix_good,2),ext_data.ph_disp(ix_good,1),13,c_original(col_ix2(ix_good),:),'filled','sq');
         set(p,'MarkerEdgeColor','k')
+    else
+        % plotting station data
+        p=scatter(ext_data.lonlat(ix_good,1),ext_data.lonlat(ix_good,2),13,'^');
+        set(p,'MarkerEdgeColor','k','MarkerfaceColor','k') 
+        
     end
-
-    p=scatter3(ext_data.lonlat(ix_good,1),ext_data.lonlat(ix_good,2),ext_data.ph_disp(ix_good,1),13,c(col_ix2(ix_good),:),'filled','sq');
-    set(p,'MarkerEdgeColor','k')
 end
-
 
 hold off
 colormap(c);
-
 
 
