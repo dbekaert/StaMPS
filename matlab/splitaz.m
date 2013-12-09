@@ -2,8 +2,12 @@ function []=splitaz(infile,informat,width,fdc,prf,outfile,plotflag)
 %SPLITAZ Split azimuth spectrum in 2 and interfere the 2 halves
 %
 %   Andy Hooper, April 2006
-%   
-
+%
+%   ====================================================================
+%   09/2006 AH: create all workspace files directly
+%   12/2013 JvO: fixed bug for ascending images: subband filters shifted
+%                based on the bin position of the max and min of meanbb
+%   ====================================================================
 
 if nargin<6
     help splitaz
@@ -20,7 +24,8 @@ else
     format='float';
 end
 
-    
+%infile(isnan(infile))=0+0i;
+plotflag=1;    
 n_patch=1500;
 n_fft=2048;
 l1=(n_fft-n_patch)/2;
@@ -40,6 +45,7 @@ buffer=zeros(n_fft,width,'single');
 
 fid=fopen(infile);
 fid2=fopen(outfile,'w');
+fid3=fopen('bandwidthgap.txt','w');
 i=0;
 
 while ~feof(fid)
@@ -51,10 +57,12 @@ while ~feof(fid)
         bb=fft(buffer);
         meanbb=sum(abs(bb),2);
         meanbb=meanbb/max(meanbb);
+	minbb=find(meanbb==min(meanbb))
+	maxbb=find(meanbb==max(meanbb))
         meanbb(meanbb<max(meanbb/5))=inf;
-        if i==0
+	if i==0
             n_bw=ceil(sum(meanbb~=inf)/2); % half bandwidth as number of bins (set 1st patch only);
-            fprintf('Bandwidth gap = %f Hz\n',(n_bw)*prf/n_fft)
+	    fprintf(fid3,'Bandwidth gap = %f Hz\n',(n_bw)*prf/n_fft)
         end
         bin1=find(diff(meanbb)==inf)+1;
         bin1=bin1(1)-n_bw;
@@ -62,21 +70,26 @@ while ~feof(fid)
             bin1=bin1+n_fft/2;
         end
         filt=gausswin(n_bw,1.5);
-        filt2=zeros(n_fft,1,'single');
+        filt1=zeros(n_fft,1,'single');
         if bin1+n_bw-1<=n_fft
-            filt2(bin1:bin1+n_bw-1,:)=filt;
+            filt1(bin1:bin1+n_bw-1,:)=filt;
         else
-            filt2(bin1:end,:)=filt(1:n_fft-bin1+1);
-            filt2(1:n_bw-(n_fft-bin1+1),:)=filt(n_fft-bin1+2:end);
+            filt1(bin1:end,:)=filt(1:n_fft-bin1+1);
+            filt1(1:n_bw-(n_fft-bin1+1),:)=filt(n_fft-bin1+2:end);
         end
-        filt1=circshift(filt2,-n_bw);
-        
+        if minbb < maxbb
+		filt1=circshift(filt1,n_fft/2); %for ascending, disable for descending
+	end
+	filt2=circshift(filt1,-n_bw);
+
         if plotflag~=0
-            plot(meanbb)
+            fig=figure('Visible','off');
+	    plot(meanbb)
             hold on
             plot(filt1./meanbb,'r')
             plot(filt2./meanbb,'g')
-            hold off
+	    hold off
+	    print(fig,'-dpng',sprintf(['splitaz_',int2str(i+1),'_',infile,'.png']));
             pause(0.1)
         end
         
@@ -100,4 +113,5 @@ end
 
 fclose(fid);
 fclose(fid2);
- 
+fclose(fid3);
+pause; 
