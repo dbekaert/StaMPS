@@ -1,0 +1,7 @@
+#	$Id: GMT_hot.cpt,v 1.1.1.1 2000/12/28 01:23:45 gmt Exp $
+#
+# Simulates the HOT colormap in Matlab
+# COLOR_MODEL = RGB
+0	0	0	0	0.375	255	0	0
+0.375	255	0	0	0.75	255	255	0
+0.75	255	255	0	1.00	255	255	255

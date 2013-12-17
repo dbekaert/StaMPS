@@ -1,0 +1,6 @@
+#	$Id: GMT_copper.cpt,v 1.1.1.1 2000/12/28 01:23:45 gmt Exp $
+#
+# Simulates the COPPER colormap in Matlab
+# COLOR_MODEL = RGB
+0.000000	0	0	0	0.796875	255	159	102
+0.796875	255	159	102	1.000000	255	200	128
