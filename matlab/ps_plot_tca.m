@@ -7,6 +7,7 @@ function [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag)
 % October 2013
 % modifications:
 % 11/2013   DB      Include WRF and update naming dry to hydro
+% 11/2013   DB      Include the non-interpolated version of MERIS
 
 if aps_flag==1 % linear correction
     aps_corr = aps.ph_tropo_linear;
@@ -35,6 +36,9 @@ elseif aps_flag==8 % ERA-I correction
 elseif aps_flag==9 % ERA-I correction
     aps_corr = aps.ph_tropo_wrf_wet;
     fig_name_tca = ' (wrf wet)';
+elseif aps_flag==10 % meris correction (not interpolated)
+    aps_corr = aps.ph_tropo_meris_no_interp;
+    fig_name_tca = ' (meris)';
 else% current implementation of aps correction
     aps_corr = aps.strat_corr;
     fig_name_tca = '';

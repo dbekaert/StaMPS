@@ -454,13 +454,13 @@ value_type=lower(value_type);
 if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a')) && isempty(strfind(value_type,'sb'))
     sb_invert_aps(aps_flag);
 end
-if isempty(strfind(value_type,'usb')) 
-    if ~isempty(strfind(value_type,'u')) || ~isempty(strfind(group_type,'v'))
-         if ~isempty(strfind(value_type,'a'))
-            sb_invert_aps(aps_flag);
-        end
-    end
-end
+% if isempty(strfind(value_type,'usb')) 
+%     if ~isempty(strfind(value_type,'u')) || ~isempty(strfind(group_type,'v'))
+%          if ~isempty(strfind(value_type,'a'))
+%             sb_invert_aps(aps_flag);
+%         end
+%     end
+% end
 
 switch(group_type)
     case {'hgt'}
@@ -839,12 +839,12 @@ switch(group_type)
         fig_name = 'u-d';
     case {'u-o'}
         uw=load(phuwname);
-        scla=load(sclaname);
+%         scla=load(sclaname);
+        scla =[]
         if strcmp('n',scla_deramp)
             disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
             return;
         end
-        
         if ~isfield(scla,'ph_ramp')
              % deramping ifgs
              [ph_all] = ps_deramp(ps,uw.ph_uw );
@@ -1372,6 +1372,8 @@ h_t=1/50*abs(textsize)/10; % text height
 x_t=round((h_x-l_t)/h_x/2*n_j);
 y_t=round(h_t*1.2/h_y*n_i);
 
+
+
 ph_disp=ph_all(:,ifg_list);
 if isreal(ph_all)
     if ref_ifg~=0
@@ -1425,7 +1427,7 @@ end
 
 if plot_flag==-1
     %savename=['~/ps_plot_',value_type]
-    savename=['ps_plot_',value_type]
+        savename=['ps_plot_',value_type]
     try
        save(savename,'ph_disp','ifg_list')
     catch

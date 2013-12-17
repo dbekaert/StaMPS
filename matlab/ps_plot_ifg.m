@@ -33,6 +33,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   05/2013 DB: More flexibility for ext data option
 %   05/2013 DB: Fix issues with colorbar for external data plotting option
 %   11/2013 DB: Add gray as colorbar option
+%   12/2013 DB: Add GMT colorbar options
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -146,7 +147,14 @@ if ~isempty(in_ph)
             c=flipud(gray(64));  
         elseif strncmpi(plot_color_scheme,'inflation',9)
             c=flipud(jet(64));
-        else
+        elseif strncmpi(plot_color_scheme,'GMT_relief',10)
+            [c] = cptcmap('GMT_relief','ncol',129) ;    
+        	c= c(65:end,:);
+        elseif strncmpi(plot_color_scheme,'GMT_globe',9)
+            [c] = cptcmap('GMT_globe','ncol',129) ;
+                c=[c(66,:) ;c(66:end,:)];
+	
+	else
             c=jet(64);
         end
     end
