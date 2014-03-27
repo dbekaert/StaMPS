@@ -67,7 +67,7 @@ day=str2num(datestr(ps.day,'yyyymmdd'));
 x=I(x);
 y=I(y);
 
-clf
+figure
 
 for i=1:length(x)
     l=line([ps.day(x(i)),ps.day(y(i))],[ps.bperp(x(i)),ps.bperp(y(i))]);

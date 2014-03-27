@@ -1,4 +1,4 @@
-export STAMPS="/home/ahooper/StaMPS_v3.1"
+export STAMPS="/home/ahooper/StaMPS_v3.2"
 export SAR="/home/ahooper/software/ROI_PAC_3_0"
 export GETORB_BIN="/home/ahooper/software/getorb/bin"
 export SAR_ODR_DIR="/home/ahooper/software/SAR_FILES/ODR"

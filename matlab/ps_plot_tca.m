@@ -41,7 +41,7 @@ elseif aps_flag==10 % meris correction (not interpolated)
     fig_name_tca = ' (meris)';
 else% current implementation of aps correction
     aps_corr = aps.strat_corr;
-    fig_name_tca = '';
+    fig_name_tca = ' (linear)';
 end
 
 

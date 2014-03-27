@@ -19,7 +19,7 @@ function xy=llh2local(llh,origin)
 %                                       of 'llh' (i.e., lon, lat, height).
 %   Dec. 6, 2000  Jessica Murray        Clarified help to show that llh 
 %                                       is a column vector
-%
+%   Mar 27, 2014  Andy Hooper           Correct bug for case latitude=0 
 %
 %-------------------------------------------------------------
 
@@ -58,7 +58,8 @@ function xy=llh2local(llh,origin)
 
 %Handle special case of latitude = 0
 
-   xy(1,~z)=a*dlambda(~z);
+   dlambda=llh(1,~z)-origin(1);
+   xy(1,~z)=a*dlambda;
    xy(2,~z)=-M0;
 
 %Convert to km

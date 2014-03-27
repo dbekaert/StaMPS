@@ -17,8 +17,8 @@ fprintf('Loading data into matlab...\n')
 
 phname=['pscands.1.ph']; % for each PS candidate, a float complex value for each ifg
 ijname=['pscands.1.ij']; % ID# Azimuth# Range# 1 line per PS candidate
-llname=['pscands.1.ll']; % 
-xyname=['pscands.1.xy']; % 
+llname=['pscands.1.ll']; % output from pt2geo
+xyname=['pscands.1.xy']; % output from pt2geo
 hgtname=['pscands.1.hgt']; % 
 daname=['pscands.1.da']; % 
 rscname = ['../rsc.txt'];
@@ -116,10 +116,15 @@ if exist(xyname,'file')
     xy=fread(fid,[2,inf],'float',endian);
     xy=xy';
     fclose(fid);
-else
+else % should only fall throufh here if pt2geo not installed
     xy=fliplr(ij(:,2:3));
-    xy(:,1)=xy(:,1)*20;
-    xy(:,2)=xy(:,2)*4;
+    xy(:,1)=xy(:,1)*20; % assume ERS/Envisat
+    xy(:,2)=xy(:,2)*4.5;
+    if cosd(heading)>0 
+        xy(:,2)=-xy(:,2); % ascending
+    else
+        xy(:,1)=-xy(:,1); % descending
+    end
 end
 
 if exist(llname,'file')

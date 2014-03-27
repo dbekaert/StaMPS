@@ -1,4 +1,4 @@
-function []=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_baselines)
+function [fig_name_tca]=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_baselines,aps_flag)
 %PS_MEAN_V Calculate mean velocities and their standard deviations
 %   PS_MEAN_V(IFG_LIST,N_BOOT,SUBTRACT_SWITCHES) where IFG_LIST gives indices 
 %   of interferograms to be included in the calculation,N_BOOT specifies number 
@@ -16,6 +16,7 @@ function []=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_baselines)
 %   03/2010 AH: var/cov added to inversion
 %   05/2010 AH: Include master if there are not ifgs before and after
 %   06/2010 AH: small change to ps_mean_v.m
+%   03/2014 AH: -a etc added
 %   ======================================================================
 
 
@@ -37,12 +38,17 @@ if nargin<4
     use_small_baselines=0;
 end
 
+if nargin<5
+    aps_flag=1;
+end
+
 load psver
 psname=['./ps',num2str(psver)];
 phuwname=['./phuw',num2str(psver)];
 phuwsbresname=['./phuw_sb_res',num2str(psver)];
 ifgstdname=['./ifgstd',num2str(psver)];
 sclaname=['./scla',num2str(psver)];
+apsname=['./tca',num2str(psver)];
 mvname=['mv',num2str(psver)];
 
 ps=load(psname);
@@ -67,6 +73,7 @@ if strcmpi(getparm('small_baseline_flag'),'y')
         unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
         phuwname=['./phuw_sb',num2str(psver)];
         sclaname=['./scla_sb',num2str(psver)];
+        apsname=['./tca_sb',num2str(psver)];
         phuwres=load(phuwsbresname,'sb_cov');
         if isfield(phuwres,'sb_cov');
             ifg_cov=phuwres.sb_cov;
@@ -110,6 +117,11 @@ case('o')
     else
         error(['ph_ramp not present or wrong size in ',sclaname])
     end
+case('a')
+    aps=load(apsname);
+    [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+    ph_uw=ph_uw - aps_corr;
+    clear aps aps_corr
 case('do')
     scla=load(sclaname);
     if isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
@@ -118,7 +130,27 @@ case('do')
     else
         error(['ph_ramp not present or wrong size in ',sclaname])
     end
-    otherwise
+case('da')
+    scla=load(sclaname);
+    ph_uw=ph_uw - scla.ph_scla;
+    clear scla
+    aps=load(apsname);
+    [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+    ph_uw=ph_uw - aps_corr;
+    clear aps aps_corr
+case('doa')
+    scla=load(sclaname);
+    if isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
+        ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
+        clear scla
+    else
+        error(['ph_ramp not present or wrong size in ',sclaname])
+    end
+    aps=load(apsname);
+    [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+    ph_uw=ph_uw - aps_corr;
+    clear aps aps_corr
+otherwise
         error('unknown subtract flags')
 end
 

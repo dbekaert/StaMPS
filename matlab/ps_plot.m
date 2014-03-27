@@ -45,7 +45,8 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %    'vs' standard deviation of MLV (mm/yr)
 %    'vs-d'
 %    'vs-o' 
-%      also 'vs-do' 
+%    'vs-a' 
+%      also 'vs-do', 'vs-da', 'vs-dao' 
 %    'vdrop' MLV calculated from all but current ifg (mm/yr)
 %    'vdrop-d' 
 %    'vdrop-o' 
@@ -178,6 +179,7 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %   10/2013 DB: Included ERA-I tca option
 %   11/2013 DB: Incorporate the inversion of the troposphere from SB to PS
 %   11/2013 DB: Including WRF atmospheric option
+%   03/2014 AH: vs-a etc added
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -1278,12 +1280,12 @@ switch(group_type)
         end
         fig_name = 'wf';
     case {'vs'}
-        ps_mean_v(ifg_list,200,value_type(4:end),use_small_baselines);
+        fig_name_tca=ps_mean_v(ifg_list,200,value_type(4:end),use_small_baselines,aps_flag);
         ifg_list=[];
         mv=load(meanvname);
         ph_all=mv.mean_v_std;
         units='mm/yr';
-        fig_name = 'vs';
+        fig_name = [value_type fig_name_tca];
     otherwise
         error('unknown value type')
     end

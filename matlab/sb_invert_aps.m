@@ -5,6 +5,7 @@ function []=sb_invert_aps(aps_flag)
 %
 % modifications:
 % 11/2013   DB  Include WRF model and change dry to hydrostatic
+% 03/2014   AH  Add backwards compatibility 
 
 logit;
 
@@ -43,7 +44,6 @@ G2=G(unwrap_ifg_index,:);
 nzc_ix=sum(abs(G2))~=0; % index for non-zero columns
 G2=G2(:,nzc_ix);
 if rank(G2)<size(G2,2) 
-    save(phuwsbresname,'sb_cov')
     error('There are isolated subsets (cannot be inverted w.r.t. master)')
 end
 
@@ -118,6 +118,13 @@ if ~isempty(aps_flag)
             save(apsname,'-append','ph_tropo_wrf_wet')
         else
             save(apsname,'ph_tropo_wrf_wet')       
+        end
+    else
+        strat_corr = aps_corr; % Old implementation
+        if exist(apsname,'file')==2
+            save(apsname,'-append','strat_corr')
+        else
+            save(apsname,'strat_corr')       
         end
     end
 end

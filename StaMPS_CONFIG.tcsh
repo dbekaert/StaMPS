@@ -1,4 +1,4 @@
-setenv STAMPS       "/home/ahooper/StaMPS_v3.1"
+setenv STAMPS       "/home/ahooper/StaMPS_v3.2"
 setenv SAR          "/home/ahooper/software/ROI_PAC_3_0"
 setenv GETORB_BIN   "/home/ahooper/software/getorb/bin"
 setenv SAR_ODR_DIR  "/home/ahooper/software/SAR_FILES/ODR"
