@@ -26,6 +26,7 @@ function ps_parms_default()
 %   06/2011 AH: add weed_neighbours 
 %   12/2012 AH: add insar_processor
 %   06/2013 DB: add parameters to include tropopshere in scla estimation
+%   12/2014 AH: add ref_velocity
 %   ======================================================================
 
 
@@ -258,6 +259,10 @@ end
 
 if ~isfield(parms,'ref_radius')
     parms.ref_radius=inf;  % radius from centre for ref ps
+end
+
+if ~isfield(parms,'ref_velocity')
+    parms.ref_velocity=0;  % LOS velocity of ref area
 end
 
 if ~isfield(parms,'plot_dem_posting')

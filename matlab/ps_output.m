@@ -12,6 +12,7 @@ function []=ps_output()
 fprintf('Writing output files...\n')
 
 small_baseline_flag=getparm('small_baseline_flag',1);
+ref_vel=getparm('ref_velocity',1);
 
 load psver
 psname=['ps',num2str(psver)];
@@ -91,7 +92,7 @@ ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),ps.n_ps,1);
 
 meanv=load(meanvname);
 lambda=getparm('lambda');
-mean_v=-meanv.m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
+mean_v=-meanv.m(2,:)'*365.25/4/pi*lambda*1000+ref_vel*1000; % m(1,:) is master APS + mean deviation from model
 %v_sort=sort(mean_v);
 %min_v=v_sort(ceil(length(v_sort)*0.001));
 %max_v=v_sort(floor(length(v_sort)*0.999));

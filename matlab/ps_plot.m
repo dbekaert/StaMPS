@@ -180,6 +180,7 @@ function [h_fig,lims,ifg_data_RMSE]=ps_plot(value_type,varargin)
 %   11/2013 DB: Incorporate the inversion of the troposphere from SB to PS
 %   11/2013 DB: Including WRF atmospheric option
 %   03/2014 AH: vs-a etc added
+%   05/2014 AH: ref_velocity added
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -284,9 +285,11 @@ n_ps=ps.n_ps;
 n_ifg=ps.n_ifg;
 master_ix=sum(day<master_day)+1;
 ref_ps=0;    
+ph_ref=0; % value at ref if known
 drop_ifg_index=getparm('drop_ifg_index');
 small_baseline_flag=getparm('small_baseline_flag');
 scla_deramp = getparm('scla_deramp');
+ref_vel = getparm('ref_velocity');
 
 
 % Making dummy files with the data when displaying band filtered data
@@ -947,6 +950,11 @@ switch(group_type)
         uw=load(phuwname);
         ph_uw=uw.ph_uw;
         clear uw
+        if ref_vel~=0
+            ph_ref=ref_vel*1000;
+            fprintf(['Reference velocity set to ',num2str(ref_vel*1000),' mm/yr\n'])
+        end
+
         switch(value_type)
         case {'v'}
             fig_name = 'v';
@@ -1131,6 +1139,11 @@ switch(group_type)
         ref_ps=ps_setref;
         ph_uw=phuw.ph_uw;
         clear phuw
+        if ref_vel~=0
+            ph_ref=ref_vel*1000;
+            fprintf(['Reference velocity set to ',num2str(ref_vel*1000),' mm/yr\n'])
+        end
+
         switch(value_type)
         case('v')
             fig_name = 'v';
@@ -1240,11 +1253,11 @@ switch(group_type)
             n=size(ph_uw,2);
             for i=1:n
                 m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n])'),sb_cov([1:i-1,i+1:end],[1:i-1,i+1:end]));
-                ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000; 
+                ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000+ref_vel*1000; 
             end
         else
             m=lscov(G,double(ph_uw'),sb_cov);
-            ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; 
+            ph_all=-m(2,:)'*365.25/4/pi*lambda*1000+ref_vel*1000; 
         end
         try
             save mean_v m
@@ -1394,7 +1407,7 @@ if isreal(ph_all)
             mean_ph(i)=mean(ref_ph(~isnan(ref_ph(:,i)),i),1);
         end
         clear i
-        ph_disp=ph_disp-repmat(mean_ph,n_ps,1);
+        ph_disp=ph_disp-repmat(mean_ph,n_ps,1)+ph_ref;
     end
     
     phsort=sort(ph_disp(~isnan(ph_disp)));
