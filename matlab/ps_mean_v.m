@@ -17,6 +17,7 @@ function [fig_name_tca]=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_ba
 %   05/2010 AH: Include master if there are not ifgs before and after
 %   06/2010 AH: small change to ps_mean_v.m
 %   03/2014 AH: -a etc added
+%   05/2014 AH: Fixed bug when only 1 ref point
 %   ======================================================================
 
 
@@ -176,7 +177,7 @@ else
     day=ps.day(ps.ifgday_ix(unwrap_ifg_index,2))-ps.day(ps.ifgday_ix(unwrap_ifg_index,1));
 end
 N=length(day);
-ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),ps.n_ps,1);
+ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),ps.n_ps,1);
 lambda=getparm('lambda');
 ph_uw=double(ph_uw/4/pi*lambda*1000)'; 
 G=[ones(N,1),double(day)/365.25] ;

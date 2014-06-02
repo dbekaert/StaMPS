@@ -6,9 +6,10 @@
 // WRITTEN   : 04.07.2006
 //
 // Change History
-// ==============================================
+// ==================================================
 // 03/2009 MA Fix for gcc 4.3.x
-// ==============================================
+// 03/2014 AH add int before main for latest compiler
+// ==================================================
 
 #include <iostream>
 using namespace std;
@@ -24,7 +25,7 @@ using namespace std;
 
 #include <cstdlib>  // [MA] gcc 4.3.x for exit and atoi
 
-main(int argc, char* argv[]) 
+int main(int  argc, char *argv[] )    
 {
   cout << "\ncpxsum, Andy Hooper, July 2006\n\n";
 
