@@ -1,4 +1,4 @@
-function [ref_ps]=ps_setref_ext_data(ps2)
+function [ref_ps]=ps_setref(ps2)
 %PS_SETREF find reference PS
 %
 %   Andy Hooper, June 2006
@@ -6,6 +6,7 @@ function [ref_ps]=ps_setref_ext_data(ps2)
 %   07/2006 AH changed to use reference lon/lat if set
 %   02/2010 AH option to also use circular reference area
 %   04/2013 DB Allow for another ps2 to be specified
+%   05/2014 DB when ref_radius is set to -inf then no reference is selected
 
 if nargin<1
     load psver
@@ -30,12 +31,17 @@ else
     ref_lat=getparm('ref_lat');
     ref_centre_lonlat=getparm('ref_centre_lonlat');
     ref_radius=getparm('ref_radius');
-    ref_ps=find(ps2.lonlat(:,1)>ref_lon(1)&ps2.lonlat(:,1)<ref_lon(2)&ps2.lonlat(:,2)>ref_lat(1)&ps2.lonlat(:,2)<ref_lat(2));
-    if ref_radius<inf
-        ref_xy=llh2local(ref_centre_lonlat',ps2.ll0)*1000;
-        xy=llh2local(ps2.lonlat(ref_ps,:)',ps2.ll0)*1000;
-        dist_sq=(xy(1,:)-ref_xy(1)).^2+(xy(2,:)-ref_xy(2)).^2; 
-        ref_ps=ref_ps(dist_sq<=ref_radius^2);
+    
+    if ref_radius==-inf
+        ref_ps = 0;
+    else
+        ref_ps=find(ps2.lonlat(:,1)>ref_lon(1)&ps2.lonlat(:,1)<ref_lon(2)&ps2.lonlat(:,2)>ref_lat(1)&ps2.lonlat(:,2)<ref_lat(2));
+        if ref_radius<inf
+            ref_xy=llh2local(ref_centre_lonlat',ps2.ll0)*1000;
+            xy=llh2local(ps2.lonlat(ref_ps,:)',ps2.ll0)*1000;
+            dist_sq=(xy(1,:)-ref_xy(1)).^2+(xy(2,:)-ref_xy(2)).^2; 
+            ref_ps=ref_ps(dist_sq<=ref_radius^2);
+        end
     end
 end
 
@@ -47,7 +53,11 @@ if isempty(ref_ps)
 end
 
 if nargin <1
-    disp([num2str(length(ref_ps)),' ref PS selected'])
+    if ref_ps==0
+        disp('No reference set')
+    else
+        disp([num2str(length(ref_ps)),' ref PS selected'])
+    end
 end
 
 

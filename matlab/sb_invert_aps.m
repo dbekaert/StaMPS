@@ -14,6 +14,7 @@ psname=['./ps',num2str(psver)];
 apssbname=['./tca_sb',num2str(psver) '.mat'];
 apsname=['./tca',num2str(psver) '.mat'];
 
+fprintf('*********** Need to include test, to make sure that the master has an APS. \n Otherwize the interferometric delays will actually be SAR delays! \n *************** \n')
 
 if nargin<1
    aps_flag = []; 

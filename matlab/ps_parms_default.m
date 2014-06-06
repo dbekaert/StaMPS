@@ -26,7 +26,9 @@ function ps_parms_default()
 %   06/2011 AH: add weed_neighbours 
 %   12/2012 AH: add insar_processor
 %   06/2013 DB: add parameters to include tropopshere in scla estimation
-%   12/2014 AH: add ref_velocity
+%   01/2014 DB: Add wavelength and heading to parameters list. This in case
+%               not all stamps steps are ran.
+%   01/2014 DB: Add a multi-core option for step 1-5
 %   ======================================================================
 
 
@@ -261,9 +263,10 @@ if ~isfield(parms,'ref_radius')
     parms.ref_radius=inf;  % radius from centre for ref ps
 end
 
-if ~isfield(parms,'ref_velocity')
-    parms.ref_velocity=0;  % LOS velocity of ref area
+if ~isfield(parms,'n_cores')
+    parms.n_cores=1;  % n_cores for the muti-core option (step 1-5)
 end
+
 
 if ~isfield(parms,'plot_dem_posting')
     parms.plot_dem_posting=90; 
@@ -314,6 +317,51 @@ end
 if ~isfield(parms,'scla_method')
     parms.scla_method='L2'; % method for estmating SCLA, L1- or L2-norm
 end
+
+if ~isfield(parms,'scla_deramp')
+    parms.scla_deramp='n'; % estimate an orbital ramp before SCLA
+end
+
+lambdaname=['lambda.1.in'];         % wavelength
+if ~isfield(parms,'lambda')
+    if ~exist(lambdaname,'file')
+        lambdaname= ['../',lambdaname];
+    end
+    if ~exist(lambdaname,'file')
+        lambdaname= ['../',lambdaname];
+    end
+    if ~exist(lambdaname,'file')
+        parms.lambda=NaN; % Add wavelength
+    else
+        lambda=load(lambdaname);
+        parms.lambda=lambda; % Add wavelength
+    end
+end
+
+headingname=['heading.1.in'];       % satellite heading
+if ~isfield(parms,'heading')
+    if ~exist(headingname,'file')
+        headingname= ['../',headingname];
+    end
+    if ~exist(headingname,'file')
+        headingname= ['../',headingname];
+    end
+    if ~exist(headingname,'file')
+        parms.heading=NaN; % Add heading
+    else
+        heading=load(headingname);
+        parms.heading=heading; % Add heading
+    end
+end
+
+
+
+
+% if ~exist(lambdaname,'file')
+%     lambdaname= ['../',lambdaname];
+% end
+% 
+
 
 if ~isfield(parms,'scla_deramp')
     parms.scla_deramp='n'; % estimate an orbital ramp before SCLA

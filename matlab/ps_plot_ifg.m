@@ -561,16 +561,16 @@ if plot_ext_data==1
 
         % plotting those values that are saturated by o marker
         if ~isempty(ix)
-            p=scatter3(ext_data.lonlat(ix,1),ext_data.lonlat(ix,2),ext_data.ph_disp(ix,1),13,c_original(col_ix2(ix),:),'filled','o');
-            set(p,'MarkerEdgeColor','k')
+            p=scatter3(ext_data.lonlat(ix,1),ext_data.lonlat(ix,2),ext_data.ph_disp(ix,1),40,c_original(col_ix2(ix),:),'filled','o');
+            set(p,'MarkerEdgeColor','w')
         end
         % plotting non-saturated values by square markers
-        p=scatter3(ext_data.lonlat(ix_good,1),ext_data.lonlat(ix_good,2),ext_data.ph_disp(ix_good,1),13,c_original(col_ix2(ix_good),:),'filled','sq');
-        set(p,'MarkerEdgeColor','k')
+        p=scatter3(ext_data.lonlat(ix_good,1),ext_data.lonlat(ix_good,2),ext_data.ph_disp(ix_good,1),40,c_original(col_ix2(ix_good),:),'filled','sq');
+        set(p,'MarkerEdgeColor','w')
     else
         % plotting station data
         p=scatter(ext_data.lonlat(ix_good,1),ext_data.lonlat(ix_good,2),13,'^');
-        set(p,'MarkerEdgeColor','k','MarkerfaceColor','k') 
+        set(p,'MarkerEdgeColor','w','MarkerfaceColor','k') 
         
     end
 end

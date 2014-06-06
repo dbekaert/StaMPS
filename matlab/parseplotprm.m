@@ -8,7 +8,9 @@
 %               'a_l' for linear, and 'a_p' for powerlaw option.
 %   04/2013 DB: Include bandfilter option 'ifg i'.
 %   05/2013 DB: Allow ext data path to be a folder or a file.
-%   06/2013 DB: Allos units to be specified 
+%   06/2013 DB: Allows units to be specified 
+%   02/2014 DB: Allow for spatial maps of K to be plotted for the power-law technique
+%   05/2014 DB: Include MODIS support
 
 % list of arguments for ps_plot excluding value type
 arglist={'plot_flag','lims','ref_ifg','ifg_list','n_x','cbar_flag',...
@@ -34,7 +36,7 @@ plot_flag=1;
 
 
 
-% search for char parameter like 'ts','a_l','a_m','a_p', 'a_e' , 'ifg i^th', 'ext PATH'
+% search for char parameter like 'ts','a_l','a_m','a_p', 'a_e', 'a_M', 'a_m+a_eh' , 'ifg i^th', 'ext PATH'
 prmsrch=[];
 for k=1:Noptargin,   
    if strcmp(varargin{k},'ts')==1
@@ -77,8 +79,43 @@ for k=1:Noptargin,
        % aps topo correlated WRF correction
        aps_flag=9;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_ww') ]);
+   elseif strcmp(varargin{k},'a_mi')==1
+       % aps topo correlated  MERIS (non-interpolated)
+       aps_flag=10;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_mi') ]);     
+  elseif strcmp(varargin{k},'a_pk')==1
+       % Spatial maps of the coefficient relating phase and tropo for power-law
+       aps_flag=11;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_pk') ]);   
+ elseif strcmp(varargin{k},'a_M')==1
+       % aps topo correlated modis correction
+       aps_flag=12;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_M') ]);       
+ elseif strcmp(varargin{k},'a_MI')==1
+       % aps topo correlated modis (non-interpolated)
+       aps_flag=13;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_MI') ]);
        
-   elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
+  elseif strcmp(varargin{k},'a_m+a_eh')==1
+       % aps topo correlated MERIS plus a hydrostatic component from ERA-I
+       aps_flag=14;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_m+a_eh')]);     
+  elseif strcmp(varargin{k},'a_mi+a_eh')==1
+       % aps topo correlated MERIS (non-interpolated) plus a hydrostatic component from ERA-I
+       aps_flag=15;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_mi+a_eh')]);     
+  elseif strcmp(varargin{k},'a_M+a_eh')==1
+       % aps topo correlated modis plus a hydrostatic component from ERA-I
+       aps_flag=16;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_M+a_eh')]);     
+  elseif strcmp(varargin{k},'a_MI+a_eh')==1
+       % aps topo correlated modis (non-interpolated) plus a hydrostatic component from ERA-I
+       aps_flag=17;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_MI+a_eh')]);    
+       
+       
+       
+ elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
            if size(varargin{k},2)==3
               ifg_number=[];
            else
@@ -128,16 +165,13 @@ if plot_flag < 0 && ts_flag==1
     break
 end
 % checking if a valid option is slected for the aps_bands potting
-if aps_band_flag==1 && aps_flag~=2
-   error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" flag can be selected. \n'])  
+if aps_band_flag==1 && aps_flag~=2 && aps_flag~=11
+   error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" and "a_pk" flag can be selected. \n'])  
 end
 if aps_band_flag==1 && isempty(ifg_number)
    error('myApp:argChk', ['Specify the ith interferogram for the spatial bands option as "ifg i". \n'])  
 end
 % checking when selected to plot external data, the path exists
-if aps_band_flag==1 && aps_flag~=2
-   error('myApp:argChk', ['For the aps display of all spatial bands only the "a_p" flag can be selected. \n'])  
-end
 % if ext_data_flag==1 && (exist(ext_data_path,'dir')~=7 || exist(ext_data_path,'file')~=2)
 %    error('myApp:argChk', ['External datapath folder/file does not exist. \n'])  
 % end

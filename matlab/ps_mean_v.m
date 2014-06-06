@@ -17,7 +17,10 @@ function [fig_name_tca]=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_ba
 %   05/2010 AH: Include master if there are not ifgs before and after
 %   06/2010 AH: small change to ps_mean_v.m
 %   03/2014 AH: -a etc added
-%   05/2014 AH: Fixed bug when only 1 ref point
+%   04/2014 DB: fix fig_name_tca output in case no aps correction
+%   05/2014 DB: Fix v-doa to v-dao 
+%   05/2014 DB: For APS related corrections include deramping on the fly
+%   05/2014 DB: big fix in case of a nan 
 %   ======================================================================
 
 
@@ -55,7 +58,7 @@ mvname=['mv',num2str(psver)];
 ps=load(psname);
 
 drop_ifg_index=getparm('drop_ifg_index');
-
+fig_name_tca = '';
 if strcmpi(getparm('small_baseline_flag'),'y')
     if use_small_baselines==0
         phuw=load(phuwname,'unwrap_ifg_index_sm');
@@ -123,6 +126,12 @@ case('a')
     [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
     ph_uw=ph_uw - aps_corr;
     clear aps aps_corr
+case('ao')
+    aps=load(apsname);
+    [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+    ph_uw=ph_uw - aps_corr;
+    [ph_uw] = ps_deramp(ps,ph_uw);
+    clear aps aps_corr
 case('do')
     scla=load(sclaname);
     if isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
@@ -139,13 +148,16 @@ case('da')
     [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
     ph_uw=ph_uw - aps_corr;
     clear aps aps_corr
-case('doa')
+case('dao')
     scla=load(sclaname);
     if isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
         ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
         clear scla
     else
-        error(['ph_ramp not present or wrong size in ',sclaname])
+        ph_uw=ph_uw - scla.ph_scla ;
+        [ph_uw] = ps_deramp(ps,ph_uw);
+
+%         error(['ph_ramp not present or wrong size in ',sclaname])
     end
     aps=load(apsname);
     [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
@@ -177,7 +189,7 @@ else
     day=ps.day(ps.ifgday_ix(unwrap_ifg_index,2))-ps.day(ps.ifgday_ix(unwrap_ifg_index,1));
 end
 N=length(day);
-ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:),1),ps.n_ps,1);
+ph_uw=ph_uw-repmat(nanmean(ph_uw(ref_ps,:)),ps.n_ps,1);
 lambda=getparm('lambda');
 ph_uw=double(ph_uw/4/pi*lambda*1000)'; 
 G=[ones(N,1),double(day)/365.25] ;
