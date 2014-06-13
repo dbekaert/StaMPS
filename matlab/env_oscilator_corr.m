@@ -29,6 +29,8 @@ function [oscilatior_corr_ifgs,oscilatior_corr_velocity] = env_oscilator_corr(en
 % Modifications
 % 04/2014       DB      Put non-envisat fix to zeros
 % 04/2014       DB      Allow forced SM oscialtor drift computation
+% 06/2014       DB      Fixed error for SM computation and added extra envisat check.
+
 
 if nargin<1 || isempty(envisat_flag)
     % checking if this is envisat or not
@@ -39,17 +41,20 @@ if nargin<1 || isempty(envisat_flag)
     else
         master_file = [];
     end
-    
+
     if ~isempty(master_file)
-        [temp, output] = system(['grep Product\ type\ specifier: ' master_file]);
-        if ~isempty(findstr(output, 'ASAR'))
-            envisat_flag = 'y';
-            fprintf('This is Envisat \n')
-        end
+       [temp, output] = system(['grep Product\ type\ specifier: ' master_file]);
+       if ~isempty(findstr(output, 'ASAR'))
+           envisat_flag = 'y';
+           fprintf('This is Envisat \n')
+       else
+            envisat_flag = 'n';
+            fprintf('This is not Envisat \n')
+       end
     else
-        envisat_flag = 'n';
-        fprintf('This is not Envisat \n')
-    end
+       envisat_flag = 'n';
+       fprintf('Could not check if this is Envisat \n')
+   end
 end
 
 small_baseline_flag = getparm('small_baseline_flag');
@@ -83,7 +88,7 @@ if strcmp(envisat_flag,'y')
         delta_year = (ps.ifgday(:,2)-ps.ifgday(:,1))./365.25;
     else
         n_ifg = ps.n_image;
-        delta_year = (ps.day-ps.master_ix)./365.25;
+        delta_year = (ps.day-ps.master_day)./365.25;
     end
     oscilatior_corr_ifgs = -4.*pi./lambda.*repmat(oscilatior_corr_velocity,1,n_ifg)./1000.*repmat(delta_year',ps.n_ps,1);
 
