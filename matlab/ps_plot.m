@@ -190,6 +190,7 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %   05/2014 DB: Fix oscialtor drift when plotting 'u' and 'usb' options
 %   05/2014 DB: Add extra output argument h_axes_all
 %   05/2014 DB: Hardcode topogrpahy to have a GMT colormap for relief
+%   06/2014 DB: Fix bug in case of plotting u
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -479,12 +480,16 @@ elseif strcmpi(group_type(1),'d')
     end
 end
 if strcmp(value_type(1),'u')
-   if strcmp(value_type(1:3),'usb')
-       forced_sm_flag=0;
+   if length(value_type)>=3
+       if strcmp(value_type(1:3),'usb')
+           forced_sm_flag=0;
+       else
+           forced_sm_flag=1;
+       end
    else
-       forced_sm_flag=1;
+       forced_sm_flag=1;       
    end
-    
+
 end
 
 
@@ -1598,8 +1603,8 @@ if isreal(ph_all)
         clear i
         ph_disp=ph_disp-repmat(mean_ph,n_ps,1);
     end
-    
     phsort=sort(ph_disp(~isnan(ph_disp)));
+    
     if isempty(lims)
         maxph=phsort(round(length(phsort)*.999));
         minph=phsort(ceil(length(phsort)*.001));
