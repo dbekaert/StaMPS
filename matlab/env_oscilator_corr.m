@@ -30,6 +30,7 @@ function [oscilatior_corr_ifgs,oscilatior_corr_velocity] = env_oscilator_corr(en
 % 04/2014       DB      Put non-envisat fix to zeros
 % 04/2014       DB      Allow forced SM oscialtor drift computation
 % 06/2014       DB      Fixed error for SM computation and added extra envisat check.
+% 06/2014       DB      Fix in case not envisat and forced SM.
 
 
 if nargin<1 || isempty(envisat_flag)
@@ -82,7 +83,7 @@ if strcmp(envisat_flag,'y')
     % velocity correction in mm
     oscilatior_corr_velocity = (envisat_resolution*ps.ij(:,3))*Oscilator_drift_corr_year*1000;
 
-    % interferogra
+    % interferogram
     if strcmp(small_baseline_flag,'y')
         n_ifg = ps.n_ifg;
         delta_year = (ps.ifgday(:,2)-ps.ifgday(:,1))./365.25;
@@ -96,6 +97,13 @@ if strcmp(envisat_flag,'y')
 else
     load psver
     ps = load(['ps' num2str(psver) '.mat']);
-    oscilatior_corr_ifgs = zeros([ps.n_ps ps.n_ifg]);
+    
+    if strcmp(small_baseline_flag,'y')
+        oscilatior_corr_ifgs = zeros([ps.n_ps ps.n_ifg]);
+    else
+        n_ifg = ps.n_image;
+        oscilatior_corr_ifgs = zeros([ps.n_ps n_ifg]);
+    end
     oscilatior_corr_velocity = zeros([ps.n_ps 1]);
+
 end
