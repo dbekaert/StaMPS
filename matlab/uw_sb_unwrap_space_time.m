@@ -14,6 +14,7 @@ function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag
 %   11/2012 AH: Add temperature option and scf_flag
 %   09/2013 DB: Fix compatibility issue with matlab 2009
 %   10/2013 DB: Fix introduced bug on them variable
+%   02/2014 AH: Add predefined ph_uw option
 %   ======================================================================
 % 
 %
@@ -28,6 +29,13 @@ n_ps=uw.n_ps;
 nzix=uw.nzix;
 ij=uw.ij;
 
+if isempty(uw.ph_uw_predef)
+    predef_flag='n';
+else
+    predef_flag='y';
+end
+
+
 n_image=size(day,1);
 master_ix=find(day==0);
 [nrow,ncol]=size(ui.Z);
@@ -35,9 +43,18 @@ master_ix=find(day==0);
 day_pos_ix=find(day>0);
 [tempdummy,I]=min(day(day_pos_ix));
 dph_space=((uw.ph(ui.edges(:,3),:).*conj(uw.ph(ui.edges(:,2),:))));
+if predef_flag=='y'
+    dph_space_uw=uw.ph_uw_predef(ui.edges(:,3),:)-uw.ph_uw_predef(ui.edges(:,2),:);
+    predef_ix=~isnan(dph_space_uw);
+    dph_space_uw=dph_space_uw(predef_ix);
+else
+    predef_ix=[];
+end
 clear uw tempdummy
 
 dph_space=dph_space./abs(dph_space);
+
+
 ifreq_ij=[];
 jfreq_ij=[];
 
@@ -116,6 +133,11 @@ if strcmpi(temp_flag,'y')
     clear cpxphase_mat trial_phase_mat phaser 
     Kt(coh<0.31)=0; % not to be trusted;
     dph_space=dph_space.*exp(-1i*Kt*temp');
+    if predef_flag=='y'
+        dph_temp=Kt*temp';
+        dph_space_uw=dph_space_uw-dph_temp(predef_ix);
+        clear dph_temp
+    end
     dph_sub=dph_sub.*exp(-1i*Kt*temp_sub');
         
 end
@@ -215,6 +237,11 @@ if strcmpi(la_flag,'y')
         K(Kt==0)=0; 
     end
     dph_space=dph_space.*exp(-1i*K*bperp');
+    if predef_flag=='y'
+        dph_scla=K*bperp';
+        dph_space_uw=dph_space_uw-dph_scla(predef_ix);
+        clear dph_scla
+    end
         
 end
 
@@ -309,8 +336,19 @@ else
      
     else
         x=(day-day(1))*(n-1)/(day(end)-day(1)); % use dates for smoothing
-
-        dph_space_series=[zeros(1,ui.n_edge);double(G(:,2:end))\double(angle(dph_space))'];
+        if predef_flag=='y'
+            n_dph=size(dph_space,1);
+            dph_space_angle=double(angle(dph_space));
+            dph_space_angle(predef_ix)=dph_space_uw;
+            dph_space_series=zeros(n,n_dph);
+            for i=1:n_dph
+                 W=predef_ix(i,:)+0.01; % give more weight to the predfined unwrapped
+                 dph_space_series(2:end,i)=lscov(double(G(:,2:end)),dph_space_angle(i,:)',W);
+            end
+        else
+            dph_space_series=[zeros(1,ui.n_edge);double(G(:,2:end))\double(angle(dph_space))'];
+        end
+        
         dph_smooth_series=zeros(size(G,2),ui.n_edge,'single');
 
         for i1=1:n
@@ -420,5 +458,5 @@ else
         shaky_ix=[];
     end
     
-    save('uw_space_time','dph_space_uw','dph_noise','G','spread','ifreq_ij','jfreq_ij','shaky_ix');
+    save('uw_space_time','dph_space_uw','dph_noise','G','spread','ifreq_ij','jfreq_ij','shaky_ix','predef_ix');
 end

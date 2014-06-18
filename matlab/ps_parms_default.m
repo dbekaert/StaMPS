@@ -29,6 +29,7 @@ function ps_parms_default()
 %   01/2014 DB: Add wavelength and heading to parameters list. This in case
 %               not all stamps steps are ran.
 %   01/2014 DB: Add a multi-core option for step 1-5
+%   02/2014 AH: add unwrap_hold_good_values
 %   ======================================================================
 
 
@@ -203,6 +204,10 @@ end
 
 if ~isfield(parms,'unwrap_gold_alpha')
     parms.unwrap_gold_alpha=0.8;  % unwrapping goldstein filter alpha
+end
+
+if ~isfield(parms,'unwrap_hold_good_values')
+    parms.unwrap_hold_good_values='n';       % fix unwrapped values judged to be good
 end
 
 if isfield(parms,'recalc_index')
@@ -380,9 +385,11 @@ end
 if ~isfield(parms,'subtr_tropo')
     parms.subtr_tropo='n';         % remove tropospheric estimate
 end
+
 if ~isfield(parms,'tropo_method')
     parms.tropo_method='a_l';       % method for tropopsheric estimate
 end
+
 
 parmfields=fieldnames(parms);
 if size(parmfields,1)~=num_fields

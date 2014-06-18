@@ -11,6 +11,7 @@ function []=ps_unwrap()
 %   02/2010 AH: Replace unwrap_ifg_index with drop_ifg_index
 %   01/2012 AH: Add bperp for new method 3D_NEW
 %   01/2012 AH: Add back SULA error before unwrapping
+%   02/2014 AH: Add predefined ph_uw option
 %   ======================================================================
 logit;
 fprintf('Phase-unwrapping...\n')
@@ -24,15 +25,16 @@ psname=['ps',num2str(psver)];
 rcname=['rc',num2str(psver)];
 pmname=['pm',num2str(psver)];
 bpname=['bp',num2str(psver)];
+goodname=['phuw_good',num2str(psver)];
 
 if ~strcmpi(small_baseline_flag,'y')
     sclaname=['scla_smooth',num2str(psver)];
-    apsname=['aps',num2str(psver)];
-    phuwname=['phuw',num2str(psver)];
+    apsname=['tca',num2str(psver)];
+    phuwname=['phuw',num2str(psver),'.mat'];
 else
     sclaname=['scla_smooth_sb',num2str(psver)];
-    apsname=['aps_sb',num2str(psver)];
-    phuwname=['phuw_sb',num2str(psver)];
+    apsname=['tca_sb',num2str(psver)];
+    phuwname=['phuw_sb',num2str(psver),'.mat'];
 end
 
 ps=load(psname);
@@ -81,7 +83,22 @@ ph_w(ix)=ph_w(ix)./abs(ph_w(ix)); % normalize, to avoid high freq artifacts bein
 scla_subtracted_sw=0;
 ramp_subtracted_sw=0;
 
-if ~strcmpi(small_baseline_flag,'y') & exist([sclaname,'.mat'],'file')
+options=struct('master_day',ps.master_day);
+unwrap_hold_good_values=getparm('unwrap_hold_good_values',1);
+if ~strcmpi(small_baseline_flag,'y') | ~exist(phuwname)
+    unwrap_hold_good_values='n';
+    logit('Code to hold good values skipped')
+end
+if unwrap_hold_good_values=='y' 
+    sb_identify_good_pixels
+    options.ph_uw_predef=nan(size(ph_w),'single');
+    uw=load(phuwname);
+    good=load(goodname)
+    options.ph_uw_predef(good.good_pixels)=uw.ph_uw(good.good_pixels);
+    clear uw good;
+end
+
+if ~strcmpi(small_baseline_flag,'y') & exist([sclaname,'.mat'],'file') % PS
     fprintf('   subtracting scla and master aoe...\n')
     scla=load(sclaname);
     if size(scla.K_ps_uw,1)==ps.n_ps
@@ -99,15 +116,21 @@ if ~strcmpi(small_baseline_flag,'y') & exist([sclaname,'.mat'],'file')
     clear scla
 end
 
-if strcmpi(small_baseline_flag,'y') & exist([sclaname,'.mat'],'file')
+if strcmpi(small_baseline_flag,'y') & exist([sclaname,'.mat'],'file') %Small baselines
     fprintf('   subtracting scla...\n')
     scla=load(sclaname);
     if size(scla.K_ps_uw,1)==ps.n_ps
       scla_subtracted_sw=1;
       ph_w=ph_w.*exp(-j*repmat(scla.K_ps_uw,1,ps.n_ifg).*bperp_mat); % subtract spatially correlated look angle error
+      if unwrap_hold_good_values=='y'
+          options.ph_uw_predef=options.ph_uw_predef-repmat(scla.K_ps_uw,1,ps.n_ifg).*bperp_mat; % subtract spatially correlated look angle error
+      end
       if strcmpi(scla_deramp,'y') & isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
          ramp_subtracted_sw=1;
          ph_w=ph_w.*exp(-j*scla.ph_ramp); % subtract orbital ramps
+         if unwrap_hold_good_values=='y'
+             options.ph_uw_predef=options.ph_uw_predef-scla.ph_ramp;
+         end
       end
     else
       fprintf('   wrong number of PS in scla - subtraction skipped...\n')
@@ -121,12 +144,14 @@ clear bp
 if exist([apsname,'.mat'],'file')
     fprintf('   subtracting slave aps...\n')
     aps=load(apsname);
-    ph_w=ph_w.*exp(-j*aps.ph_aps_slave);
+    ph_w=ph_w.*exp(-j*aps.strat_corr);
+    if unwrap_hold_good_values=='y'
+        options.ph_uw_predef=options.ph_uw_predef-aps.strat_corr;
+    end
     clear aps
 end
 
 
-options=struct('master_day',ps.master_day);
 options.time_win=getparm('unwrap_time_win',1);
 options.unwrap_method=getparm('unwrap_method',1);
 options.grid_size=getparm('unwrap_grid_size',1);
@@ -135,6 +160,8 @@ options.goldfilt_flag=getparm('unwrap_prefilter_flag',1);
 options.gold_alpha=getparm('unwrap_gold_alpha',1);
 options.la_flag=getparm('unwrap_la_error_flag',1);
 options.scf_flag=getparm('unwrap_spatial_cost_func_flag',1);
+
+
 
 max_topo_err=getparm('max_topo_err',1);
 lambda=getparm('lambda',1);
@@ -175,6 +202,10 @@ else
     day=ps.day-ps.master_day;
 end
 
+if unwrap_hold_good_values=='y'
+    options.ph_uw_predef=options.ph_uw_predef(:,unwrap_ifg_index);
+end
+
 [ph_uw_some,msd_some]=uw_3d(ph_w(:,unwrap_ifg_index),ps.xy,day,ifgday_ix(unwrap_ifg_index,:),ps.bperp(unwrap_ifg_index),options);
 
 ph_uw=zeros(ps.n_ps,ps.n_ifg,'single');
@@ -206,7 +237,7 @@ end
 if exist([apsname,'.mat'],'file')
     fprintf('Adding back slave APS...\n')
     aps=load(apsname);
-    ph_uw=ph_uw+aps.ph_aps_slave;
+    ph_uw=ph_uw+aps.strat_corr;
     clear aps
 end
 

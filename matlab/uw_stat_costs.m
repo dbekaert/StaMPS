@@ -25,9 +25,9 @@ maxshort=32000;
 
 fprintf('Unwrapping in space...\n')
 
-uw=load('uw_grid');
+uw=load('uw_grid','ph','nzix','pix_size','n_ps','n_ifg');
 ui=load('uw_interp');
-ut=load('uw_space_time','dph_space_uw','dph_noise','spread');
+ut=load('uw_space_time','dph_space_uw','dph_noise','spread','predef_ix');
 
 if nargin<2
     variance=[];
@@ -35,6 +35,12 @@ end
 
 if nargin<3
     subset_ifg_index=[1:size(uw.ph,2)];
+end
+
+if isempty(ut.predef_ix)
+    predef_flag='n';
+else
+    predef_flag='y';
 end
 
 [nrow,ncol]=size(uw.nzix);
@@ -47,7 +53,6 @@ z=[1:uw.n_ps];
 colix=ui.colix;
 rowix=ui.rowix;
 Z=ui.Z;
-
 
 grid_edges=[colix(abs(colix)>0);rowix(abs(rowix)>0)];
 n_edges=hist(abs(grid_edges),[1:ui.n_edge])';
@@ -123,6 +128,9 @@ for i1=subset_ifg_index
     spread=full(ut.spread(:,i1));
     spread=int16(round((abs(spread)*nshortcycle^2)/6/costscale.*repmat(n_edges,1,size(spread,2))));
     sigsqtot=sigsq+spread;
+    if predef_flag=='y'
+        sigsqtot(ut.predef_ix(:,i1))=1;
+    end
     rowstdgrid(nzrowix)= sigsqtot(abs(rowix(nzrowix)));
     rowcost(:,2:4:end)= rowstdgrid; % sigsq
     colstdgrid(nzcolix)= sigsqtot(abs(colix(nzcolix)));

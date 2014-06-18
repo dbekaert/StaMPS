@@ -1,4 +1,4 @@
-function []=uw_grid_wrapped(ph_in,xy_in,pix_size,prefilt_win,goldfilt_flag,lowfilt_flag,gold_alpha)
+function []=uw_grid_wrapped(ph_in,xy_in,pix_size,prefilt_win,goldfilt_flag,lowfilt_flag,gold_alpha,ph_in_predef)
 %UW_GRID_WRAPPED resample unwrapped phase to a grid and filter
 %
 %   Andy Hooper, June 2006
@@ -10,6 +10,7 @@ function []=uw_grid_wrapped(ph_in,xy_in,pix_size,prefilt_win,goldfilt_flag,lowfi
 % 03/2012 AH: Allow for non-complex wrapped phase
 % 01/2013 AH: No gridding option (pix_size=0)
 % 04/2013 AH: Correct bug calling wrap_filt
+% 02/2014 AH: Add predefined ph_uw option
 % ============================================================
 
 fprintf('Resampling phase to grid...\n')
@@ -31,6 +32,15 @@ if nargin<6
 end
 if nargin<7
     gold_alpha=0.8
+end
+if nargin<8
+    ph_uw_predef=[];
+end
+
+if isempty(ph_in_predef)
+    predef_flag='n';
+else
+    predef_flag='y';
 end
 
 [n_ps,n_ifg]=size(ph_in);
@@ -64,6 +74,10 @@ else
 end
 
 ph_grid=zeros(n_i,n_j,'single');
+if predef_flag=='y'
+    ph_grid_uw=zeros(n_i,n_j,'single');
+    N_grid_uw=zeros(n_i,n_j,'single');
+end
 
 if min(size(ph_grid))<prefilt_win
     error(['Minimum dimension of the resampled grid (',num2str(min(size(ph_grid))),' pixels) is less than prefilter window size (',num2str(prefilt_win),')'])
@@ -76,13 +90,33 @@ for i1=1:n_ifg
     else
         ph_this=ph_in(:,i1);
     end 
-    ph_grid(:)=0;
+    if predef_flag=='y'
+        ph_this_uw=ph_in_predef(:,i1);
+        ph_grid_uw(:)=0;
+        N_grid_uw(:)=0;
+    end
     
+    ph_grid(:)=0;
+
+ 
     if pix_size==0
         ph_grid((xy_in(:,2)-1)*n_i+xy_in(:,3))=ph_this;
+        if predef_flag=='y'
+           ph_grid_uw((xy_in(:,2)-1)*n_i+xy_in(:,3))=ph_this_uw;
+        end
     else
         for i=1:n_ps     
             ph_grid(grid_ij(i,1),grid_ij(i,2))=ph_grid(grid_ij(i,1),grid_ij(i,2))+ph_this(i);
+        end
+        if predef_flag=='y'
+           for i=1:n_ps
+               if ~isnan(ph_this_uw(i))
+                  ph_grid_uw(grid_ij(i,1),grid_ij(i,2))=ph_grid_uw(grid_ij(i,1),grid_ij(i,2))+ph_this_uw(i);
+                  N_grid_uw(grid_ij(i,1),grid_ij(i,2))=N_grid_uw(grid_ij(i,1),grid_ij(i,2))+1;
+               end
+           end 
+           ph_grid_uw=ph_grid_uw./N_grid_uw;
+           %ph_grid_uw(ph_grid_uw==inf)=nan;
         end
     end
   
@@ -94,6 +128,11 @@ for i1=1:n_ifg
             ph_lowpass=ph;
         else
             ph_lowpass=[];
+        end
+        if predef_flag=='y'
+            ph_uw_predef=zeros(n_ps_grid,n_ifg,'single');
+        else
+            ph_uw_predef=[];
         end
     end
     if strcmpi(goldfilt_flag,'y') | strcmpi(lowfilt_flag,'y')
@@ -107,7 +146,13 @@ for i1=1:n_ifg
     else
         ph(:,i1)=ph_grid(nzix);
     end
-
+    if predef_flag=='y'
+       ph_uw_predef(:,i1)=ph_grid_uw(nzix);
+       ix=~isnan(ph_uw_predef(:,i1));
+       ph_diff=angle(ph(ix,i1).*conj(exp(j*ph_uw_predef(ix,i1))));
+       ph_diff(abs(ph_diff)>1)=nan; % if difference is too large, can't be sure which way to round
+       ph_uw_predef(ix,i1)=ph_uw_predef(ix,i1)+ph_diff; % set so ph_uw is filtered ph + integer num cycles
+    end
 end
 
 n_ps=n_ps_grid;
@@ -127,5 +172,5 @@ ij=[nz_i,nz_j];
 
 
 
-save('uw_grid','ph','ph_in','ph_lowpass','xy','ij','nzix','grid_x_min','grid_y_min','n_i','n_j','n_ifg','n_ps','grid_ij','pix_size')    
+save('uw_grid','ph','ph_in','ph_lowpass','ph_uw_predef','ph_in_predef','xy','ij','nzix','grid_x_min','grid_y_min','n_i','n_j','n_ifg','n_ps','grid_ij','pix_size')    
 

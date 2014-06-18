@@ -35,6 +35,7 @@ function [ph_uw,msd]=uw_3d(ph,xy,day,ifgday_ix,bperp,options)
 % 01/2012 AH: Add bperp for new look angle error estimation
 % 02/2012 AH: Add new method 3D_NEW
 % 11/2012 AH: Several new options
+% 02/2014 AH: Add predefined ph_uw option
 % ============================================================
 tic;
 if nargin<4
@@ -57,7 +58,7 @@ else
     single_master_flag=0;
 end
 
-valid_options={'la_flag','scf_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha','n_trial_wraps','temp','n_temp_wraps','max_bperp_for_temp_est','variance'};
+valid_options={'la_flag','scf_flag','master_day','grid_size','prefilt_win','time_win','unwrap_method','goldfilt_flag','lowfilt_flag','gold_alpha','n_trial_wraps','temp','n_temp_wraps','max_bperp_for_temp_est','variance','ph_uw_predef'};
 invalid_options=setdiff(fieldnames(options),valid_options);
 if length(invalid_options)>0
     error(['"',invalid_options{1}, '" is an invalid option'])
@@ -131,6 +132,10 @@ if ~isfield(options,'variance')
     options.variance=[];
 end
 
+if ~isfield(options,'ph_uw_predef')
+    options.ph_uw_predef=[];
+end
+
 if size(xy,2)==2
    xy(:,2:3)=xy(:,1:2);
 end
@@ -147,7 +152,7 @@ if strcmpi(options.unwrap_method,'3D') | strcmpi(options.unwrap_method,'3D_NEW')
     end
 end
 
-uw_grid_wrapped(ph,xy,options.grid_size,options.prefilt_win,options.goldfilt_flag,options.lowfilt_flag,options.gold_alpha);
+uw_grid_wrapped(ph,xy,options.grid_size,options.prefilt_win,options.goldfilt_flag,options.lowfilt_flag,options.gold_alpha,options.ph_uw_predef);
 clear ph
 uw_interp;
 %if single_master_flag==1

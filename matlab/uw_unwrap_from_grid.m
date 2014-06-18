@@ -1,3 +1,4 @@
+
 function [ph_uw,msd]=uw_unwrap_from_grid(xy,pix_size)
 %UW_UNWRAP_FROM_GRID unwrap PS from unwrapped gridded ifgs 
 %
@@ -10,7 +11,7 @@ function [ph_uw,msd]=uw_unwrap_from_grid(xy,pix_size)
 
 fprintf('Unwrapping from grid...\n')
 
-uw=load('uw_grid','nzix','n_ps','grid_ij','ph_in');
+uw=load('uw_grid','nzix','n_ps','grid_ij','ph_in','ph_in_predef');
 uu=load('uw_phaseuw');
 
 [n_ps,n_ifg]=size(uw.ph_in);
@@ -31,6 +32,14 @@ for i=1:n_ps
           ph_uw(i,:)=ph_uw_pix+angle(uw.ph_in(i,:).*exp(-1i*ph_uw_pix));
         end
     end
+end
+
+if ~isempty(uw.ph_in_predef)
+    predef_ix=~isnan(uw.ph_in_predef);
+    meandiff=nanmean(ph_uw-uw.ph_in_predef);
+    meandiff=2*pi*round(meandiff/2/pi);
+    uw.ph_in_predef=uw.ph_in_predef+repmat(meandiff,n_ps,1);
+    ph_uw(predef_ix)=uw.ph_in_predef(predef_ix);
 end
 
 msd=uu.msd;
