@@ -31,6 +31,7 @@ function [oscilatior_corr_ifgs,oscilatior_corr_velocity] = env_oscilator_corr(en
 % 04/2014       DB      Allow forced SM oscialtor drift computation
 % 06/2014       DB      Fixed error for SM computation and added extra envisat check.
 % 06/2014       DB      Fix in case not envisat and forced SM.
+% 11/2014       DB      Fix to make windows and linux compatible 
 
 
 if nargin<1 || isempty(envisat_flag)
@@ -44,8 +45,11 @@ if nargin<1 || isempty(envisat_flag)
     end
 
     if ~isempty(master_file)
-       [temp, output] = system(['grep Product\ type\ specifier: ' master_file]);
-       if ~isempty(findstr(output, 'ASAR'))
+        
+        % make windows and linux compatible
+        a = fileread(master_file);
+        ix = strfind(a,'ASAR');
+       if ~isempty(ix)
            envisat_flag = 'y';
            fprintf('This is Envisat \n')
        else
