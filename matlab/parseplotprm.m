@@ -11,6 +11,8 @@
 %   06/2013 DB: Allows units to be specified 
 %   02/2014 DB: Allow for spatial maps of K to be plotted for the power-law technique
 %   05/2014 DB: Include MODIS support
+%   08/2014 DB: MODIS recalibrated support
+%   10/2014 DB: Support for ionospheric delays
 
 % list of arguments for ps_plot excluding value type
 arglist={'plot_flag','lims','ref_ifg','ifg_list','n_x','cbar_flag',...
@@ -28,6 +30,7 @@ aps_flag=0;             % when 0 default aps estimation
                         % when 1 linear correction aps
                         % when 2 powerlaw correction aps
                         % when 3 meris correction aps
+iono_flag = 0;      
 aps_band_flag=0;        % when 1 plot the aps estimated band frequencies
 ifg_number = 0;         % the ifg number for the aps_band_flag
 ext_data_flag=0;        % when 1 there will be external data to be plotted.
@@ -112,9 +115,32 @@ for k=1:Noptargin,
        % aps topo correlated modis (non-interpolated) plus a hydrostatic component from ERA-I
        aps_flag=17;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_MI+a_eh')]);    
-       
-       
-       
+  elseif strcmp(varargin{k},'a_lman')==1
+       % aps topo correlated linear manual
+       aps_flag=18;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_lman')]);    
+ elseif strcmp(varargin{k},'a_RM')==1
+       % aps topo correlated modis recalibrated correction
+       aps_flag=19;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_RM') ]);       
+ elseif strcmp(varargin{k},'a_RMI')==1
+       % aps topo correlated modis recalibrated (non-interpolated)
+       aps_flag=20;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_RMI') ]);
+  elseif strcmp(varargin{k},'a_RM+a_eh')==1
+       % aps topo correlated modis recalibrated plus a hydrostatic component from ERA-I
+       aps_flag=21;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_RM+a_eh')]);     
+  elseif strcmp(varargin{k},'a_RMI+a_eh')==1
+       % aps topo correlated modis recalibrated (non-interpolated) plus a hydrostatic component from ERA-I
+       aps_flag=22;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_RMI+a_eh')]);    
+   elseif strcmp(varargin{k},'i_as')==1
+       % ionopsheric correlated atmopshere - azimuth shift method
+       iono_flag=1;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'i_as')]);   
+ 
+  
  elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
            if size(varargin{k},2)==3
               ifg_number=[];
