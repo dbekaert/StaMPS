@@ -45,6 +45,7 @@ else
     make_raw_alos.pl IMG-HH-ALP $dir > step_slc.log
 endif
 
+echo $MY_SCR
 $MY_SCR/roi_prep.pl $dir HDR >> step_slc.log
 roi.pl $dir no 1 no >> step_slc.log
 roipac2doris $dir s >> step_slc.log
