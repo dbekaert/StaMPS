@@ -6,6 +6,7 @@ function []=sb_invert_aps(aps_flag)
 % modifications:
 % 11/2013   DB  Include WRF model and change dry to hydrostatic
 % 03/2014   AH  Add backwards compatibility 
+% 12/2014   DB  Invert such that when one date exist the delay is excluded
 
 logit;
 
@@ -14,7 +15,6 @@ psname=['./ps',num2str(psver)];
 apssbname=['./tca_sb',num2str(psver) '.mat'];
 apsname=['./tca',num2str(psver) '.mat'];
 
-fprintf('*********** Need to include test, to make sure that the master has an APS. \n Otherwize the interferometric delays will actually be SAR delays! \n *************** \n')
 
 if nargin<1
    aps_flag = []; 
@@ -25,9 +25,6 @@ drop_ifg_index=getparm('drop_ifg_index');
 unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 
 ref_ps=ps_setref;
-
-
-
 
 G=zeros(ps.n_ifg,ps.n_image);
 for i=1:ps.n_ifg
@@ -49,13 +46,38 @@ if rank(G2)<size(G2,2)
 end
 
 
+
 if ~isempty(aps_flag)
     aps=load(apssbname);
     [aps_corr_sb,fig_name_tca] = ps_plot_tca(aps,aps_flag);
-    aps_corr_sb= aps_corr_sb(:,unwrap_ifg_index);
+    
+    
+    ix = find(nanmean(aps_corr_sb,1)==0);
+    unwrap_ifg_index_new = setdiff(unwrap_ifg_index,ix);
+
+    G3=G(unwrap_ifg_index_new,:);
+    nzc_ix=sum(abs(G3))~=0; % index for non-zero columns
+    G3=G3(:,nzc_ix);
+    if rank(G3)<size(G3,2) 
+        error('There are isolated subsets that do not have an APS estimate (cannot be inverted w.r.t. master)')
+    end
+    aps_corr_sb= aps_corr_sb(:,unwrap_ifg_index_new);
+
+    G2 =G3;
+    
+    
+    % check if the master to be inverted actually has a delay estimated with it.
+    ifgs_days = unique(reshape(ps.ifgday((sum(aps_corr_sb)~=0),:),[],1));
+    if sum(ps.master_day==ifgs_days)~=1
+%         fprintf('************ \nMaster day is not esimated in the APS \n The interferometric delays will actually be SAR delays! \n *************** \n')
+        error('Master does not have an APS estimated, inversion not possible')
+    end
     
     aps_corr=zeros(ps.n_ps,ps.n_image,'single');
     aps_corr(:,nzc_ix)=lscov(G2,double(aps_corr_sb'))';
+    
+    
+    
     
     if aps_flag==1 % linear correction
         ph_tropo_linear = aps_corr;       
