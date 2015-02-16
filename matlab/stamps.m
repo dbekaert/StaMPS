@@ -1,4 +1,4 @@
-function stamps_mc(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file)
+function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file)
 %STAMPS Stanford Method for Persistent Scatterers
 %   STAMPS(START_STEP,END_STEP,PATCHES_FLAG,EST_GAMMA_FLAG) Default is to run all steps.
 %   A subset of steps may be selected with START_STEP and/or END_STEP
@@ -55,6 +55,7 @@ unwrap_method=getparm('unwrap_method');
 unwrap_prefilter_flag=getparm('unwrap_prefilter_flag');
 small_baseline_flag=getparm('small_baseline_flag');
 insar_processor=getparm('insar_processor');
+
 
 if nargin<1 || isempty(start_step)==1
     start_step=1;
