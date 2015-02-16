@@ -1,4 +1,4 @@
-function stamps_mc_header(start_step,end_step,est_gamma_parm,n_cores,patch_list_file)
+function stamps_mc(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file)
 % stamps_mc_header(start_step,end_step,est_gamma_parm,n_cores,patch_list_file)
 % Program mainly for the first 5 steps of Stamps that splits up the
 % parameter list based on the number of processing cores specified. An
@@ -9,87 +9,118 @@ function stamps_mc_header(start_step,end_step,est_gamma_parm,n_cores,patch_list_
 % By David Bekaert - PhD student - University of Leeds
 % December 2012
 % modifications:
-%
+% 01/2014   DB  Remove the matlab multi-core functions and use the schell
+%               instead by launching multiple matlab jobs
+% 01/2014   DB  Integrate steps 1-4 to split patch lists and steps from 5
+%               on to use a merged dataset
 
-
-if nargin<3 || isempty(est_gamma_parm)
-   est_gamma_parm=[];
+% The definition of the stamps steps
+if nargin<1 || isempty(start_step)==1
+    start_step=1;
 end
-if nargin<4 || isempty(n_cores)
-    n_cores=1;
+if nargin<2 || isempty(end_step)==1
+    end_step=8;
 end
-if nargin<5 || isempty(patch_list_file)
-   patch_list_file='patch.list';
-end
-patches_flag=[];
-
-% checking the number of cores by connecting them once all
-% matlabpool('open')
-% n_cores_available = matlabpool('size');
-% matlabpool('close');
-n_cores_available = 12;     % maximum for local setup machine
-
-if n_cores_available<n_cores
-   fprintf(['Too many cores, maximum cores available: ' num2str(n_cores_available) ' ... \n'])
-   n_cores = n_cores_available;
-end
-if n_cores_available==n_cores
-   fprintf('No others cores free once launched ... \n') 
-end
-
-
-% generating new patch list based on the number of cores selected
-% getting the patch list from the source file
-if exist(patch_list_file,'file')
-    fid=fopen(patch_list_file);
-    n_patches=0;
-    while 1
-        nextline=fgetl(fid);
-        if ischar(nextline)
-            n_patches=n_patches+1;
-            patchdir(n_patches).name=nextline;
-        else
-            break
-        end
-    end     
-else
-    patchdir=dir('PATCH*');
-    n_patches=1;
-end
-% checking the number of patches to be processed per core
-if n_patches<n_cores
-    fprintf('Decrease number of cores, as lesser patches are being processed... \n')
-   n_cores =  n_patches;
-end
-n_patches_core = ceil(n_patches./n_cores);
-% splitting of the patch list
-for k=1:n_cores
-    ix = [(k-1)*n_patches_core+1:1:k*n_patches_core];
-    ix(ix>n_patches) =[];
-    patch_list_filename = ['patch.list_split_' num2str(k)];
-    fid = fopen(patch_list_filename,'w');
-    for ll=1:length(ix)
-        str_temp = patchdir(ix(ll));
-        str_temp = str_temp.name;
-        copyfile('parms.mat',[str_temp filesep]);
-        fprintf(fid,'%s\n',str_temp);
+if nargin<3 || isempty(patches_flag)==1
+    if start_step<6
+        patches_flag='y';
+    else
+        patches_flag='n';
     end
-    fclose(fid);
+end
+if nargin<4 || isempty(est_gamma_parm)==1
+    est_gamma_parm=0;
+end
+if nargin<5 || isempty(patch_list_file)     % [DB] allow for own specified patch list file
+    patch_list_file = 'patch.list';
+    new_patch_file = 0;
+else
+    % use own file
+    new_patch_file = 1;
+end
+n_cores=getparm('n_cores');
+
+
+% below converting the input arguments to same strings that can be called
+% outside matlab for the multi-core option
+if strcmp(patches_flag,'y')
+    patches_flag_str='[]';
+end
+if est_gamma_parm==0
+   est_gamma_parm_str='[]';
+end
+if isnumeric(est_gamma_parm)
+    est_gamma_parm_str = num2str(est_gamma_parm);
 end
 
-keyboard
+% defining the step_range
+step_range = [start_step:end_step];
+ix_split_patches = find(step_range<5);
+ix_merged = find(step_range>=5);
 
-% openign the set of processors which will be used
-matlabpool('open',n_cores)
-% launch of the processing jobs
-parfor k=1:n_cores
-    stamps_mc(start_step,end_step,patches_flag,est_gamma_parm,['patch.list_split_' num2str(k)])
+
+
+if ~isempty(ix_split_patches)
+
+
+    % generating new patch list based on the number of cores selected
+    % getting the patch list from the source file
+    if exist(patch_list_file,'file')
+        fid=fopen(patch_list_file);
+        n_patches=0;
+        while 1
+            nextline=fgetl(fid);
+            if ischar(nextline)
+                n_patches=n_patches+1;
+                patchdir(n_patches).name=nextline;
+            else
+                break
+            end
+        end     
+    else
+        patchdir=dir('PATCH*');
+        n_patches=size(patchdir,1);
+    end
+    % checking the number of patches to be processed per core
+    if n_patches<n_cores
+        fprintf('Decrease number of cores, as lesser patches are being processed... \n')
+       n_cores =  n_patches;
+    end
+    n_patches_core = ceil(n_patches./n_cores);
+    % splitting of the patch list
+    counter_cores = 0;
+    for k=1:n_cores
+        ix = [(k-1)*n_patches_core+1:1:k*n_patches_core];
+        ix(ix>n_patches) =[];
+        patch_list_filename = ['patch_list_split_' num2str(k)];
+        for ll=1:length(ix)
+            if ll==1
+                    fid = fopen(patch_list_filename,'w');
+                    counter_cores = counter_cores+1;
+            end
+            str_temp = patchdir(ix(ll));
+            str_temp = str_temp.name;
+            copyfile('parms.mat',[str_temp filesep]);
+            fprintf(fid,'%s\n',str_temp);
+            if ll==length(ix)
+                fclose(fid);
+            end
+        end
+    end
+    n_cores = counter_cores;
+
+    comandstr = 'echo logfile > log_stamps_overview';
+    system(comandstr);
+
+    for k=1:n_cores
+        %matlab -nodesktop -nodisplay -r "test('double test',1); exit" > log
+        comandstr = (['matlab -nodesktop -nodisplay -r "stamps(' num2str(step_range(ix_split_patches(1)) ) ',' num2str(step_range(ix_split_patches(end))) ',' patches_flag_str ',' est_gamma_parm_str ',' '''patch_list_split_' num2str(k) '''); exit" > log_stamps_split_' num2str(k) ' & ' ]);
+        comandstr2 = 'echo "${!}" >> log_stamps_overview';
+        command = [comandstr comandstr2];
+        [a,b] = system(command);
+        fprintf([num2str(k) 'Done \n'])
+    end
+
+
 end
-% closing the pool of workers again
-matlabpool('close')
-
-
-
-% Checking if the processing went fine for each core
-
 
