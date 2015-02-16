@@ -8,9 +8,19 @@ parms=struct('Created',date);
 
 parms.small_baseline_flag='n'; % PS ifgs with single masters
 
-if exist('./processor.txt','file')
-    processor=textread('./processor.txt','%s');
-    parms.insar_processor=processor{1};
+processor_file = './processor.txt';
+if exist(processor_file,'file')~=2
+    processor_file = ['..' filesep processor_file];
+    if exist(processor_file,'file')~=2
+        processor_file = ['..' filesep processor_file];
+        if exist(processor_file,'file')~=2
+            processor_file = ['..' filesep processor_file];
+        end
+    end
+end
+if exist(processor_file,'file')==2
+    processor=textread(processor_file,'%s');
+    parms.insar_processor=strtrim(processor{1});
 else
     parms.insar_processor='doris';
 end
