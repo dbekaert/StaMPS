@@ -180,7 +180,8 @@ savename=['ps',num2str(psver)];
 phname=['ph',num2str(psver)];
 
 save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','ifgday','ifgday_ix','n_image','n_ifg','n_ps','sort_ix','ll0','master_ix','day_ix');
-save(phname,'ph');
+
+save(phname,'ph','-v7.3');
 save psver psver
     
 if exist(daname,'file')
