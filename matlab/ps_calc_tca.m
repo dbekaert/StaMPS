@@ -13,6 +13,8 @@ function []=ps_calc_tca
 %   11/2012 HB added more precise pixel selection, bugfixes
 %   11/2012 HB drop ifg index included
 %   01/2013 AH converted to function and name changed
+%   08/2014 DB Append the correction in case the tca variable esits 
+%   08/2014 DB Change such can be ran without having ran step 7
 %   ================================================================
 
 clear all
@@ -24,10 +26,10 @@ plot_flag = 1;    % 0 --> no plot/ 1 -> plot uph, correction, corrected ifg afte
 
 load psver
 psname=['./ps',num2str(psver)];
-sclaname=['./scla',num2str(psver)];
-sclasbname=['./scla_sb',num2str(psver)];
-phuwname=['./phuw',num2str(psver)];
-phuwsbname=['./phuw_sb',num2str(psver)];
+sclaname=['./scla',num2str(psver) '.mat'];
+sclasbname=['./scla_sb',num2str(psver) '.mat'];
+phuwname=['./phuw',num2str(psver) '.mat'];
+phuwsbname=['./phuw_sb',num2str(psver) '.mat'];
 
 
 ps=load(psname);
@@ -36,40 +38,41 @@ num_ifg = ps.n_ifg;
 num_pix = ps.n_ps;
 
 small_baseline_flag = getparm('small_baseline_flag');
-
 if ~strcmpi(small_baseline_flag,'y')
     disp('working on the PS interferograms');
-    if exist([phuwname,'.mat'],'file')
+    if exist([phuwname],'file')
         stratname=['./tca',num2str(psver)]; 
         u_ph = load(phuwname');
+        
+    end
+    if exist(sclasbname,'file')==2
         scla=load(sclaname);
         % subtract dem error
         ph_all=u_ph.ph_uw - scla.ph_scla;
-           
-    else
-        disp('please run StaMPS first');
         
+        fprintf('DEM error removed \n')
+    else
+        ph_all=u_ph.ph_uw  ;      
     end
 else
     disp('working on the SB interferograms');
-    if exist([phuwsbname,'.mat'],'file')
+    if exist([phuwsbname],'file')
         stratname=['./tca_sb',num2str(psver)]; 
         u_ph = load(phuwsbname);  
+     end
+    if exist(sclasbname,'file')==2
         scla=load(sclasbname);
         % subtract dem error
         ph_all=u_ph.ph_uw - scla.ph_scla;
+        fprintf('DEM error removed \n')
+
     else
-        disp('please run StaMPS first');
+        ph_all=u_ph.ph_uw;
     end
 end
 
 % if existent load strat correction
-if exist([stratname,'.mat'],'file')
-    strat = load(stratname);
-    strat_corr = strat.strat_corr;
-else
-    strat_corr = zeros(num_pix,num_ifg);
-end
+strat_corr = zeros(num_pix,num_ifg);
 
 
 % load dem data
@@ -157,4 +160,8 @@ for k = ifg : end_ifg
 end
 
 % save matrix
-save([stratname,'.mat'],'strat_corr')
+if exist([stratname,'.mat'],'file')~=2
+    save([stratname,'.mat'],'strat_corr')
+else
+    save([stratname,'.mat'],'-append','strat_corr')
+end
