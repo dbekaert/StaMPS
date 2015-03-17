@@ -12,6 +12,7 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %    valid VALUE_TYPE's are:
 %    'hgt' for topography
 %    'w' for wrapped phase
+%    'w-a' for wrapped phase
 %    'w-d' for wrapped phase minus smoothed dem error
 %    'w-o' for wrapped phase minus orbital ramps
 %      also 'w-dm','w-do','w-dmo'
@@ -101,6 +102,8 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %    'a_l'  = topography correlated aps correction using linear correction
 %    'a_p'  = topography correlated aps correction using power law relationship
 %    'a_m'  = topography correlated aps correction using MERIS data
+%    'a_M'  = topography correlated aps correction using MODIS data
+%    'a_RM'  = topography correlated aps correction using MODIS recalibrated data
 %    'a_e'  = topography correlated aps correction using ERA-I data
 %    'a_w'  = topography correlated aps correction using WRF model data
 %    'ifg i' = only for 'a_p' show the topopgraphy correlated aps correction
@@ -191,11 +194,20 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %   05/2014 DB: Add extra output argument h_axes_all
 %   05/2014 DB: Hardcode topogrpahy to have a GMT colormap for relief
 %   06/2014 DB: Fix bug in case of plotting u
+%   07/2014 DB: Fix a bug, which already corrected itself latter on
+%   07/2014 DB: Fix in case there is no data in the reference area
+%   08/2014 DB: Bug fix for ps_plot V-DOA
+%   08/2014 DB: Allow to plot w-a, and wa (wrapped atmosphere)
+%   08/2014 DB: Include modis recalibrated data support
+%   10/2014 DB: Include support for ionopsheric delays
+%   03/2015 DB: Remove the reference for the K spatial map option
 %   ======================================================================
 
 stdargin = nargin ; 
-parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_e' ('a_eh' for hydrostatic and 'a_ew' for wet), 'a_w' ('a_wh' for hydrostatic and 'a_ww' for wet), 'a_p' ('a_pk' for spatial map of coefficent K), 'ifg i^th', 'ext PATH ' is specified
+parseplotprm  % check if 'ts', 'a_m', 'a_l', 'a_e' ('a_eh' for hydrostatic and 'a_ew' for wet), 'a_w' ('a_wh' for hydrostatic and 'a_ww' for wet),
+% 'a_p' ('a_pk' for spatial map of coefficent K), 'i_as', 'ifg i^th', 'ext PATH ' is specified
 
+reference_flag=0;
 
 if stdargin<1
     help ps_plot
@@ -272,6 +284,10 @@ apsbandsname = ['./tca_bands' num2str(psver) '.mat'];
 apsbandssbname = ['./tca_bands_sb' num2str(psver) '.mat'];
 apsname=['./tca',num2str(psver)];
 apssbname=['./tca_sb',num2str(psver)];
+iononame = ['./ica' num2str(psver) '.mat'];
+ionosbname = ['./ica_sb' num2str(psver) '.mat'];
+tidename=['./tide',num2str(psver)];
+tidesbname=['./tide_sb',num2str(psver)];
 hgtname=['./hgt',num2str(psver)];
 
 
@@ -280,10 +296,6 @@ sclasbname=['./scla_sb',num2str(psver)];
 sclasmoothname=['./scla_smooth',num2str(psver)];
 sclasbsmoothname=['./scla_smooth_sb',num2str(psver)];
 meanvname=['./mv',num2str(psver)];
-
-
-
-
 
 
 ps=load(psname);
@@ -430,13 +442,13 @@ else
         end
         if ischar(value_type)~=1 & isempty(ifg_list) % [DB] to plot data matrix which is not a valuetype
                     ifg_list=unwrap_ifg_index_sb;
-        elseif ischar(value_type)==1 & length(value_type)>2 & (value_type(1:3)=='usb'|value_type(1:3)=='rsb'| value_type(1:3)=='asb') & isempty(ifg_list)
+        elseif ischar(value_type)==1 & length(value_type)>2 & (value_type(1:3)=='usb'|value_type(1:3)=='rsb'| value_type(1:3)=='asb' | value_type(1:3)=='isb') & isempty(ifg_list)
                     ifg_list=unwrap_ifg_index_sb;
         end
     else
         unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
     end
-    if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='w') & isempty(ifg_list)
+    if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='i' | value_type(1)=='w') & isempty(ifg_list)
         ifg_list=unwrap_ifg_index;
     end
     if ischar(value_type)~=1 & size(value_type,2)<length(ifg_list)
@@ -447,7 +459,6 @@ end
 if isempty(units) && ischar(value_type)==1
       units='rad'; 
 end
-
 
 % flag for oscilator drift
 forced_sm_flag=0;
@@ -492,7 +503,6 @@ if strcmp(value_type(1),'u')
 
 end
 
-
 if forced_sm_flag==1
     [ph_unw_eni_osci,v_envi_osci] = env_oscilator_corr([],forced_sm_flag);
 else
@@ -500,12 +510,45 @@ else
     [ph_unw_eni_osci,v_envi_osci] = env_oscilator_corr;
 end
 
-
 value_type=lower(value_type);
 % Check if the tropopsheric needs to be inverted from SB to PS
-if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a')) && isempty(strfind(value_type,'sb'))
-    sb_invert_aps(aps_flag);
+if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
+    if isempty(strfind(value_type,'w')) 
+        if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
+           % this is small baselines velocity with SB aps correction
+           sb_invert_aps(aps_flag);
+        elseif (strcmpi(group_type,'vs'))~=1
+           % this is small baselines velocity with SB aps correction
+           sb_invert_aps(aps_flag);
+        end
+    end
 end
+% Check if the tidal correction needs to be inverted from SB to PS
+if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'t')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
+    if isempty(strfind(value_type,'w')) 
+        if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
+           % this is small baselines velocity with SB tide correction
+           sb_invert_tide;
+        elseif (strcmpi(group_type,'vs'))~=1
+           % this is small baselines velocity with SB tide correction
+           sb_invert_tide;
+        end
+    end
+end
+% Check if the ionopshere need to be inverted from SB to PS
+if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'i')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
+    if isempty(strfind(value_type,'w')) 
+        if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
+           % this is small baselines velocity with SB aps correction
+           sb_invert_iono(iono_flag);
+        elseif (strcmpi(group_type,'vs'))~=1
+           % this is small baselines velocity with SB aps correction
+           sb_invert_iono(iono_flag);
+        end
+    end
+end
+
+
 % if isempty(strfind(value_type,'usb')) 
 %     if ~isempty(strfind(value_type,'u')) || ~isempty(strfind(group_type,'v'))
 %          if ~isempty(strfind(value_type,'a'))
@@ -513,7 +556,6 @@ end
 %         end
 %     end
 % end
-
 switch(group_type)
     case {'hgt'}
         hgt = load(hgtname);
@@ -541,6 +583,91 @@ switch(group_type)
         end
         clear rc
         fig_name = 'w';
+    case {'w-a'}
+        if exist(rcname,'file')
+            rc=load(rcname);
+            ph_all=rc.ph_rc;
+        else
+            rc=load(phname);
+            ph_all=rc.ph;
+        end
+        
+        
+        if strcmpi(small_baseline_flag,'y')
+            aps=load(apssbname);
+        else
+            aps=load(apsname);
+        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+       
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all.*exp(-j*ph_unw_eni_osci).*exp(-j*aps_corr);
+        
+        if ref_ifg~=0
+            ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
+        end
+        clear rc
+        clear  aps aps_corr
+        fig_name = ['w-a' fig_name_tca];
+
+     case {'w-da'}
+        if exist(rcname,'file')
+            rc=load(rcname);
+            ph_all=rc.ph_rc;
+        else
+            rc=load(phname);
+            ph_all=rc.ph;
+        end
+        if ~strcmpi(small_baseline_flag,'y')
+            scla=load(sclasmoothname);
+        else
+            scla=load(sclasbsmoothname);
+        end
+        
+        if strcmpi(small_baseline_flag,'y')
+            aps=load(apssbname);
+        else
+            aps=load(apsname);
+        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+       
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all.*exp(-j*ph_unw_eni_osci).*exp(-j*aps_corr).*exp(-j*scla.ph_scla);
+        
+        if ref_ifg~=0
+            ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
+        end
+        clear rc
+        clear  aps aps_corr
+        fig_name = ['w-da' fig_name_tca];
+
+        
+         
+        
+    case {'wa'}       
+        if strcmpi(small_baseline_flag,'y')
+            aps=load(apssbname);
+        else
+            aps=load(apsname);
+        end
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+       
+        % subtract of oscialtor drift in case of envisat
+        ph_all = exp(-j*aps_corr);
+        ix = sum(ph_all~=1)==0;
+       
+        ph_all(:,ix)=complex(1,1);
+        
+        
+        
+        
+        if ref_ifg~=0
+%             ph_all=ph_all.*conj(repmat(rc.ph_reref(:,ref_ifg),1,n_ifg));
+        end
+        clear  aps aps_corr
+        fig_name = ['wa' fig_name_tca];
+
+        
      case {'w-d'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
@@ -662,6 +789,7 @@ switch(group_type)
         ref_ps=ps_setref;
         fig_name = 'u';
         units='rad';
+         
     case {'usb'}
         uw=load(phuwsbname);
         ph_all=uw.ph_uw;
@@ -671,6 +799,8 @@ switch(group_type)
         ref_ps=ps_setref;
         textsize=0;
         fig_name = 'usb';
+                        
+        
     case {'dsb'}
         scla=load(sclasbname,'K_ps_uw');
         ph_all=scla.K_ps_uw;
@@ -742,6 +872,22 @@ switch(group_type)
         
         ref_ps=ps_setref;
         textsize=0;
+        
+    case {'usb-ai'}
+        uw=load(phuwsbname);
+        aps=load(apssbname);
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        iono=load(ionosbname);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        fig_name = ['usb-ai' fig_name_tca ' ' fig_name_ica];
+        ph_all=uw.ph_uw - aps_corr - iono_corr;
+        clear uw aps aps_corr
+        
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        
+        ref_ps=ps_setref;
+        textsize=0;
      case {'usb-ao'}
         uw=load(phuwsbname);
         aps=load(apssbname);
@@ -771,13 +917,33 @@ switch(group_type)
 
         ref_ps=ps_setref;
         textsize=0;
+        
+     case {'usb-dai'}
+        uw=load(phuwsbname);
+        scla=load(sclasbname);
+        aps=load(apssbname);
+        iono=load(ionosbname);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['usb-dai' fig_name_tca ' ' fig_name_ica] ;
+ 
+        ph_all=uw.ph_uw - scla.ph_scla - aps_corr -iono_corr;
+        clear uw scla aps aps_corr
+        
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+
+        ref_ps=ps_setref;
+        textsize=0;    
+        
     case {'usb-dao'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
         aps=load(apssbname);
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
         fig_name = ['usb-dao' fig_name_tca];
-        ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp - aps_corr;
+        ph_all=uw.ph_uw - scla.ph_scla - aps_corr;
+        [ph_all] = ps_deramp(ps,ph_all);       
         clear uw scla aps aps_corr
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
@@ -796,14 +962,46 @@ switch(group_type)
         ref_ps=ps_setref;
         textsize=0;
         fig_name = 'rsb';  
+    case {'rsb-o'}
+        uw=load(phuwsbname);
+        res=load(phuwsbresname);
+        ph_all=zeros(size(uw.ph_uw));
+        ph_all(:,unwrap_ifg_index_sb)=uw.ph_uw(:,unwrap_ifg_index_sb)-res.ph_res(:,unwrap_ifg_index_sb);
+        [ph_all] = ps_deramp(ps,ph_all );
+
+        clear uw
+        ref_ps=ps_setref;
+        textsize=0;
+        fig_name = 'rsb-o'; 
+        
     case {'asb'}
         aps=load(apssbname);
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);    
         fig_name = ['asb' fig_name_tca];
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
-        ref_ps=ps_setref;
+        % when plotting spatial maps of K do not re-reference the data!
+        if aps_flag~=11
+            ref_ps=ps_setref;
+        end
         textsize=0;
+        
+     case {'tsb'}
+            tide=load(tidesbname);
+            fig_name = ['tsb'];
+            ph_all= tide.ph_tide;  
+            ref_ps=ps_setref;
+    case {'isb'}
+        iono=load(ionosbname);
+        %ph_all=exp(j*ph_scn);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        fig_name = ['isb' fig_name_ica];
+        fig_name = [fig_name fig_name_suffix];
+        ph_all=iono_corr;
+        clear iono iono_corr
+        ref_ps=ps_setref;   
+        
+        
      case {'asb-o'}
         aps=load(apssbname);
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
@@ -882,6 +1080,47 @@ switch(group_type)
         ph_all(:,master_ix)=0;
         clear uw scla aps aps_corr
         ref_ps=ps_setref;
+        
+        
+      case {'u-dai'}
+        uw=load(phuwname);
+        scla=load(sclaname);
+        aps=load(apsname);
+        iono=load(iononame);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-dai' fig_name_tca ' ' fig_name_ica];
+        ph_all=uw.ph_uw; 
+        ph_all=uw.ph_uw - scla.ph_scla - aps_corr - iono_corr;
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        
+        ph_all(:,master_ix)=0;
+        clear uw scla aps aps_corr
+        ref_ps=ps_setref;
+        
+        
+      case {'u-dait'}
+        uw=load(phuwname);
+        scla=load(sclaname);
+        aps=load(apsname);
+        iono=load(iononame);
+        tide=load(tidename);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-dait' fig_name_tca ' ' fig_name_ica];
+        ph_all=uw.ph_uw; 
+        ph_all=uw.ph_uw - scla.ph_scla - aps_corr - iono_corr- tide.ph_tide;
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        
+        ph_all(:,master_ix)=0;
+        clear uw scla aps aps_corr
+        ref_ps=ps_setref;
+             
+    
+        
+        
     case {'u-dma'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -949,6 +1188,24 @@ switch(group_type)
         end
         clear uw aps aps_corr
         ref_ps=ps_setref;
+     case {'u-ai'}
+        uw=load(phuwname);
+        aps=load(apsname);
+        iono=load(iononame);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+        fig_name = ['u-ai' fig_name_tca ' ' fig_name_ica];
+        ph_all=uw.ph_uw;
+        ph_all=uw.ph_uw - aps_corr - iono_corr;
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        if aps_band_flag~=1
+            ph_all(:,master_ix)=0;
+        end
+        clear uw aps aps_corr
+        ref_ps=ps_setref;  
+        
+        
      case {'u-ao'}
         uw=load(phuwname);
         aps=load(apsname);
@@ -1000,6 +1257,36 @@ switch(group_type)
         ph_all = ph_all-ph_unw_eni_osci;
         ref_ps=ps_setref;
         fig_name = 'u-d';
+        
+    case {'u-di'}
+        uw=load(phuwname);
+        scla=load(sclaname);
+        iono=load(iononame);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        fig_name = ['u-di' fig_name_ica];
+        fig_name = [fig_name fig_name_suffix];
+        ph_all=uw.ph_uw - scla.ph_scla - iono_corr;
+        clear uw scla
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        ref_ps=ps_setref;
+    case {'u-dit'}
+        uw=load(phuwname);
+        scla=load(sclaname);
+        iono=load(iononame);
+        tide=load(tidename);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        fig_name = ['u-dit' fig_name_ica];
+        fig_name = [fig_name fig_name_suffix];
+        ph_all=uw.ph_uw - scla.ph_scla - iono_corr - tide.ph_tide;
+        clear uw scla
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        ref_ps=ps_setref;
+            
+        
+        
+        
     case {'u-o'}
         uw=load(phuwname);
 %         scla=load(sclaname);
@@ -1026,19 +1313,7 @@ switch(group_type)
     case {'u-do'}
         uw=load(phuwname);
         scla=load(sclaname);
-        if strcmp('n',scla_deramp)
-            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-            return;
-        end
-        if ~isfield(scla,'ph_ramp')
-             % deramping ifgs
-             [ph_all] = ps_deramp(ps,uw.ph_uw - scla.ph_scla);
-        else
-            ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp;
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
-        end
+        [ph_all] = ps_deramp(ps,uw.ph_uw - scla.ph_scla);
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         clear uw scla
@@ -1056,6 +1331,39 @@ switch(group_type)
         
         ref_ps=ps_setref;
         fig_name = 'u-m';
+        
+     case {'i'}
+        iono=load(iononame);
+        %ph_all=exp(j*ph_scn);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        fig_name = ['i' fig_name_ica];
+        fig_name = [fig_name fig_name_suffix];
+        ph_all=iono_corr;
+        clear iono iono_corr
+        ref_ps=ps_setref;
+        
+     case {'u-i'}
+        uw=load(phuwname);
+        iono=load(iononame);
+        %ph_all=exp(j*ph_scn);
+        [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+        fig_name = ['u-i' fig_name_ica];
+        fig_name = [fig_name fig_name_suffix];
+        
+        ph_all=uw.ph_uw - iono_corr;
+        ph_all(:,master_ix)=0;
+        clear uw scla
+        % subtract of oscialtor drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        
+        ref_ps=ps_setref;
+               
+    case {'t'}
+            tide=load(tidename);
+            fig_name = ['t'];
+            ph_all= tide.ph_tide;  
+            ref_ps=ps_setref;
+
     case {'a'}
         aps=load(apsname);
         %ph_all=exp(j*ph_scn);
@@ -1064,7 +1372,12 @@ switch(group_type)
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         clear aps aps_corr
-        ref_ps=ps_setref;
+        
+        if aps_flag~=11
+            ref_ps=ps_setref;
+        else
+            units = ['rad/m^{\alpha}'];
+        end
         
    case {'a-o'}
         aps=load(apsname);
@@ -1080,6 +1393,7 @@ switch(group_type)
         clear aps aps_corr
         ref_ps=ps_setref;
         
+      
         
     case {'s'}
         scn=load(scnname);
@@ -1130,7 +1444,11 @@ switch(group_type)
             fig_name = 'v';
         case {'v-d'}
             scla=load(sclaname);
-            ph_uw=ph_uw - scla.ph_scla - repmat(scla.C_ps_uw,1,size(ph_uw,2)); % master phase doesn't effect plot, but better for ts plot
+            if isfield(scla,'C_ps_uw')
+                ph_uw=ph_uw - scla.ph_scla - repmat(scla.C_ps_uw,1,size(ph_uw,2)); % master phase doesn't effect plot, but better for ts plot
+            else
+                 ph_uw=ph_uw - scla.ph_scla;
+            end
             clear scla
             fig_name = 'v-d';
         case {'v-o'}
@@ -1161,7 +1479,7 @@ switch(group_type)
             
          case {'v-dos'}
              if strcmp('n',scla_deramp)
-             disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
              return;
              end
              scla=load(sclaname);
@@ -1197,7 +1515,45 @@ switch(group_type)
             fig_name = ['v-da' fig_name_tca];
             ph_uw=ph_uw - scla.ph_scla - aps_corr;
             clear scla aps aps_corr
+            
+        case {'v-dai'}
+            scla=load(sclaname);
+            aps=load(apsname);
+            iono=load(iononame);
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+            fig_name = ['v-dai' fig_name_tca ' ' fig_name_ica];
+            ph_uw=ph_uw - scla.ph_scla - aps_corr - iono_corr;
+            clear scla aps aps_corr iono_corr
+         case {'v-dait'}
+            scla=load(sclaname);
+            aps=load(apsname);
+            iono=load(iononame);
+            tide=load(tidename);
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+            fig_name = ['v-dait' fig_name_tca ' ' fig_name_ica];
+            ph_uw=ph_uw - scla.ph_scla - aps_corr -iono_corr - tide.ph_tide;
+            clear scla aps aps_corr iono_corr
+            
+         case {'vt'}
+            tide=load(tidename);
+            fig_name = ['vt'];
+            ph_uw= tide.ph_tide;
+            
+            
+         case {'vi'}
+            iono=load(iononame);
+            [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+            fig_name = ['vi' fig_name_ica];
+            ph_uw= iono_corr; 
+            
+            
+            
         case {'v-dao'}
+            
+            
+            scla=load(sclaname);
             aps=load(apsname);
             [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
             fig_name = ['v-dao' fig_name_tca];
@@ -1235,7 +1591,15 @@ switch(group_type)
             fig_name = 'vdrop-do';
             if sum(sum(ph_unw_eni_osci))~=0
                 fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
+            end  
+        case {'vdrop-dao'}
+            scla=load(sclaname);
+            aps=load(apsname);
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['vdrop-dao' fig_name_tca];
+            ph_uw=ph_uw - scla.ph_scla - aps_corr;
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
             
         otherwise
             error('unknown value type')
@@ -1362,6 +1726,38 @@ switch(group_type)
             fig_name = ['v-da' fig_name_tca];
             ph_uw=ph_uw - scla.ph_scla - aps_corr;
             clear scla aps aps_corr
+        case {'v-dai'}
+            scla=load(sclasbname);
+            aps=load(apssbname);
+            iono=load(ionosbname);
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+            fig_name = ['v-dai' fig_name_tca ' ' fig_name_ica];
+            ph_uw=ph_uw - scla.ph_scla - aps_corr -iono_corr;
+            clear scla aps aps_corr iono_corr
+                  
+            
+        case {'v-dat'}
+            scla=load(sclasbname);
+            aps=load(apssbname);
+            tide=load(tidesbname);
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['v-dat' fig_name_tca];
+            ph_uw=ph_uw - scla.ph_scla - aps_corr- tide.ph_tide;
+            clear scla aps aps_corr  
+            
+          case {'v-dait'}
+            scla=load(sclasbname);
+            aps=load(apssbname);
+            iono=load(ionosbname);
+            tide=load(tidesbname);
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
+            fig_name = ['v-dait' fig_name_tca ' ' fig_name_ica];
+            ph_uw=ph_uw - scla.ph_scla - aps_corr -iono_corr - tide.ph_tide;
+            clear scla aps aps_corr iono_corr
+              
+            
         case {'v-dao'}
             scla=load(sclasbname);
             aps=load(apssbname);
@@ -1383,8 +1779,15 @@ switch(group_type)
             end
             
         case('v-do')
-            scla=load(sclasbname);
-            ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
+            scla=load(sclasbname);            
+            ph_uw=ph_uw - scla.ph_scla ;
+            if isempty(scla.ph_ramp)
+                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
+                ph_uw = ps_deramp(ps,ph_uw);
+            else
+               ph_uw = ph_uw - scla.ph_ramp;
+                
+            end
             clear scla
             fig_name = 'v-do';
             if sum(sum(ph_unw_eni_osci))~=0
@@ -1414,6 +1817,17 @@ switch(group_type)
             if sum(sum(ph_unw_eni_osci))~=0
                 fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
             end
+            
+        case {'vdrop-dao'} 
+            scla=load(sclasbname);
+            aps=load(apssbname);
+            [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+            fig_name = ['vdrop-dao' fig_name_tca];
+            ph_uw=ph_uw - scla.ph_scla - aps_corr;
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
+            
+            clear scla aps aps_corr
         otherwise
             error('unknown value type')
         end
@@ -1487,7 +1901,9 @@ switch(group_type)
         end
         fig_name = 'wf';
     case {'vs'}
-        fig_name_tca=ps_mean_v(ifg_list,200,value_type(4:end),use_small_baselines,aps_flag);
+%         fig_name_tca=ps_mean_v_cov(ifg_list,800,value_type(4:end),use_small_baselines,aps_flag,reference_flag);
+        fig_name_tca=ps_mean_v(ifg_list,1500,value_type(4:end),use_small_baselines,aps_flag);
+
         ifg_list=[];
         mv=load(meanvname);
         ph_all=mv.mean_v_std;
@@ -1501,6 +1917,9 @@ else
     ref_ps=ps_setref;
 	fig_name = 'data';
     value_type = 'data';
+    if size(ph_all,2)~=ps.n_ifg
+        ifg_list=[];
+    end
 end
 
 
@@ -1582,7 +2001,6 @@ x_t=round((h_x-l_t)/h_x/2*n_j);
 y_t=round(h_t*1.2/h_y*n_i);
 
 
-
 ph_disp=ph_all(:,ifg_list);
 if isreal(ph_all)
     if ref_ifg~=0
@@ -1599,6 +2017,10 @@ if isreal(ph_all)
         mean_ph=zeros(1,size(ph_disp,2));
         for i=1:size(ph_disp,2)
             mean_ph(i)=mean(ref_ph(~isnan(ref_ph(:,i)),i),1);
+            if isnan(mean_ph(i))
+                mean_ph(i)=0;
+                fprintf(['Interferogram (' num2str(i) ') does not have a reference area\n'])
+            end
         end
         clear i
         ph_disp=ph_disp-repmat(mean_ph,n_ps,1);

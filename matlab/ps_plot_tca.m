@@ -11,6 +11,7 @@ function [aps_corr,fig_name_tca,aps_flag] = ps_plot_tca(aps,aps_flag)
 % 02/2014   DB      Include the plotting of the powerlaw spatial maps of K
 % 05/2014   DB 	    Include MODIS support
 % 08/2014   DB      Include MODIS recalibrated support
+% 03/2015   DB      Adding the options of spectrometers + wrf hydro
 
 
 if ischar(aps_flag)
@@ -79,8 +80,28 @@ if ischar(aps_flag)
        aps_flag=21;
    elseif strcmp(aps_flag,'a_RMI+a_eh')==1
        % aps topo correlated modis recalibrated (non-interpolated) plus a hydrostatic component from ERA-I
-       aps_flag=22;       
+       aps_flag=22;
+    elseif strcmp(aps_flag,'a_m+a_wh')==1
+       % aps topo correlated MERIS plus a hydrostatic component from WRF
+       aps_flag=23;
+   elseif strcmp(aps_flag,'a_mi+a_wh')==1
+       % aps topo correlated MERIS (non-interpolated) plus a hydrostatic component from WRF
+       aps_flag=24;
+   elseif strcmp(aps_flag,'a_M+a_wh')==1
+       % aps topo correlated modis plus a hydrostatic component from  WRF
+       aps_flag=25;
+   elseif strcmp(aps_flag,'a_MI+a_wh')==1
+       % aps topo correlated modis (non-interpolated) plus a hydrostatic component from WRF
+       aps_flag=26;
+   elseif strcmp(aps_flag,'a_RM+a_wh')==1
+       % aps topo correlated modis recalibrated plus a hydrostatic component from WRF
+       aps_flag=27;
+   elseif strcmp(aps_flag,'a_RMI+a_wh')==1
+       % aps topo correlated modis recalibrated (non-interpolated) plus a hydrostatic component from WRF
+       aps_flag=28;
    end
+   
+   
 end
 
 
@@ -150,14 +171,38 @@ elseif aps_flag==19 % modis correction
 elseif aps_flag==20 % modis correction (not interpolated)
     aps_corr = aps.ph_tropo_modis_no_interp_recal;
     fig_name_tca = ' (modis recal)';   
-elseif aps_flag==21 % modis correction + ERA hydro component
+elseif aps_flag==21 % modis recal correction + ERA hydro component
     ix_no_modis = find(sum(aps.ph_tropo_modis)==0);
     aps_corr = aps.ph_tropo_modis_recal+aps.ph_tropo_era_hydro;
     aps_corr(:,ix_no_modis)=0;
     fig_name_tca = ' (modis recal + ERA hydro)';    
-elseif aps_flag==22 % modis correction (not interpolated)
+elseif aps_flag==22 % modis recal correction (not interpolated)
     aps_corr = aps.ph_tropo_modis_no_interp_recal+aps.ph_tropo_era_hydro;
-    fig_name_tca = ' (modis recal + ERA hydro)';     
+    fig_name_tca = ' (modis recal + ERA hydro)';  
+elseif aps_flag==23; % MERIS + WRF hydro component
+    ix_no_meris = find(sum(aps.ph_tropo_meris)==0);
+    aps_corr = aps.ph_tropo_meris+aps.ph_tropo_wrf_hydro;
+    aps_corr(:,ix_no_meris)=0;
+    fig_name_tca = ' (meris + WRF hydro)';
+elseif aps_flag==24; %  MERIS (non-interpolated) + WRF hydro component
+    aps_corr = aps.ph_tropo_meris_no_interp + aps.ph_tropo_wrf_hydro;
+    fig_name_tca = ' (meris + WRF hydro)';
+elseif aps_flag==25; % modis + WRF hydro component
+    ix_no_modis = find(sum(aps.ph_tropo_modis)==0);
+    aps_corr = aps.ph_tropo_modis+aps.ph_tropo_wrf_hydro;
+    aps_corr(:,ix_no_modis)=0;
+    fig_name_tca = ' (modis + WRF hydro)';   
+elseif aps_flag==26; % modis  (non-interpolated)  + WRF hydro component
+    aps_corr = aps.ph_tropo_modis_no_interp+aps.ph_tropo_wrf_hydro;
+    fig_name_tca = ' (modis + WRF hydro)';   
+elseif aps_flag==27; % modis recalibrated + WRF hydro component
+    ix_no_modis = find(sum(aps.ph_tropo_modis)==0);
+    aps_corr = aps.ph_tropo_modis_recal+aps.ph_tropo_wrf_hydro;
+    aps_corr(:,ix_no_modis)=0;
+    fig_name_tca = ' (modis recal + WRF hydro)'; 
+elseif aps_flag==28; % modis recalibrated  (non-interpolated)  + WRF hydro component
+    aps_corr = aps.ph_tropo_modis_no_interp_recal+aps.ph_tropo_wrf_hydro;
+    fig_name_tca = ' (modis recal + WRF hydro)';  
 else
     error('not a valid APS option')
 end
