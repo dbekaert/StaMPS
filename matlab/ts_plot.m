@@ -25,7 +25,7 @@ radiusfactor = radiusfactor(1);								% select only the first value, i checked 
 momfig_name=['(', get(gcf,'name'), ')']; % inherent fig_name from the velocity plot
 
 % LOAD TS mat file ~ ps_plot_ts_v-d.mat
-if ~exist('ph_uw','var')
+if ~exist('ph_mm','var')
   %fid = fopen(savetxt);
   fid = fopen('ps_plot_ts_matname.txt');
   tsmat=textscan(fid,'%s'); % get mat filename to load parameters
@@ -82,19 +82,19 @@ figure
 
 
 % phases
-% ph_uw holds corrected phase
+% ph_mm holds corrected phase
 % ph_all holds radians to meters
 % v_all=-m(2,:)'; % ?
   
 % PLOT TS for given point(s)
-ts=-ph_uw(in,:)*lambda*1000/(4*pi);
-%G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
-%x_hat=G\double(ts');
+ts=ph_mm(in,:);
+G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
 
 offset=pi*1000*lambda/(4*pi);
 
-ts_hat=nanmean(ts,1);
-%ts_hat=G*x_hat;
+ts=nanmean(ts,1);
+x_hat=G\double(ts');
+ts_hat=G*x_hat;
 %tsup_hat=ts_hat+offset;
 %tslo_hat=ts_hat-offset;
 
@@ -119,37 +119,39 @@ ts_hat=nanmean(ts,1);
  figure % main figure
    orient landscape
    % Bperp
-   subplot(10,1,1)     % Bperp
-     bperp(find(bperp==0))=[]; % drop master.
-     bar(bperp)
-     ylabel('Bperp [m]')
-   grid on
+%    subplot(10,1,1)     % Bperp
+%      bperp(find(bperp==0))=[]; % drop master.
+%      bar(bperp)
+%      ylabel('Bperp [m]')
+%    grid on
    % TS
-   subplot(10,10,[11 87]) % subplot(10,1,2:9)
+%    subplot(10,10,[11 87]) % subplot(10,1,2:9)
        set(gcf,'name',[ ' Times series plot for #point(s): ',...
         num2str(n_pts_near), ' ', momfig_name])
-    h1=plot(day,ts,'--*'); hold on
-    %plot(day,ts_hat,'-*r','LineSmoothing','on'); % mess up ticks
-    h2=plot(day,ts_hat,'-ok');
+    %h1=plot(day,ts,'--*'); hold on
+    %plot(day,ts_hat,'-k','LineSmoothing','on'); % mess up ticks
+    plot(day,ts_hat,'-r'); % mess up ticks
+    hold on
+    h2=plot(day,ts,'ob');
     set(h2,'linewidth',2)
     %h3=plot(day,tsup_hat,'-.g');
     %h4=plot(day,tslo_hat,'-.g');
+    set(gca,'fontsize',14)
     hold off
     grid on
-    ylabel('mm');
-    xlabel('Time [mmmyy]')
+    ylabel('LOS (mm)');
     %datetick('x','mmmyy')  % keepticks or see below
    
     ts_years=unique(datenum(datestr(day,'yyyy'),'yyyy'));
     ts_dates=[ts_years(1):365.25:ceil(ts_years(end)+365.25)];
     %ts_dates=[day(1):365:day(end)+365];
     set(gca, 'XTick',ts_dates);
-    set(gca, 'XTickLabel', datestr(ts_dates,'mmmyy'));
+    set(gca, 'XTickLabel', datestr(ts_dates,'yyyy'));
     % annotate velocit slope in ts plot  
      
    % IFG Dates - excluding master 
-   subplot(10,10,[18 90]) % subplot for rectangle
-      putdates(0.05,1,datestr(day,'yyyy-mm-dd'),0.035,9) % putdates(xstart, ystart, labels, labeloffset, fontsize)
+%    subplot(10,10,[18 90]) % subplot for rectangle
+%       putdates(0.05,1,datestr(day,'yyyy-mm-dd'),0.035,9) % putdates(xstart, ystart, labels, labeloffset, fontsize)
    %subplot(10,1,10)
    %bar(Bdop)
     

@@ -122,6 +122,7 @@ end
 min_ph=0;
 max_ph=0;
 
+
 if ~isempty(in_ph)
     if ~isempty(col_rg)
         min_ph=min(col_rg);
@@ -146,7 +147,7 @@ if ~isempty(in_ph)
         if strncmpi(plot_color_scheme,'gray',4)
             c=flipud(gray(64));  
         elseif strncmpi(plot_color_scheme,'inflation',9)
-            c=flipud(jet(64));
+            c=flipud(colormap);
         elseif strncmpi(plot_color_scheme,'GMT_relief',10)
             [c] = cptcmap('GMT_relief','ncol',129) ;    
         	c= c(65:end,:);
@@ -155,7 +156,7 @@ if ~isempty(in_ph)
                 c=[c(66,:) ;c(66:end,:)];
 	
 	else
-            c=jet(64);
+            c=colormap;
         end
     end
 

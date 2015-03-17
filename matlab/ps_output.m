@@ -7,12 +7,14 @@ function []=ps_output()
 %   09/2009 AH: Correct processing for small baselines output
 %   03/2010 AH: Add velocity standard deviation 
 %   09/2011 AH: Remove code that reduces extreme values
+%   02/2015 AH: Remove code that reduces the extreme values in u-dm
 %   =======================================================================
 
 fprintf('Writing output files...\n')
 
 small_baseline_flag=getparm('small_baseline_flag',1);
 ref_vel=getparm('ref_velocity',1);
+lambda=getparm('lambda',1);
 
 load psver
 psname=['ps',num2str(psver)];
@@ -91,7 +93,6 @@ clear scla phuw
 ph_uw=ph_uw-repmat(mean(ph_uw(ref_ps,:)),ps.n_ps,1);
 
 meanv=load(meanvname);
-lambda=getparm('lambda');
 mean_v=-meanv.m(2,:)'*365.25/4/pi*lambda*1000+ref_vel*1000; % m(1,:) is master APS + mean deviation from model
 %v_sort=sort(mean_v);
 %min_v=v_sort(ceil(length(v_sort)*0.001));
@@ -130,8 +131,8 @@ for i=1:n_image
     ph_sort=sort(ph);
     min_ph=ph_sort(ceil(length(ph_sort)*0.001));
     max_ph=ph_sort(floor(length(ph_sort)*0.999));
-    ph(ph<min_ph)=min_ph;
-    ph(ph>max_ph)=max_ph;
+    %ph(ph<min_ph)=min_ph;
+    %ph(ph>max_ph)=max_ph;
     ph=-ph*lambda*1000/4/pi;
     ph=[ps.lonlat,double(ph)];
     save(['ps_u-dm.',num2str(i),'.xy'],'ph','-ASCII');

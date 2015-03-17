@@ -72,7 +72,7 @@ function gescatter(filename,lon,lat,c,varargin)
 clims=[min(c) max(c)];
 cmap=fliplr(jet);
 t=[];
-scale=0.5;
+scale=0.2;
 opacity=0.4;  % default value for 40 percent opacity [MA]
 
 %parse inputs and do some error-checking
@@ -215,8 +215,8 @@ for i=1:length(lon)
     
     fprintf(fid, '%s \n','</Placemark>');
     
-    waitbar(i/length(lon),h,sprintf('%d%% complete...',...
-        round((i/length(lon))*100)));
+    %waitbar(i/length(lon),h,sprintf('%d%% complete...',...
+        %round((i/length(lon))*100)));
     
 end
 

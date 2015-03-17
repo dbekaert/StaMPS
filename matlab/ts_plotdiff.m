@@ -7,6 +7,7 @@
 %   ======================================================================
 %   11/2010 MMC & MA: plotting time series using 'ts' option 
 %   03/2011 AH convert radius to m, remove line fitting and add mean
+%   02/2015 AH Store phase in mm instead of radians
 %   ======================================================================
 
 % Place button for new TS plots
@@ -25,7 +26,7 @@ radiusfactor = radiusfactor(1);								% select only the first value, i checked 
 momfig_name=['(', get(gcf,'name'), ')']; % inherent fig_name from the velocity plot
 
 % LOAD TS mat file ~ ps_plot_ts_v-d.mat
-if ~exist('ph_uw','var')
+if ~exist('ph_mm','var')
   %fid = fopen(savetxt);
   fid = fopen('ps_plot_ts_matname.txt');
   tsmat=textscan(fid,'%s'); % get mat filename to load parameters
@@ -105,13 +106,13 @@ figure
 
 
 % phases
-% ph_uw holds corrected phase
+% ph_mm holds corrected phase
 % ph_all holds radians to meters
 % v_all=-m(2,:)'; % ?
   
 % PLOT TS for given point(s)
-ts=-ph_uw(in,:)*lambda*1000/(4*pi);
-ts11=-ph_uw(in11,:)*lambda*1000/(4*pi);
+ts=ph_mm(in,:);
+ts11=ph_mm(in11,:);
 %G=[ones(size(day)),day-master_day] ; % [ 1  a ] --> b + ax
 %x_hat=G\double(ts');
 
@@ -145,28 +146,28 @@ ts_hatdiff=ts_hat-ts_hat11;
  figure % main figure
    orient landscape
    % Bperp
-   subplot(10,1,1)     % Bperp
-     bperp(find(bperp==0))=[]; % drop master.
-     bar(bperp)
-     ylabel('Bperp [m]')
-   grid on
+   %subplot(10,1,1)     % Bperp
+   %  bperp(find(bperp==0))=[]; % drop master.
+   %  bar(bperp)
+   %  ylabel('Bperp [m]')
+   %grid on
    % TS
    %subplot(10,10,[11 87]) % subplot(10,1,2:9)
-   subplot(10,10,[11 47]) % subplot(10,1,2:9)
+   %subplot(10,10,[11 47]) % subplot(10,1,2:9)
        set(gcf,'name',[ ' Times series plot for #point(s): ',...
         num2str(n_pts_near), ' ', momfig_name])
-    h1=plot(day,ts,'--*b'); hold on  % PTS 1
+    %h1=plot(day,ts,'--*b'); hold on  % PTS 1
     %plot(day,ts_hat,'-*r','LineSmoothing','on'); % mess up ticks
    %h2=plot(day,ts_hat,'-ok'); % ts_hat diff
    % set(h2,'linewidth',2)
     %h3=plot(day,tsup_hat,'-.g');
     %h4=plot(day,tslo_hat,'-.g');
-      h3=plot(day,ts_hat,'-*b','linewidth',2);
-      h4=plot(day,ts_hat11,'-*r','linewidth',2);
-    h5=plot(day,ts11,'--or'); % PTS 2
-    hold off
-    grid on
-    ylabel('[mm]');
+    %  h3=plot(day,ts_hat,'-*b','linewidth',2);
+    %  h4=plot(day,ts_hat11,'-*r','linewidth',2);
+    %h5=plot(day,ts11,'--or'); % PTS 2
+    %hold off
+    %grid on
+    %ylabel('[mm]');
     %xlabel('Time [mmmyy]')
     %%%datetick('x','mmmyy')  % keepticks or see below
    
@@ -176,20 +177,20 @@ ts_hatdiff=ts_hat-ts_hat11;
     set(gca, 'XTick',ts_dates);
     set(gca, 'XTickLabel', datestr(ts_dates,'mmmyy'));
     % annotate velocit slope in ts plot  
-   subplot(10,10,[51 87])
+   %subplot(10,10,[51 87])
       hold on
-      h2=plot(day,ts_hatdiff,'-ok'); % ts_hat diff
-      set(h2,'linewidth',2)
+      h2=plot(day,ts_hatdiff,'ob'); % ts_hat diff
+      %set(h2,'linewidth',2)
+      set(gca,'fontsize',14)
       hold off
       grid on
-    ylabel('TS Difference [mm]');
-    xlabel('Time [mmmyy]')
+    ylabel('LOS Difference [mm]');
     set(gca, 'XTick',ts_dates);
-    set(gca, 'XTickLabel', datestr(ts_dates,'mmmyy'));
+    set(gca, 'XTickLabel', datestr(ts_dates,'yyyy'));
     
    % IFG Dates - excluding master 
-   subplot(10,10,[18 90]) % subplot for rectangle
-      putdates(0.05,1,datestr(day,'yyyy-mm-dd'),0.035,9) % putdates(xstart, ystart, labels, labeloffset, fontsize)
+   %subplot(10,10,[18 90]) % subplot for rectangle
+   %   putdates(0.05,1,datestr(day,'yyyy-mm-dd'),0.035,9) % putdates(xstart, ystart, labels, labeloffset, fontsize)
    %subplot(10,1,10)
    %bar(Bdop)
     

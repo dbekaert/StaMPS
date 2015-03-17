@@ -268,6 +268,10 @@ if ~isfield(parms,'ref_radius')
     parms.ref_radius=inf;  % radius from centre for ref ps
 end
 
+if ~isfield(parms,'ref_velocity')
+    parms.ref_velocity=0;  % velocity of reference point if known
+end
+
 if ~isfield(parms,'n_cores')
     parms.n_cores=1;  % n_cores for the muti-core option (step 1-5)
 end
