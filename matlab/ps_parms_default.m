@@ -30,6 +30,7 @@ function ps_parms_default()
 %               not all stamps steps are ran.
 %   01/2014 DB: Add a multi-core option for step 1-5
 %   02/2014 AH: add unwrap_hold_good_values
+%   08/2014 DB: explicit search if there is not a processor.txt file 
 %   ======================================================================
 
 
@@ -363,15 +364,6 @@ if ~isfield(parms,'heading')
     end
 end
 
-
-
-
-% if ~exist(lambdaname,'file')
-%     lambdaname= ['../',lambdaname];
-% end
-% 
-
-
 if ~isfield(parms,'scla_deramp')
     parms.scla_deramp='n'; % estimate an orbital ramp before SCLA
 end
@@ -383,7 +375,27 @@ if ~isfield(parms,'sb_scla_drop_index')
 end
 
 if ~isfield(parms,'insar_processor')
-    parms.insar_processor='doris'; % 
+    processor_file = 'processor.txt';
+    if exist(processor_file,'file')~=2
+       if exist(['..' filesep processor_file],'file')==2
+           processor_file = ['..' filesep processor_file];
+           if exist(['..' filesep processor_file],'file')==2
+               processor_file = ['..' filesep processor_file];
+           end
+       end
+    end 
+           
+   if exist(processor_file,'file')~=2
+       parms.insar_processor='doris'; % 
+   else
+       processor = fileread(processor_file);
+       processor = strtrim(processor);
+       parms.insar_processor=processor; % 
+
+       if ~strcmpi(processor,'gamma') & ~strcmpi(processor,'doris')
+           error('This processor is not supported (doris and gamma)')
+       end
+   end
 end
 
 if ~isfield(parms,'subtr_tropo')
