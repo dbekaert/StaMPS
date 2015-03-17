@@ -13,6 +13,8 @@
 %   05/2014 DB: Include MODIS support
 %   08/2014 DB: MODIS recalibrated support
 %   10/2014 DB: Support for ionospheric delays
+%   03/2014 DB: Fix for a big introduced when APS option does not exist.
+%               Add the missing option too  
 
 % list of arguments for ps_plot excluding value type
 arglist={'plot_flag','lims','ref_ifg','ifg_list','n_x','cbar_flag',...
@@ -135,12 +137,42 @@ for k=1:Noptargin,
        % aps topo correlated modis recalibrated (non-interpolated) plus a hydrostatic component from ERA-I
        aps_flag=22;
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_RMI+a_eh')]);    
+       
+  elseif strcmp(varargin{k},'a_m+a_wh')==1
+       % aps topo correlated MERIS plus a hydrostatic component from WRF
+       aps_flag=23;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_m+a_wh')]);     
+   elseif strcmp(varargin{k},'a_mi+a_wh')==1
+       % aps topo correlated MERIS (non-interpolated) plus a hydrostatic component from WRF
+       aps_flag=24;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_mi+a_wh')]);     
+   elseif strcmp(varargin{k},'a_M+a_wh')==1
+       % aps topo correlated modis plus a hydrostatic component from  WRF
+       aps_flag=25;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_M+a_wh')]);     
+   elseif strcmp(varargin{k},'a_MI+a_wh')==1
+       % aps topo correlated modis (non-interpolated) plus a hydrostatic component from WRF
+       aps_flag=26;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_MI+a_wh')]);    
+   elseif strcmp(varargin{k},'a_RM+a_wh')==1
+       % aps topo correlated modis recalibrated plus a hydrostatic component from WRF
+       aps_flag=27;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_RM+a_wh')]);     
+   elseif strcmp(varargin{k},'a_RMI+a_wh')==1
+       % aps topo correlated modis recalibrated (non-interpolated) plus a hydrostatic component from WRF
+       aps_flag=28;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_RMI+a_wh')]);   
+
    elseif strcmp(varargin{k},'i_as')==1
        % ionopsheric correlated atmopshere - azimuth shift method
        iono_flag=1;
        prmsrch=logical([prmsrch strcmp(varargin{k},'i_as')]);   
  
-  
+       
+       
+    
+       
+       
  elseif size(varargin{k},2)>=3  && strcmp(varargin{k}(1:3),'ifg')==1
            if size(varargin{k},2)==3
               ifg_number=[];
@@ -180,7 +212,14 @@ for k = 1:length(varargin(:))
     %disp([arglist{k},'=varargin{',num2str(k),'};']);  % debug
     %disp([arglist{k}, num2cell(val)]);                % debug
 end
-    
+
+% fix in case the specied APS option does not exist it will be mapped in
+% plot_flag. However that needs to be a numeric value not a string. When
+% this occurs give error as this plotting APS type does not exist
+if ~isnumeric(plot_flag)
+    error('This plotting option does not exist')
+end
+
 if plot_flag > 1 && ts_flag==1
     disp('TS plot is possible with backgrounds options 0 or 1')
     plot_flag=1
