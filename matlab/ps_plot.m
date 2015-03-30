@@ -204,6 +204,7 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %   08/2014 DB: Include modis recalibrated data support
 %   10/2014 DB: Include support for ionopsheric delays
 %   03/2015 DB: Remove the reference for the K spatial map option
+%   03/2015 DB: Update and clean for relaese with TRAIN
 %   ======================================================================
 
 stdargin = nargin ; 

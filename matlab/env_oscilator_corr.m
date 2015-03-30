@@ -32,6 +32,7 @@ function [oscilatior_corr_ifgs,oscilatior_corr_velocity] = env_oscilator_corr(en
 % 06/2014       DB      Fixed error for SM computation and added extra envisat check.
 % 06/2014       DB      Fix in case not envisat and forced SM.
 % 11/2014       DB      Fix to make windows and linux compatible 
+% 03/2015       DB      Clean script output
 
 
 if nargin<1 || isempty(envisat_flag)
@@ -51,10 +52,9 @@ if nargin<1 || isempty(envisat_flag)
         ix = strfind(a,'ASAR');
        if ~isempty(ix)
            envisat_flag = 'y';
-           fprintf('This is Envisat \n')
+           fprintf('This is Envisat, oscilator drift is being removed... \n')
        else
             envisat_flag = 'n';
-            fprintf('This is not Envisat \n')
        end
     else
        envisat_flag = 'n';
