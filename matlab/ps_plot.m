@@ -9,6 +9,9 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %       when the master is earlier than the slave.
 %    In the case of velocities, +ve values are towards the satellite.
 %
+%    an invalid VALUE_TYPE related to double removing of atmosphere:
+%    anything when removing master and estiamted tropospheric signals: 'ma'
+%
 %    valid VALUE_TYPE's are:
 %    'hgt' for topography
 %    'w' for wrapped phase
@@ -503,6 +506,8 @@ if strcmp(value_type(1),'u')
 
 end
 
+
+% related to the oscilator drift correction - envisat only
 if forced_sm_flag==1
     [ph_unw_eni_osci,v_envi_osci] = env_oscilator_corr([],forced_sm_flag);
 else
@@ -549,13 +554,7 @@ if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'i')) && isem
 end
 
 
-% if isempty(strfind(value_type,'usb')) 
-%     if ~isempty(strfind(value_type,'u')) || ~isempty(strfind(group_type,'v'))
-%          if ~isempty(strfind(value_type,'a'))
-%             sb_invert_aps(aps_flag);
-%         end
-%     end
-% end
+
 switch(group_type)
     case {'hgt'}
         hgt = load(hgtname);
@@ -690,6 +689,7 @@ switch(group_type)
      case {'w-o'}
         rc=load(rcname);
         ph_all=rc.ph_rc;
+        
         if strcmp('n',scla_deramp)
             disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
             return;
@@ -783,7 +783,7 @@ switch(group_type)
     case {'u'}
         phuw=load(phuwname);
         ph_all=phuw.ph_uw;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;        
         clear phuw
         ref_ps=ps_setref;
@@ -793,8 +793,8 @@ switch(group_type)
     case {'usb'}
         uw=load(phuwsbname);
         ph_all=uw.ph_uw;
-        % subtract of oscialtor drift in case of envisat
-%         ph_all = ph_all-ph_unw_eni_osci;
+        % subtract of oscilator drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
         clear uw
         ref_ps=ps_setref;
         textsize=0;
@@ -804,10 +804,6 @@ switch(group_type)
     case {'dsb'}
         scla=load(sclasbname,'K_ps_uw');
         ph_all=scla.K_ps_uw;
-        %if exist([pmname,'.mat'],'file')
-        %    pm=load(pmname,'K_ps');
-        %    ph_all=ph_all+pm.K_ps;
-        %end
         clear scla
         ref_ps=ps_setref;
         units='rad/m';
@@ -816,7 +812,7 @@ switch(group_type)
         uw=load(phuwsbname);
         scla=load(sclasbname);
         ph_all=uw.ph_uw - scla.ph_scla;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         clear uw scla
         ref_ps=ps_setref;
@@ -825,20 +821,10 @@ switch(group_type)
     case {'usb-o'}
         uw=load(phuwsbname);
         ph_all=uw.ph_uw;
-
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
         % deramping ifgs
-        if exist(sclasbname,'file')~=2
-            [ph_all] = ps_deramp(ps,ph_all);
-        else
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
-            scla=load(sclasbname);       
-            ph_all=uw.ph_uw - scla.ph_ramp;
-        end
+        [ph_all] = ps_deramp(ps,ph_all);
         clear uw scla
         ref_ps=ps_setref;
         textsize=0;
@@ -847,14 +833,11 @@ switch(group_type)
     case {'usb-do'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
-        ph_all=uw.ph_uw - scla.ph_scla - scla.ph_ramp;
-        
-        % subtract of oscialtor drift in case of envisat
+        ph_all=uw.ph_uw - scla.ph_scla;
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        if sum(sum(ph_unw_eni_osci))~=0
-            fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-        end
-
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
         clear uw scla
         ref_ps=ps_setref;
         textsize=0;
@@ -866,24 +849,22 @@ switch(group_type)
         fig_name = ['usb-a' fig_name_tca];
         ph_all=uw.ph_uw - aps_corr;
         clear uw aps aps_corr
-        
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
         ref_ps=ps_setref;
         textsize=0;
-        
     case {'usb-ai'}
         uw=load(phuwsbname);
         aps=load(apssbname);
+        % removing troposphere
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
         iono=load(ionosbname);
+        % removing ionopshere
         [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
         fig_name = ['usb-ai' fig_name_tca ' ' fig_name_ica];
         ph_all=uw.ph_uw - aps_corr - iono_corr;
         clear uw aps aps_corr
-        
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         
         ref_ps=ps_setref;
@@ -895,7 +876,6 @@ switch(group_type)
         fig_name = ['usb-ao' fig_name_tca];
         ph_all=uw.ph_uw - aps_corr;
         clear uw aps aps_corr
-        
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         % deramping ifgs
@@ -908,13 +888,10 @@ switch(group_type)
         aps=load(apssbname);
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
         fig_name = ['usb-da' fig_name_tca];
- 
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr;
         clear uw scla aps aps_corr
-        
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-
         ref_ps=ps_setref;
         textsize=0;
         
@@ -926,16 +903,12 @@ switch(group_type)
         [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
         fig_name = ['usb-dai' fig_name_tca ' ' fig_name_ica] ;
- 
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr -iono_corr;
         clear uw scla aps aps_corr
-        
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-
         ref_ps=ps_setref;
         textsize=0;    
-        
     case {'usb-dao'}
         uw=load(phuwsbname);
         scla=load(sclasbname);
@@ -943,14 +916,11 @@ switch(group_type)
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
         fig_name = ['usb-dao' fig_name_tca];
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr;
-        [ph_all] = ps_deramp(ps,ph_all);       
         clear uw scla aps aps_corr
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        if sum(sum(ph_unw_eni_osci))~=0
-            fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-        end
-        
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
         ref_ps=ps_setref;
         textsize=0;
     case {'rsb'}
@@ -968,7 +938,6 @@ switch(group_type)
         ph_all=zeros(size(uw.ph_uw));
         ph_all(:,unwrap_ifg_index_sb)=uw.ph_uw(:,unwrap_ifg_index_sb)-res.ph_res(:,unwrap_ifg_index_sb);
         [ph_all] = ps_deramp(ps,ph_all );
-
         clear uw
         ref_ps=ps_setref;
         textsize=0;
@@ -1000,8 +969,6 @@ switch(group_type)
         ph_all=iono_corr;
         clear iono iono_corr
         ref_ps=ps_setref;   
-        
-        
      case {'asb-o'}
         aps=load(apssbname);
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
@@ -1009,26 +976,18 @@ switch(group_type)
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
         clear aps aps_corr
-        
         % deramping ifgs
         [ph_all] = ps_deramp(ps,ph_all);
-        
         ref_ps=ps_setref;
         textsize=0;       
-        
-        
     case {'u-dms'}
         uw=load(phuwname);
         scn=load(scnname);
         scla=load(sclaname);
         ph_all=uw.ph_uw - scn.ph_scn_slave - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla;
         clear uw scn scla
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        if sum(sum(ph_unw_eni_osci))~=0
-            fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-        end
-        
         ph_all(:,ps.master_ix)=0;
         ref_ps=ps_setref;
         fig_name = 'u-dms';
@@ -1039,10 +998,8 @@ switch(group_type)
         %ph_all(:,unwrap_ifg_index)=ph_all(:,unwrap_ifg_index) - repmat(scla.C_ps_uw,1,length(unwrap_ifg_index));
         %ph_all(:,unwrap_ifg_index) = ph_all(:,unwrap_ifg_index) - scla.ph_scla(:,unwrap_ifg_index);
         ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
-        
         ph_all(:,master_ix)=0;
         clear uw scla
         ref_ps=ps_setref;
@@ -1050,18 +1007,12 @@ switch(group_type)
     case {'u-dmo'}
         uw=load(phuwname);
         scla=load(sclaname);
-        if strcmp('n',scla_deramp)
-            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-            return;
-        end
         ph_all=uw.ph_uw; 
-        ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp;
+        ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla;
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        if sum(sum(ph_unw_eni_osci))~=0
-            fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-        end
-        
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
         ph_all(:,master_ix)=0;
         clear uw scla
         ref_ps=ps_setref;
@@ -1074,9 +1025,8 @@ switch(group_type)
         fig_name = ['u-da' fig_name_tca];
         ph_all=uw.ph_uw; 
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
         ph_all(:,master_ix)=0;
         clear uw scla aps aps_corr
         ref_ps=ps_setref;
@@ -1092,9 +1042,8 @@ switch(group_type)
         fig_name = ['u-dai' fig_name_tca ' ' fig_name_ica];
         ph_all=uw.ph_uw; 
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr - iono_corr;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
         ph_all(:,master_ix)=0;
         clear uw scla aps aps_corr
         ref_ps=ps_setref;
@@ -1111,66 +1060,27 @@ switch(group_type)
         fig_name = ['u-dait' fig_name_tca ' ' fig_name_ica];
         ph_all=uw.ph_uw; 
         ph_all=uw.ph_uw - scla.ph_scla - aps_corr - iono_corr- tide.ph_tide;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
         ph_all(:,master_ix)=0;
         clear uw scla aps aps_corr
         ref_ps=ps_setref;
-             
-    
-        
-        
+ 
     case {'u-dma'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        aps=load(apsname);
-        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
-        fig_name = ['u-dma' fig_name_tca];
-        ph_all=uw.ph_uw; 
-        ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - aps_corr;
-        % subtract of oscialtor drift in case of envisat
-        ph_all = ph_all-ph_unw_eni_osci;
-        
-        ph_all(:,master_ix)=0;
-        clear uw scla aps aps_corr
-        ref_ps=ps_setref;
+        error('This is not a valid option: you cannot remove atmosphere twice \n ')
     case {'u-dmao'}
-        uw=load(phuwname);
-        scla=load(sclaname);
-        aps=load(apsname);
-        if strcmp('n',scla_deramp)
-            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-            return;
-        end
-        [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
-        fig_name = ['u-dmao' fig_name_tca];
-        ph_all=uw.ph_uw; 
-        ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp - aps_corr;
-        % subtract of oscialtor drift in case of envisat
-        ph_all = ph_all-ph_unw_eni_osci;
-        if sum(sum(ph_unw_eni_osci))~=0
-            fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-        end
-        
-        ph_all(:,master_ix)=0;
-        clear uw scla aps aps_corr
-        ref_ps=ps_setref;
+        error('This is not a valid option: you cannot remove atmosphere twice \n ')
+
     case {'u-dmos'}
         uw=load(phuwname);
         scn=load(scnname);
-        if strcmp('n',scla_deramp)
-            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-            return;
-        end
         scla=load(sclaname);
-        ph_all=uw.ph_uw - scn.ph_scn_slave - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla - scla.ph_ramp;
+        ph_all=uw.ph_uw - scn.ph_scn_slave - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2)) - scla.ph_scla;
         clear uw scn scla
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-        end
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
         ph_all(:,ps.master_ix)=0;
         ref_ps=ps_setref;
         fig_name = 'u-dms';
@@ -1181,7 +1091,7 @@ switch(group_type)
         fig_name = ['u-a' fig_name_tca];
         ph_all=uw.ph_uw;
         ph_all=uw.ph_uw - aps_corr;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         if aps_band_flag~=1
             ph_all(:,master_ix)=0;
@@ -1197,7 +1107,7 @@ switch(group_type)
         fig_name = ['u-ai' fig_name_tca ' ' fig_name_ica];
         ph_all=uw.ph_uw;
         ph_all=uw.ph_uw - aps_corr - iono_corr;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         if aps_band_flag~=1
             ph_all(:,master_ix)=0;
@@ -1215,14 +1125,11 @@ switch(group_type)
         ph_all=uw.ph_uw - aps_corr;
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
         if aps_band_flag~=1
             ph_all(:,master_ix)=0;
         end
-        
         % deramping ifgs
         [ph_all] = ps_deramp(ps,ph_all);
-        
         clear uw aps aps_corr
         ref_ps=ps_setref;
         
@@ -1237,14 +1144,10 @@ switch(group_type)
         if aps_band_flag~=1
             ph_all(:,master_ix)=0;
         end
-        
+        % subtract of oscilator drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
         % deramping ifgs
         [ph_all] = ps_deramp(ps,ph_all);
-        
-        % subtract of oscialtor drift in case of envisat
-        ph_all = ph_all-ph_unw_eni_osci;
-        
-        
         clear uw aps aps_corr scla
         ref_ps=ps_setref;     
         
@@ -1253,7 +1156,7 @@ switch(group_type)
         scla=load(sclaname);
         ph_all=uw.ph_uw - scla.ph_scla;
         clear uw scla
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         ref_ps=ps_setref;
         fig_name = 'u-d';
@@ -1267,9 +1170,10 @@ switch(group_type)
         fig_name = [fig_name fig_name_suffix];
         ph_all=uw.ph_uw - scla.ph_scla - iono_corr;
         clear uw scla
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         ref_ps=ps_setref;
+        
     case {'u-dit'}
         uw=load(phuwname);
         scla=load(sclaname);
@@ -1280,32 +1184,18 @@ switch(group_type)
         fig_name = [fig_name fig_name_suffix];
         ph_all=uw.ph_uw - scla.ph_scla - iono_corr - tide.ph_tide;
         clear uw scla
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         ref_ps=ps_setref;
             
         
-        
-        
     case {'u-o'}
         uw=load(phuwname);
-%         scla=load(sclaname);
-        scla =[]
-        if strcmp('n',scla_deramp)
-            disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-            return;
-        end
-        if ~isfield(scla,'ph_ramp')
-             % deramping ifgs
-             [ph_all] = ps_deramp(ps,uw.ph_uw );
-        else
-            ph_all=uw.ph_uw - scla.ph_ramp;
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
-        end
+        ph_all = uw.ph_uw;
         % subtract of oscialtor drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
 
         clear uw scla
         ref_ps=ps_setref;
@@ -1313,9 +1203,11 @@ switch(group_type)
     case {'u-do'}
         uw=load(phuwname);
         scla=load(sclaname);
-        [ph_all] = ps_deramp(ps,uw.ph_uw - scla.ph_scla);
-        % subtract of oscialtor drift in case of envisat
+        ph_all = uw.ph_uw - scla.ph_scla;
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
+        % deramping ifgs
+        [ph_all] = ps_deramp(ps,ph_all);
         clear uw scla
         ref_ps=ps_setref;
         fig_name = 'u-do';
@@ -1326,7 +1218,7 @@ switch(group_type)
         ph_all=uw.ph_uw - repmat(scla.C_ps_uw,1,size(uw.ph_uw,2));
         ph_all(:,master_ix)=0;
         clear uw scla
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
         
         ref_ps=ps_setref;
@@ -1334,7 +1226,6 @@ switch(group_type)
         
      case {'i'}
         iono=load(iononame);
-        %ph_all=exp(j*ph_scn);
         [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
         fig_name = ['i' fig_name_ica];
         fig_name = [fig_name fig_name_suffix];
@@ -1345,17 +1236,14 @@ switch(group_type)
      case {'u-i'}
         uw=load(phuwname);
         iono=load(iononame);
-        %ph_all=exp(j*ph_scn);
         [iono_corr,fig_name_ica] = ps_plot_ica(iono,iono_flag);
         fig_name = ['u-i' fig_name_ica];
         fig_name = [fig_name fig_name_suffix];
-        
         ph_all=uw.ph_uw - iono_corr;
         ph_all(:,master_ix)=0;
         clear uw scla
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_all = ph_all-ph_unw_eni_osci;
-        
         ref_ps=ps_setref;
                
     case {'t'}
@@ -1366,7 +1254,6 @@ switch(group_type)
 
     case {'a'}
         aps=load(apsname);
-        %ph_all=exp(j*ph_scn);
         [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
         fig_name = ['a' fig_name_tca];
         fig_name = [fig_name fig_name_suffix];
@@ -1386,14 +1273,10 @@ switch(group_type)
         fig_name = ['a-o' fig_name_tca];
         fig_name = [fig_name fig_name_suffix];
         ph_all=aps_corr;
-        
         % deramping ifgs
         [ph_all] = ps_deramp(ps,ph_all);
-        
         clear aps aps_corr
         ref_ps=ps_setref;
-        
-      
         
     case {'s'}
         scn=load(scnname);
@@ -1452,17 +1335,11 @@ switch(group_type)
             clear scla
             fig_name = 'v-d';
         case {'v-o'}
-            if strcmp('n',scla_deramp)
-                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-                return;
-            end
-            scla=load(sclaname);
-            ph_uw=ph_uw - scla.ph_ramp;
+            ph_uw=ph_uw;
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
             clear scla
             fig_name = 'v-o';
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
             
         case {'v-do'}
             if strcmp('n',scla_deramp)
@@ -1470,26 +1347,21 @@ switch(group_type)
                 return;
             end
             scla=load(sclaname);
-            ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla;
+            ph_uw=ph_uw - scla.ph_scla;
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
             clear scla
             fig_name = 'v-do';
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
+
             
          case {'v-dos'}
-             if strcmp('n',scla_deramp)
-                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-             return;
-             end
              scla=load(sclaname);
              scn=load(scnname);
-             ph_uw=ph_uw - scla.ph_ramp - scla.ph_scla - scn.ph_scn_slave;
+             ph_uw=ph_uw - scla.ph_scla - scn.ph_scn_slave;
              clear scla scn
              fig_name = 'v-dos';
-             if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
+             % deramping ifgs
+             [ph_uw] = ps_deramp(ps,ph_uw);
              
         case {'v-a'}
             aps=load(apsname);
@@ -1548,11 +1420,7 @@ switch(group_type)
             fig_name = ['vi' fig_name_ica];
             ph_uw= iono_corr; 
             
-            
-            
         case {'v-dao'}
-            
-            
             scla=load(sclaname);
             aps=load(apsname);
             [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
@@ -1577,21 +1445,19 @@ switch(group_type)
             fig_name = 'vdrop-d';
         case {'vdrop-o'}
             scla=load(sclaname);
-            ph_uw=ph_uw - scla.ph_ramp;
             clear scla
             fig_name = 'vdrop-o';
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
             
         case {'vdrop-do'}
             scla=load(sclaname);
-            ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
+            ph_uw=ph_uw - scla.ph_scla;
             clear scla
             fig_name = 'vdrop-do';
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end  
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
+
         case {'vdrop-dao'}
             scla=load(sclaname);
             aps=load(apsname);
@@ -1608,8 +1474,12 @@ switch(group_type)
         if ts_flag==1 % master AOE doesn't effect v plot, but better for ts plot
             if exist([sclaname '.mat'],'file')==2
                 scla=load(sclaname,'C_ps_uw');
-                ph_uw=ph_uw - repmat(scla.C_ps_uw,1,size(ph_uw,2));
-                clear scla
+                if isfield(scla,'C_ps_uw')
+                    ph_uw=ph_uw - repmat(scla.C_ps_uw,1,size(ph_uw,2));
+                    clear scla
+                else
+                   fprintf('Master atmosphere is not subtracted \n') 
+                end
             else
                fprintf('Master atmosphere is not subtracted \n') 
             end
@@ -1770,29 +1640,19 @@ switch(group_type)
             clear scla aps aps_corr
         case('v-o')
             scla=load(sclasbname);
-            ph_uw=ph_uw - scla.ph_ramp;
+            ph_uw=ph_uw;
             clear scla
             fig_name = 'v-o';
-            
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
             
         case('v-do')
             scla=load(sclasbname);            
             ph_uw=ph_uw - scla.ph_scla ;
-            if isempty(scla.ph_ramp)
-                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-                ph_uw = ps_deramp(ps,ph_uw);
-            else
-               ph_uw = ph_uw - scla.ph_ramp;
-                
-            end
+            ph_uw = ps_deramp(ps,ph_uw);
             clear scla
             fig_name = 'v-do';
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
+
             
         case {'vdrop'}
             fig_name = 'vdrop';
@@ -1803,20 +1663,18 @@ switch(group_type)
             fig_name = 'vdrop-d';
         case {'vdrop-o'}
             scla=load(sclasbname);
-            ph_uw=ph_uw - scla.ph_ramp;
+            ph_uw=ph_uw;
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
             clear scla
             fig_name = 'vdrop-o';
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
         case {'vdrop-do'}
             scla=load(sclasbname);
-            ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
+            ph_uw=ph_uw - scla.ph_scla;
             clear scla
             fig_name = 'vdrop-do';
-            if sum(sum(ph_unw_eni_osci))~=0
-                fprintf('Warning: note that the oscilator drift is also removed, make sure that the ramp is estimated after correction \n')
-            end
+            % deramping ifgs
+            [ph_uw] = ps_deramp(ps,ph_uw);
             
         case {'vdrop-dao'} 
             scla=load(sclasbname);
