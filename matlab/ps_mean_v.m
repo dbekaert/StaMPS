@@ -22,6 +22,7 @@ function [fig_name_tca]=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_ba
 %   05/2014 DB: For APS related corrections include deramping on the fly
 %   05/2014 DB: big fix in case of a nan 
 %   07/2014 EH: Fix for nanmean in case of single element compared to vector
+%   03/2015 DB: Do all deramping on the fly, make consistent for TRAIN release
 %   ======================================================================
 
 
@@ -30,7 +31,6 @@ fprintf('Calculating standard deviation of mean velocity...\n')
 if nargin<1
     ifg_list=[];
 end
-
 if nargin<2
     n_boot=100;
 end
@@ -54,6 +54,8 @@ phuwsbresname=['./phuw_sb_res',num2str(psver)];
 ifgstdname=['./ifgstd',num2str(psver)];
 sclaname=['./scla',num2str(psver)];
 apsname=['./tca',num2str(psver)];
+tidename=['./tide',num2str(psver)];
+
 mvname=['mv',num2str(psver)];
 
 ps=load(psname);
@@ -79,6 +81,8 @@ if strcmpi(getparm('small_baseline_flag'),'y')
         phuwname=['./phuw_sb',num2str(psver)];
         sclaname=['./scla_sb',num2str(psver)];
         apsname=['./tca_sb',num2str(psver)];
+        tidename=['./tide_sb',num2str(psver)];
+
         phuwres=load(phuwsbresname,'sb_cov');
         if isfield(phuwres,'sb_cov');
             ifg_cov=phuwres.sb_cov;
@@ -91,8 +95,6 @@ else
     unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
     if ~exist([ifgstdname,'.mat'],'file')
         ifg_cov=eye(ps.n_ifg);
-        %ps_calc_ifg_std;
-    %end
     else ifgstd=load(ifgstdname);
       if isfield(ifgstd,'ifg_std');
         ifgvar=(ifgstd.ifg_std*pi/181).^2;
@@ -108,6 +110,7 @@ uw=load(phuwname);
 ph_uw=uw.ph_uw;
 clear uw
 
+
 switch(subtract_switches)
 case('')
 case('d')
@@ -115,13 +118,7 @@ case('d')
     ph_uw=ph_uw - scla.ph_scla;
     clear scla
 case('o')
-    scla=load(sclaname);
-    if isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
-        ph_uw=ph_uw - scla.ph_ramp;
-        clear scla
-    else
-        error(['ph_ramp not present or wrong size in ',sclaname])
-    end
+    [ph_uw] = ps_deramp(ps,ph_uw);
 case('a')
     aps=load(apsname);
     [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
@@ -135,12 +132,8 @@ case('ao')
     clear aps aps_corr
 case('do')
     scla=load(sclaname);
-    if isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
-        ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
-        clear scla
-    else
-        error(['ph_ramp not present or wrong size in ',sclaname])
-    end
+    ph_uw=ph_uw - scla.ph_scla;
+    [ph_uw] = ps_deramp(ps,ph_uw);
 case('da')
     scla=load(sclaname);
     ph_uw=ph_uw - scla.ph_scla;
@@ -149,17 +142,19 @@ case('da')
     [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
     ph_uw=ph_uw - aps_corr;
     clear aps aps_corr
+case('dat')
+    tide=load(tidename);
+    scla=load(sclaname);
+    ph_uw=ph_uw - scla.ph_scla;
+    clear scla
+    aps=load(apsname);
+    [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
+    ph_uw=ph_uw - aps_corr-tide.ph_tide;
+    clear aps aps_corr
 case('dao')
     scla=load(sclaname);
-    if isfield(scla,'ph_ramp') & size(scla.ph_ramp,1)==ps.n_ps
-        ph_uw=ph_uw - scla.ph_scla - scla.ph_ramp;
-        clear scla
-    else
-        ph_uw=ph_uw - scla.ph_scla ;
-        [ph_uw] = ps_deramp(ps,ph_uw);
-
-%         error(['ph_ramp not present or wrong size in ',sclaname])
-    end
+    ph_uw=ph_uw - scla.ph_scla ;
+    [ph_uw] = ps_deramp(ps,ph_uw);
     aps=load(apsname);
     [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
     ph_uw=ph_uw - aps_corr;
@@ -212,6 +207,7 @@ while i<ps.n_ps
     end
     ph_bit=ph_uw(:,i:i_end);
     rand('twister',rand_init)
+    
     [mean_v_dist,boot_ix] = bootstrp(n_boot, @(x) single(lscov(G(x,:),ph_bit(x,:))), [1:N]);
     mean_v_std(i:i_end) = std(mean_v_dist(:,2:2:end))';
     i=i+n;
