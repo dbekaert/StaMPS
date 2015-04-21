@@ -13,6 +13,7 @@ function []=sb_invert_uw()
 %   07/2010 AH: Default small baseline covariance for multilooked case
 %   01/2013 AH: Invert topo-correlated atmosphere if calculated
 %   04/2013 AH: Remove inversion of topo-correlated atmosphere
+%   09/2014 DB: Fix for nanmean of the reference area
 %   ======================================================================
 logit;
 
@@ -31,13 +32,24 @@ ps=load(psname);
 drop_ifg_index=getparm('drop_ifg_index');
 unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
 
-if exist([pmname,'.mat'],'file')
+
+
+if exist([pmname,'.mat'],'file') 
     rc=load(rcname);
     pm=load(pmname);
-    ph_noise=angle(rc.ph_rc.*conj(pm.ph_patch));
-    clear pm rc
-    sb_cov=double(cov(ph_noise)); % Covariance between IFGs
-    clear ph_noise
+    
+    if isfield(pm,'ph_patch')
+        if ~isempty(pm.ph_patch)
+            ph_noise=angle(rc.ph_rc.*conj(pm.ph_patch));
+            clear pm rc
+            sb_cov=double(cov(ph_noise)); % Covariance between IFGs
+            clear ph_noise
+        else
+            sb_cov=eye(ps.n_ifg);
+        end
+    else
+        sb_cov=eye(ps.n_ifg);
+    end
 else
     sb_cov=eye(ps.n_ifg);
 end
@@ -58,7 +70,7 @@ ref_ps=ps_setref;
 %    end
 %end
 
-ph_uw_sb=ph_uw_sb-repmat(mean(ph_uw_sb(ref_ps,:)),ps.n_ps,1);
+ph_uw_sb=ph_uw_sb-repmat(nanmean(ph_uw_sb(ref_ps,:)),ps.n_ps,1);
 
 G=zeros(ps.n_ifg,ps.n_image);
 for i=1:ps.n_ifg
@@ -77,6 +89,8 @@ G2=G(unwrap_ifg_index,:);
 
 nzc_ix=sum(abs(G2))~=0; % index for non-zero columns
 G2=G2(:,nzc_ix);
+
+
 if rank(G2)<size(G2,2) 
     save(phuwsbresname,'sb_cov')
     error('There are isolated subsets (cannot be inverted w.r.t. master)')
