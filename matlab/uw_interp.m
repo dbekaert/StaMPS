@@ -6,6 +6,7 @@ function []=uw_interp();
 %   ============================================================================
 %   01/2012 AH: Speed up read/write for triangle 
 %   01/2013 AH: Replace dsearch by dsearchn only for versions 2012 onwards
+%   08/2014 DB: Suppress command line output
 %   ============================================================================
 
 fprintf('Interpolating grid...\n')
@@ -21,7 +22,7 @@ xy=[[1:uw.n_ps]',x,y];
 fprintf(fid,'%d %d %d\n',xy');
 fclose(fid);
 
-!triangle -e unwrap.1.node > triangle.log
+[a,b] = system('triangle -e unwrap.1.node > triangle.log');
 
 fid=fopen('unwrap.2.edge','r');
 header=str2num(fgetl(fid));
