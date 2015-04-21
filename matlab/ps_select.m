@@ -23,6 +23,7 @@ function []=ps_select(reest_flag,plot_flag)
 %   02/2011 DB: Fix error with keep_ix
 %   05/2012 AH: subtract only pixel being tested, not zero whole grid cell
 %   01/2013 AH: Set default threshold if not enough random pixels
+%   04/2015 DB: Give a warning to remove patch from patch list when no PS are left
 %   ======================================================================
 logit;
 logit('Selecting stable-phase pixels...')
@@ -229,6 +230,8 @@ if gamma_stdev_reject>0
 end
 
 
+
+
 if reest_flag~=1  
 
   if reest_flag~=2 % reestimate coh with the PS removed from filtered patch
@@ -399,6 +402,13 @@ if reest_flag~=1
     clear pm
     logit(sprintf('%d ps selected after re-estimation of coherence',sum(keep_ix)))
     clear pm
+
+
+   % give warning that no PS are left and step 4 will fail
+   if sum(keep_ix)==0
+       fprintf('\n\n***No PS points left.\nDelete this patch from the patch list, as step 4 will fail upon continuation for this patch*** \n\n')
+   end
+
 
 else % reest_flag==1, skip re-estimation
     pm=rmfield(pm,{'ph_grid'});
