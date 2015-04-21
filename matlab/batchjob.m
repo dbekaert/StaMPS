@@ -1,6 +1,8 @@
 %BATCHJOB initial script invoked for all background jobs
 %
 %   Andy Hooper, Sep 2001
+% modifications
+% DB    10/2014     Clean up command line output
 
 [p(1),p(2),p(3),p(4),p(5),p(6),p(7),p(8),p(9),p(10),p(11),p(12),therest]=textread('matbgparms.txt','%s%s%s%s%s%s%s%s%s%s%s%s%[^\n]');
 
@@ -25,11 +27,15 @@ for i=2:length(p)
     end
 end
 
-parmarray
-!hostname
+parmarray;
 
-%setpath
+
+% getting which machine is being ran
+[a,b] = system('hostname >temp');
+text = fileread('temp');
+fprintf(['Running on : ' text '\n'])
 
 tic
 feval(parmarray{:});
 toc
+
