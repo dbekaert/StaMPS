@@ -40,7 +40,9 @@ function gescatter(filename,lon,lat,c,varargin)
 % A. Stevens @ USGS 3/04/2009
 % astevens@usgs.gov
 % 
+% Modifications:
 % M. Arikan @ TU Delft  - OPACITY option added 10/04/2010
+% A Hooper - minor changes 17 March 2015 
 
 % Copyright (c) 2010, Andrew Stevens
 % All rights reserved.
