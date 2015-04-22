@@ -8,7 +8,8 @@ function []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation,list)
 %                     coh_thresh value. Between 0-1, default this is 0.3
 %   - weed_zero_elevation: default 'n' this is not done
 %   - list: txt file with ifgs folders that needs to be considered in the
-%           processing. By default all date folders are considered
+%           processing. By default all date folders are considered. This is
+%           a file given as DATE1_DATE2
 %
 %   Andy Hooper, July 2006
 %
@@ -22,6 +23,9 @@ function []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation,list)
 %   12/2012 DB: Set empty for default value as well + print processing values
 %               Add syntax to the code
 %   12/2012 DB: Allow a list of folders (ifgs) to be specified to be considered
+%   04/2013 DB: Output the look angles for the selected points
+%   03/2014 DB: Save output variables
+%   03/2014 DB: Save coherence information too.
 %   =============================================================
 
 if nargin<1 || isempty(coh_thresh)
@@ -42,7 +46,6 @@ else
    flag_all_ifgs = 0;
 end
 
-save_v7_3=0;
 
 phname=['pscands.1.ph'];            % for each PS candidate, a float complex value for each ifg
 ijname=['pscands.1.ij'];            % ID# Azimuth# Range# 1 line per PS candidate
@@ -106,7 +109,9 @@ else
 end
 cohname=['coh_',num2str(looks),'l'];
 n_lrg=floor(n_rg/looks);
-
+if ~exist(laname,'file')
+    laname = ['.',laname];
+end
 if ~exist(arname,'file')
     arname= ['.',arname];
 end
@@ -119,7 +124,7 @@ n_laz=floor(n_az/looks/ar);
 
 % allow a processing list of ifgs folders to be specified
 if flag_all_ifgs==1
-    dirs=ls(['*/',cohname,'.raw']);
+    dirs=ls(['2*/',cohname,'.raw']);
     dirs=strread(dirs,'%s');
     n_d=length(dirs); 
 else
@@ -370,44 +375,85 @@ else
     clear hgt_slc
 end
 fclose(fid);
-%fid=fopen(demradname);
-%hgt=fread(fid,[n_rg,inf],'float');
-%fclose(fid);
-%hgt=hgt';
-%hgt=hgt(round(looks*ar/2):looks*ar:end,round(looks/2):looks:end);
-%hgt=hgt(1:n_laz,1:n_lrg);
 hgt=hgt(ix);
+
+
+% storing the coherence information for the ps points, can be used for
+% resampling:
+% allow a processing list of ifgs folders to be specified
+if flag_all_ifgs==1
+    dirs=ls(['2*/',cohname,'.raw']);
+    dirs=strread(dirs,'%s');
+    n_d=length(dirs); 
+else
+    dirs = textread(list,'%s');
+    n_d = length(dirs); 
+    for k=1:n_d
+       dirs{k} = [dirs{k} filesep cohname,'.raw'];
+    end
+end
+i1=0;
+coh_ps=zeros(n_ps,n_ifg,'single');
+for i=1:n_d
+    if strfind(dirs{i},cohname)
+
+        
+        i1=i1+1;
+        filename=dirs{i};
+        coh_ix=strfind(filename,rubbish);
+        if ~isempty(coh_ix)
+            filename=filename(coh_ix(end-1)+5:coh_ix(end)-1); % drop extra stuff sometimes added to start and end
+        end
+        fid=fopen(filename);
+        if fid<=0
+           error([filename,' does not appear to exist'])
+        end
+        fprintf('   reading %s...\n',filename)
+        coh=fread(fid,[n_lrg,inf],'float=>single');
+        fclose(fid);
+
+        coh=coh';
+        coh= reshape(coh,[],1);
+        coh_ps(:,i)=coh(ix);
+        clear coh
+    end
+end
+
+
+
+% weeding zero height information when requested
 if ~strcmpi(weed_zero_elevation,'n')
     nzix=hgt>0;
     hgt=hgt(nzix);
     ph=ph(nzix,:);
+    coh_ps= coh_ps(nzix,:);
     xy=xy(nzix,:);
     ij=ij(nzix,:);
     lonlat=lonlat(nzix,:);
     ix=ix(nzix);
     n_ps=size(ph,1);
 end
-
 save('hgt2','hgt')
+
+
+
 
 if single_master_flag~=0
     ph_rc=[ph(:,1:master_ix-1),zeros(size(ph,1),1),ph(:,master_ix:end)];
     n_ifg=n_ifg+1;
+    coh_ps= [coh_ps(:,1:master_ix-1),zeros(size(coh_ps,1),1),coh_ps(:,master_ix:end)];
 else
     ph_rc=ph;
 end
+save('rc2','ph_rc');
+save('pm2','coh_ps')
 
-if save_v7_3==1
-    save('rc2','ph_rc','-v7.3');
-else
-    save('rc2','ph_rc');  
-end
 
+
+% getting Bperp information
 updir=0;
 bperpdir=dir('bperp_*.1.in');
 [gridX,gridY]=meshgrid(linspace(0,n_rg,50),linspace(0,n_az,50));
-
-
 if isempty(bperpdir)
    bperpdir=dir('../bperp_*.1.in');
    updir=1;
@@ -430,14 +476,9 @@ for i=setdiff([1:n_image],master_ix);
     bperp_mat(:,i)=bp0_ps;
 end
 bperp_mat=bperp_mat(:,ifgday_ix(:,2))-bperp_mat(:,ifgday_ix(:,1));
+save('bp2','bperp_mat')
 
-    
-if save_v7_3==1
-    save('bp2','bperp_mat','-v7.3');
-else
-    save('bp2','bperp_mat')
-end
-
+% constructing vector of Bperp for ps2.mat
 bperp=mean(bperp_mat)';
 if ~single_master_flag==0
     bperp=[bperp(:,1:master_ix-1);0;bperp(:,master_ix:end)]; % insert master-master bperp (zero)
@@ -463,7 +504,10 @@ if ~exist(lambdaname,'file')
 end
 lambda=load(lambdaname);
 setparm('lambda',lambda,1);
+setparm('weed_zero_elevation',weed_zero_elevation)
 
+
+
+% constructing ps2.mat
 save('ps2','ij','lonlat','xy','day','ifgday','ifgday_ix','bperp','master_day','master_ix','n_ifg','n_image','n_ps','ll0','master_ix');
 
-setparm('weed_zero_elevation',weed_zero_elevation)
