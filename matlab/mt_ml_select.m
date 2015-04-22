@@ -23,7 +23,6 @@ function []=mt_ml_select(coh_thresh,image_fraction,weed_zero_elevation,list)
 %   12/2012 DB: Set empty for default value as well + print processing values
 %               Add syntax to the code
 %   12/2012 DB: Allow a list of folders (ifgs) to be specified to be considered
-%   04/2013 DB: Output the look angles for the selected points
 %   03/2014 DB: Save output variables
 %   03/2014 DB: Save coherence information too.
 %   =============================================================
