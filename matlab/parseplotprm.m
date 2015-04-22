@@ -13,7 +13,7 @@
 %   05/2014 DB: Include MODIS support
 %   08/2014 DB: MODIS recalibrated support
 %   10/2014 DB: Support for ionospheric delays
-%   03/2014 DB: Fix for a big introduced when APS option does not exist.
+%   03/2014 DB: Fix for a bug introduced when APS option does not exist.
 %               Add the missing option too  
 
 % list of arguments for ps_plot excluding value type
