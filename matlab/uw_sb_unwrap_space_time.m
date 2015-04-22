@@ -14,6 +14,8 @@ function []=uw_sb_unwrap_space_time(day,ifgday_ix,unwrap_method,time_win,la_flag
 %   11/2012 AH: Add temperature option and scf_flag
 %   09/2013 DB: Fix compatibility issue with matlab 2009
 %   10/2013 DB: Fix introduced bug on them variable
+%   09/2014 DB: Fix the order in which isolated dates are removed. Start
+%               from big to small.
 %   02/2014 AH: Add predefined ph_uw option
 %   ======================================================================
 % 
@@ -69,6 +71,7 @@ day=day(nzc_ix);
 n_image=size(day,1);
 G=G(:,nzc_ix);
 zc_ix=find(nzc_ix==0);
+zc_ix = sort(zc_ix,'descend');              % fix to make sure the order goes from largest to smallest
 for i=1:length(zc_ix)
     ifgday_ix(ifgday_ix>zc_ix(i))=ifgday_ix(ifgday_ix>zc_ix(i))-1;
 end
