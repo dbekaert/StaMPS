@@ -10,6 +10,7 @@ function []=plot_sb_baselines(ix)
 %   09/2010 AH: For SMALL_BASELINES/MERGED don't plot dropped ifgs 
 %   12/2012 DB: Added meaning of ix to the syntax of the code
 %   04/2013 DB: Command variable
+%   03/2014 DB: Suppress command line output
 %   ======================================================================
 
 
@@ -17,16 +18,17 @@ if nargin <1
    ix=[];
 end
 
+
 currdir=pwd;
 dirs=strread(currdir,'%s','delimiter','/');
 if strcmp(dirs{end},'SMALL_BASELINES') 
-    !\ls -d [1,2]* | sed 's/_/ /' > small_baselines.list
+    [a,b] = system(['\ls -d [1,2]* | sed ''' 's/_/ /''' ' > small_baselines.list']);
     load ../psver
     psname=['../ps',num2str(psver)];
     small_baseline_flag='y';
 elseif strcmp(dirs{end},'MERGED') 
     cd ../SMALL_BASELINES
-    !\ls -d [1,2]* | sed 's/_/ /' > ../MERGED/small_baselines.list
+    [a,b] = system(['\ls -d [1,2]* | sed ''' 's/_/ /''' ' > ../MERGED/small_baselines.list']);
     cd ../MERGED
     load ../psver
     psname=['../ps',num2str(psver)];
@@ -68,7 +70,6 @@ x=I(x);
 y=I(y);
 
 figure
-
 for i=1:length(x)
     l=line([ps.day(x(i)),ps.day(y(i))],[ps.bperp(x(i)),ps.bperp(y(i))]);
     text((ps.day(x(i))+ps.day(y(i)))/2,(ps.bperp(x(i))+ps.bperp(y(i)))/2,num2str(ix(i)));
