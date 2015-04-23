@@ -11,6 +11,7 @@ function []=uw_stat_costs(unwrap_method,variance,subset_ifg_index);
 %   01/2012 AH: Change noise estimation for 2D method
 %   02/2012 AH: Updated for 3D_NEW method
 %   03/2013 AH: Add variance option for 2D method
+%   08/2014 DB: Suppress external command window output
 %   ======================================================================
 
 
@@ -150,8 +151,10 @@ for i1=subset_ifg_index
     fclose(fid);
     ifgw=reshape(uw.ph(Z,i1),nrow,ncol);
     writecpx('snaphu.in',ifgw)
-    cmdstr=['!snaphu -d -f snaphu.conf ',num2str(ncol),' >& snaphu.log'];
-    eval(cmdstr)
+    cmdstr=['snaphu -d -f snaphu.conf ',num2str(ncol),' >& snaphu.log'];
+    
+    
+    [a,b] =system(cmdstr);
     fid=fopen('snaphu.out');
     ifguw=fread(fid,[ncol,inf],'float');
     fclose(fid);
