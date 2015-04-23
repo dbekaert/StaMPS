@@ -205,6 +205,7 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %   10/2014 DB: Include support for ionopsheric delays
 %   03/2015 DB: Remove the reference for the K spatial map option
 %   03/2015 DB: Update and clean for relaese with TRAIN
+%   05/2015 DB: Fix to separate hgt from t options
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -516,44 +517,54 @@ else
     [ph_unw_eni_osci,v_envi_osci] = env_oscilator_corr;
 end
 
+% Separate tide t from topography hgt option
 value_type=lower(value_type);
-% Check if the tropopsheric needs to be inverted from SB to PS
-if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
-    if isempty(strfind(value_type,'w')) 
-        if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
-           % this is small baselines velocity with SB aps correction
-           sb_invert_aps(aps_flag);
-        elseif (strcmpi(group_type,'vs'))~=1
-           % this is small baselines velocity with SB aps correction
-           sb_invert_aps(aps_flag);
-        end
+aps_tide_iono_flag = 1;             % do the checks anyway, but make sure its not hgt option
+if length(value_type)>=3
+    if strcmpi(value_type(1:3),'hgt')
+        aps_tide_iono_flag = 0;
     end
 end
-% Check if the tidal correction needs to be inverted from SB to PS
-if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'t')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
-    if isempty(strfind(value_type,'w')) 
-        if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
-           % this is small baselines velocity with SB tide correction
-           sb_invert_tide;
-        elseif (strcmpi(group_type,'vs'))~=1
-           % this is small baselines velocity with SB tide correction
-           sb_invert_tide;
+if aps_tide_iono_flag==1
+    % Check if the tropopsheric needs to be inverted from SB to PS
+    if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'a')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
+        if isempty(strfind(value_type,'w')) 
+            if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
+               % this is small baselines velocity with SB aps correction
+               sb_invert_aps(aps_flag);
+            elseif (strcmpi(group_type,'vs'))~=1
+               % this is small baselines velocity with SB aps correction
+               sb_invert_aps(aps_flag);
+            end
         end
     end
-end
-% Check if the ionopshere need to be inverted from SB to PS
-if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'i')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
-    if isempty(strfind(value_type,'w')) 
-        if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
-           % this is small baselines velocity with SB aps correction
-           sb_invert_iono(iono_flag);
-        elseif (strcmpi(group_type,'vs'))~=1
-           % this is small baselines velocity with SB aps correction
-           sb_invert_iono(iono_flag);
-        end
-    end
-end
 
+    % Check if the tidal correction needs to be inverted from SB to PS
+    if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'t')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0     
+        if isempty(strfind(value_type,'w')) 
+            if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
+               % this is small baselines velocity with SB tide correction
+               sb_invert_tide;
+            elseif (strcmpi(group_type,'vs'))~=1
+               % this is small baselines velocity with SB tide correction
+               sb_invert_tide;
+            end
+        end
+    end
+    
+    % Check if the ionopshere need to be inverted from SB to PS
+    if strcmpi(small_baseline_flag,'y') && ~isempty(strfind(value_type,'i')) && isempty(strfind(value_type,'sb')) &&  (strcmpi(group_type,'vsb'))==0
+        if isempty(strfind(value_type,'w')) 
+            if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
+               % this is small baselines velocity with SB aps correction
+               sb_invert_iono(iono_flag);
+            elseif (strcmpi(group_type,'vs'))~=1
+               % this is small baselines velocity with SB aps correction
+               sb_invert_iono(iono_flag);
+            end
+        end
+    end
+end
 
 
 switch(group_type)
