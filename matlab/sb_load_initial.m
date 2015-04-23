@@ -9,6 +9,7 @@ function []=sb_load_initial()
 %   Change Log: 
 %   11/2007 AH: change bperp to be bperp at 0 m
 %   12/2012 DB: Add compatibility with Matlab2012B, keep backward compatible
+%   02/2015 DB: save phase using slower method to allow for larger files
 %   ======================================================================
 
 %NB IFGS assumed in ascending date order
