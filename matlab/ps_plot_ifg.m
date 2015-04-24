@@ -34,6 +34,9 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   05/2013 DB: Fix issues with colorbar for external data plotting option
 %   11/2013 DB: Add gray as colorbar option
 %   12/2013 DB: Add GMT colorbar options
+%   04/2015 DB: Bugfix of the colorbar when memory is not cleared properly.
+%               harcoded deflation and inflation using jet, rather than
+%               colormap options
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -123,6 +126,7 @@ min_ph=0;
 max_ph=0;
 
 
+
 if ~isempty(in_ph)
     if ~isempty(col_rg)
         min_ph=min(col_rg);
@@ -147,7 +151,7 @@ if ~isempty(in_ph)
         if strncmpi(plot_color_scheme,'gray',4)
             c=flipud(gray(64));  
         elseif strncmpi(plot_color_scheme,'inflation',9)
-            c=flipud(colormap);
+            c=flipud(jet(64));
         elseif strncmpi(plot_color_scheme,'GMT_relief',10)
             [c] = cptcmap('GMT_relief','ncol',129) ;    
         	c= c(65:end,:);
@@ -155,8 +159,8 @@ if ~isempty(in_ph)
             [c] = cptcmap('GMT_globe','ncol',129) ;
                 c=[c(66,:) ;c(66:end,:)];
 	
-	else
-            c=colormap;
+        else    % deflation
+            c=jet(64);
         end
     end
 
