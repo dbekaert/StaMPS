@@ -2055,7 +2055,6 @@ else
        ext_data = []; 
     end
     
-    
     ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg,ext_data);
     %plot_phase(ph_tc(:,i)*conj(ph_tc(ref_ix,i)));
     box on

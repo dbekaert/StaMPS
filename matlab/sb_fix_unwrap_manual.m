@@ -11,7 +11,8 @@ function [] = sb_fix_unwrap_manual(reset_flag)
 % By Bekaert David - University of Leeds - Sept 2014
 % 
 % modifications:
-%
+%   Bekaert David   05/2015     Fix in command line output, fix the code
+%                               for ps_plot
 %
 
 % flags
@@ -36,17 +37,24 @@ if reset_flag==1
     fprintf('Using the original data\n')
    ph_input = load('phuw_sb2_original');
 else
-   fprintf('Use data from a previous run')
+   fprintf('Use data from a previous run\n')
    ph_input = load('phuw_sb2.mat');
 end
 
 % loading the interferogram information
 ps = load('ps2.mat');
 
+% plotting the current rsb data
+if deramp_flag==1
+    ps_plot('rsb-o',1,0,0);
+else
+    ps_plot('rsb',1,0,0);
+end
+
 % get the interferogram that the user needs to adapt
 repeat=1;
 while repeat==1
-    ix_ifg = input('Which interferogram to you want to adapt?','s');
+    ix_ifg = input('Which interferogram to you want to correct? ','s');
     ix_ifg = str2num(ix_ifg);
     if isempty(ix_ifg) 
         repeat=1;
@@ -69,7 +77,7 @@ else
 end
 
 % gettign the polygon for which the correction will be made
-fprintf('Define a polygon \n')
+fprintf('Define a polygon by clicking on the figure. Press enter when done. \n')
 polygon=ginput;
 
 % loop untill the user is happy with it
@@ -77,12 +85,12 @@ continue_flag=1;
 while continue_flag==1
     repeat=1;
     while repeat==1
-        ix_shift= input('By how may cycles to you want to shift this region?','s');
+        ix_shift= input('By how many cycles to you want to shift this region? [+-integer]','s');
         ix_shift = str2num(ix_shift);
         if isempty(ix_shift) 
             repeat=1;
         elseif (ix_shift./(round(ix_shift)))~=1
-            fprintf(['Needs to be an integer number \n'])
+            fprintf(['Needs to be an integer number... \n'])
             repeat =1;
         else
             repeat=0;
@@ -105,12 +113,15 @@ while continue_flag==1
     % re-running the 
     sb_invert_uw
 
-    ps_plot_tide('rsb-o',1,0,0,ix_ifg)
-    
+    if deramp_flag==1
+        ps_plot('rsb-o',1,0,0,ix_ifg);
+    else
+        ps_plot('rsb',1,0,0,ix_ifg);
+    end    
     
     repeat=1;
     while repeat==1
-        string= input('retry?','s');
+        string= input('retry? [y/n] ','s');
         if strcmpi(string,'y')
             repeat=0;
             continue_flag = 1;
@@ -120,7 +131,7 @@ while continue_flag==1
             % see if the result needs to be kept or reverted
             repeat2=1;
             while repeat2==1
-                action_flag= input('Keep this result?','s');
+                action_flag= input('Keep this result [y/n]? ','s');
                 if strcmpi(action_flag,'y')
                     repeat2=0;
                 elseif strcmpi(action_flag,'n')
@@ -129,11 +140,11 @@ while continue_flag==1
                     % restore the codes
                     keyboard 
                 else
-                    fprintf('y or n\n')
+                    fprintf('y or n ...\n')
                 end
             end
         else
-            fprintf('y or n\n')
+            fprintf('y or n ...\n')
         end
     end
     
