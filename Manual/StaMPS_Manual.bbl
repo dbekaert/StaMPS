@@ -1,4 +1,4 @@
-\begin{thebibliography}{8}
+\begin{thebibliography}{10}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 
 \bibitem[{{\it Ar{\i}kan et~al.\/}(2010){\it Ar{\i}kan, Hooper, and
@@ -6,6 +6,18 @@
 Ar{\i}kan, M., A.~Hooper, and R.~Hanssen, Radar time series analysis over west
   anatolia, {\it European Space Agency, (Special Publication) ESA SP-677\/},
   2010.
+
+\bibitem[{{\it Bekaert et~al.\/}(2015){\it Bekaert, Hooper, and
+  Wright\/}}]{Bekaert2015}
+Bekaert, D., A.~Hooper, and T.~Wright, {A spatially-variable power-law
+  tropospheric correction technique for InSAR data}, {\it J. Geophys. Res.\/},
+  {\it 120\/}, 2015.
+
+\bibitem[{{\it Bekaert et~al.\/}(In review){\it Bekaert, Walters, Wright,
+  Hooper, and Parker\/}}]{Bekaert2015a}
+Bekaert, D., R.~Walters, T.~Wright, A.~Hooper, and D.~Parker, {Statistical
+  comparison of tropospheric correction techniques for InSAR}, {\it Remote
+  Sensing of Environment\/}, In review.
 
 \bibitem[{{\it Hooper\/}(2008)}]{HooperA2008}
 Hooper, A., A multi-temporal {InSAR} method incorporating both persistent

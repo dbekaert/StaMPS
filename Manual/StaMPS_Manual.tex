@@ -249,7 +249,7 @@
    StaMPS/MTI  Manual\\
      }}}}
      \vspace{5mm}
-     {\sffamily\Large{\textbf{Version 3.3}}}
+     {\sffamily\Large{\textbf{Version 3.4}}}
 \vspace{5mm}
 
 
@@ -262,9 +262,9 @@
 
 %\begin{flushright}
 \begin{center}
-{\sffamily\textbf{Andy Hooper, David Bekaert, Karsten Spaans}}\\
+{\sffamily\textbf{Andy Hooper, David Bekaert, Karsten Spaans, Ekbal Hussain}}\\
 \vspace{4mm}
-{\sffamily\textbf{1th September, 2013}}
+{\sffamily\textbf{1th June, 2015}}
 %\end{flushright}
 \end{center}
 
@@ -419,11 +419,11 @@ Envisat instrument calibration files (INS) can be downloaded from:\\
  The optimisation routines of snaphu are used by the 3-D unwrapping code and can be downloaded from:\\
   \url{http://www.stanford.edu/group/radar/softwareandlinks/sw/snaphu/}.
 
-
-
-
-
-
+\section{TRAIN}
+The Toolbox for Reducing Atmospheric InSAR Noise (TRAIN) can be used to estimate tropospheric delays (see \citep{Bekaert2015,Bekaert2015a}). It can be downloaded from:\\
+\url{http://www.davidbekaert.com/#links}. \\
+The help forum can be accessed at:\\
+\url{http://groups.google.com/group/TRAIN_support}
  
 \chapter{Create SLCs (using ROI\_PAC)}
 
@@ -590,7 +590,7 @@ Choose a master based on minimising perpendicular, Doppler and temporal baseline
  Take note of the number of range looks.
  
  %\cs{dismph image.slc.}\cc{X}\cs{looks.raw} \cc{1294 } (range looks, multilooked filewidth) or 
- \cs{eog image.slc_}\cc{X}\cs{l.ras}
+ \cs{eog image.slc\_}\cc{X}\cs{l.ras}
 
  If your system does not have eog, an alternative image viewer which support Sun raster files will work as well.
  
@@ -1247,10 +1247,11 @@ If the Doppler centroid is high, Doris may fail when filtering in azimuth. You c
 
 Note that the first parameter is amplitude {\em difference} dispersion rather than amplitude dispersion as used for PS processing, and a higher value should be given, e.g., 0.6.
  
+ 
+\section{Step 1-5} 
  As for PS processing, small baseline MTI processing is controlled by various parameters that can be modified with $>>$\cs{setparm} and processing is initiated with\\
   \cs{matlab}\\
  $>>$\cs{stamps}
-
 
 When running this process, the amount of the computer load is probably much higher than  during PS processing. This may cause the program to stop due PC memory limitations. If this is the case, the number of patches should be increased, then rerun \cs{mt\_prep}. In general patch sizes smaller $<$ 4 million SLC pixels are OK.
 
@@ -1273,17 +1274,34 @@ For small baselines processing, some of the parameters have different default va
 
 
 
+\section{Step 6: Phase unwrapping}
+
+ Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. 
+ 
+
+ 
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
+You can \textbf{manually fix regional unwrapping errors} by running $>>$\cs{sb\_fix\_unwrap\_manual}. First a `rsb' plot will be generated from your currently unwrapped dataset, after which you are asked which interferogram you want to correct. Start with the interferogram which shows the largest spatial unwrapping error. Note that it can occur that an unwrapping error happens within another region. Type the interferogram number on the command line and hit enter. This will generate the `rsb' plot for the specific interferogram, for which you can define a polygon of the unwrapping error by clicking on the figure. Press enter once you defined the polygon to continue. You will now be prompted on the number of integer 2$\pi$ cycles that should be removed (positive or negative number). After hitting enter this will re-run the sb inversion, and generate an updated 'rsb' plot. You will be able to iterate your correction till the unwrapping error disappears from the `rsb' plot. You can re-set you unwrapped results to the initial unwrapped interferograms by calling  $>>$\cs{sb\_fix\_unwrap\_manual(1)}. Note that when re-running step 6, you results will be overwritten. \\
+In case your small baseline interferograms had their perpendicular baseline estimated for each individual interferogram (e.g. gamma), ramp like features can appear in `rsb'. If this is the cases, set `deramp\_flag=1' in the function sb\_fix\_unwrap\_manual.m.\\
+\end{small}
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
 
 
 
 
 
+ 
+ 
+\section{Step 7: Estimate spatially-correlated look angle error}
 
-
-
-
-
- Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. Step 7 includes extra processing to calculate the SCLA error from both small baseline and single master interferograms.
+ 
+ Step 7 includes extra processing to calculate the SCLA error from both small baseline and single master interferograms.
 Step 7 is controlled by the following parameters:
 
 \footnotesize
@@ -1546,7 +1564,7 @@ to display the image in matlab instead of using {\tt disrg}
 
 \section{Version 3.0}
 \begin{itemize}
-\item Small baseline and combined combined time series methods added.
+\item Small baseline and PS combined time series methods added.
 \end{itemize}
 
 \section{Version 3.1}
@@ -1610,6 +1628,25 @@ to display the image in matlab instead of using {\tt disrg}
 \item Fix bug in ps\_info
 \item Improved unwrapping and new unwrapping options.
 \item Improved processing efficiency.
+\end{itemize}
+
+
+\section{Version 3.4}
+\begin{itemize}
+\item Update the manual with extra tips and current websites.
+\item Expand the manual with new unwrapping methods, tropospheric corections (TRAIN),  new scripts.
+\item Include plotting and processing compatibility with TRAIN.
+\item New unwrapping methods
+\item Script to manually correct unwrapping errors for SB.
+\item Generation of shape files for data using ps\_shapefile.m
+\item Bug fix in sb\_invert\_uw in case of NaN in reference area.
+\item Bug fix in llh2local.m for latitude equal to 0
+\item Bug fix in ps\_deramp.m for SB interferograms
+\item Bug fix in ps\_mean\_v.m for NaN values
+\item Bug fix in uw\_sb\_unwrap\_space\_time.m for Matlab compatibility
+\item Bug fix in ps\_plot.m when no points in reference area
+\item Bug fix in ps\_parms\_default.m when searching for processor flag
+\item Bug fix in sb\_load\_initial.m when saving to large mat files
 \end{itemize}
 
 
