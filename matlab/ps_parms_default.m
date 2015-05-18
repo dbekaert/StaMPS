@@ -31,6 +31,7 @@ function ps_parms_default()
 %   01/2014 DB: Add a multi-core option for step 1-5
 %   02/2014 AH: add unwrap_hold_good_values
 %   08/2014 DB: explicit search if there is not a processor.txt file 
+%   05/2015 AH: add gamma_max_iterations 
 %   ======================================================================
 
 
@@ -69,6 +70,10 @@ end
 
 if ~isfield(parms,'gamma_change_convergence')
     parms.gamma_change_convergence=0.005; % change in change in gamma that signals convergence
+end
+
+if ~isfield(parms,'gamma_max_iterations')
+    parms.gamma_max_iterations=3; % maximum number of iterations for gamma estimation 
 end
 
 if ~isfield(parms,'slc_osf')
@@ -251,6 +256,10 @@ end
 
 if ~isfield(parms,'scn_deramp_ifg')
     parms.scn_deramp_ifg=[];  % deramp these ifgs and add to estimate of scn
+end
+
+if ~isfield(parms,'scn_kriging_flag')
+    parms.scn_kriging_flag='n';  % use kriging, 'y' or 'n'
 end
 
 if ~isfield(parms,'ref_lon')

@@ -136,7 +136,7 @@ ts_hat=G*x_hat;
     set(h2,'linewidth',2)
     %h3=plot(day,tsup_hat,'-.g');
     %h4=plot(day,tslo_hat,'-.g');
-    set(gca,'fontsize',14)
+    set(gca,'fontsize',20)
     hold off
     grid on
     ylabel('LOS (mm)');

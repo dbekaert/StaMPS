@@ -16,6 +16,7 @@ function []=ps_est_gamma_quick(restart_flag)
 %   12/2008 AH: avoid divide by zero for zero phase values
 %   05/2012 AH: correct weighted phase for range error and save it
 %   05/2012 AH: remove convergence condition that gamma_cc<0
+%   05/2015 AH: add maximum iteration criteria
 %   ==============================================================
 logit;
 logit('Estimating gamma for candidate pixels')
@@ -262,8 +263,9 @@ while loop_end_sw==0
         coh_ps_save=coh_ps;
 
         gamma_change_convergence=getparm('gamma_change_convergence',1);
+        gamma_max_iterations=getparm('gamma_max_iterations',1);
 %        if gamma_change_change<0&abs(gamma_change_change)<gamma_change_convergence
-        if abs(gamma_change_change)<gamma_change_convergence
+        if abs(gamma_change_change)<gamma_change_convergence | i_loop>=gamma_max_iterations
             %figure
             %subplot(2,1,1)
             %hist(weighting,100)

@@ -224,7 +224,11 @@ end
 if start_step<=8 & end_step >=8
     msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 8 ';
     fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
-    ps_scn_filt
+    if strcmpi(scn_kriging_flag,'y')
+        ps_scn_filt_krig
+    else
+        ps_scn_filt
+    end
 end
 
 
