@@ -967,6 +967,24 @@ The parameters that control the processing are set to default values which you c
  
  Once Step 1 has been run you can run $>>$\cs{ps\_info} to list brief information for each of the interferograms included.
  
+ 
+ 
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
+\textbf{Parallelisation of steps 1-4}. You can run  $>>$\cs{stamps\_mc\_header(\cc{start\_step},\cc{end\_step})} just like conventional $>>$\cs{stamps(\cc{start\_step},\cc{end\_step})} to increase the processing speed of the first 4 steps of StaMPS. You can specify the number of cores to be used using $>>$\cs{setparm(`n\_cores',\cc{XX})}, where \cc{XX} are the number of cores to be used. Note that increasing the number of cores above the machine capability will not speed up the processing. The patchlist will be split into \cc{XX} components, for which an individual matlab job will be launched in the background. The command line output for each matlab job is contained int he corresponding log\_stamps\_split\_\cc{XX} file. It is recommended to regulary check the output to catch errors.
+\end{small}
+
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
+ 
+ 
+ 
+ 
+ 
 \section{Step 1: Load data} 
 Converts the data into the formats required for PS processing and stores them in matlab workspaces.
 
@@ -1252,7 +1270,6 @@ Note that the first parameter is amplitude {\em difference} dispersion rather th
  As for PS processing, small baseline MTI processing is controlled by various parameters that can be modified with $>>$\cs{setparm} and processing is initiated with\\
   \cs{matlab}\\
  $>>$\cs{stamps}
-
 When running this process, the amount of the computer load is probably much higher than  during PS processing. This may cause the program to stop due PC memory limitations. If this is the case, the number of patches should be increased, then rerun \cs{mt\_prep}. In general patch sizes smaller $<$ 4 million SLC pixels are OK.
 
 For small baselines processing, some of the parameters have different default values compared to PS processing:\\
@@ -1271,15 +1288,20 @@ For small baselines processing, some of the parameters have different default va
  \end{tabular} 
  \normalsize
 
-
-
-
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
+\textbf{Parallelisation of steps 1-4}. You can run  $>>$\cs{stamps\_mc\_header(\cc{start\_step},\cc{end\_step})} just like conventional $>>$\cs{stamps(\cc{start\_step},\cc{end\_step})} to increase the processing speed of the first 4 steps of StaMPS. You can specify the number of cores to be used using $>>$\cs{setparm(`n\_cores',\cc{XX})}, where \cc{XX} are the number of cores to be used. Note that increasing the number of cores above the machine capability will not speed up the processing. The patchlist will be split into \cc{XX} components, for which an individual matlab job will be launched in the background. The command line output for each matlab job is contained int he corresponding log\_stamps\_split\_\cc{XX} file. It is recommended to regulary check the output to catch errors.
+\end{small}
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
+ 
 \section{Step 6: Phase unwrapping}
-
- Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. 
- 
-
- 
+Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. 
+  
 \begin{center}
 \colorbox{notegray}{
 \begin{minipage}{0.95\linewidth}
