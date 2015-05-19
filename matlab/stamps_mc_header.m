@@ -1,10 +1,29 @@
-function stamps_mc(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file)
-% stamps_mc_header(start_step,end_step,est_gamma_parm,n_cores,patch_list_file)
-% Program mainly for the first 5 steps of Stamps that splits up the
-% parameter list based on the number of processing cores specified. An
-% upper bound is set by the cores available.
-% INPUTS:
+function stamps_mc_header(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file)
+% stamps_mc_header(start_step,end_step,est_gamma_parm,patch_list_file)
+% Program can be used for step 1-4s of stamps, and which splits up the
+% parameter list based on the number of processing cores specified. 
+% incase you have more cores than patches, then the number of cores is
+% reduced to the number of patches. The number of cors can be specified by 
+% using setparm('n_cores',XX). It is recommended to investigate the logs
+% after each step.
 %
+% INPUTS:
+% start_step        Start step, defined the same as for regular stamps.m script
+%                   By default this is step 1.
+% end_step          End step, defined the same as for regular stamps.m script
+%                   By default this is step 4
+% patches_flag      Process in patches, by default this is 'y', or leave blank
+% est_gamma_parm    est_gamma_parm, by default this is 0, or leave blank
+%
+%
+% GENERATED FILES:
+% log_stamps_overview   This file contains the process ID for each launched
+%                       matlab job. You can use this to terminate one of
+%                       the processed using e.g. top command in linux. The
+%                       processes are ranked starting with CORE1 file.
+% patch_list_split_XX   The patchlist used in stamps for the XX core.
+% log_stamps_split_XX   The matlab command line output for the XX core.
+% 
 %
 % By David Bekaert - PhD student - University of Leeds
 % December 2012
@@ -19,8 +38,17 @@ if nargin<1 || isempty(start_step)==1
     start_step=1;
 end
 if nargin<2 || isempty(end_step)==1
-    end_step=8;
+    end_step=4;
 end
+if end_step>=5
+   fprintf('Multi-core currently only supported step 1-4\n')
+   if start_step>=5
+       error('Will aboard ..., Please proceed with regular stamps.m function \n')
+   end
+end
+
+% keep below such in future there can be a catch to see when step 5 is
+% finnished by all cores before proceeding to the second part of step 5.
 if nargin<3 || isempty(patches_flag)==1
     if start_step<6
         patches_flag='y';
@@ -59,10 +87,8 @@ ix_split_patches = find(step_range<5);
 ix_merged = find(step_range>=5);
 
 
-
+% generating a patchlist in case none is given
 if ~isempty(ix_split_patches)
-
-
     % generating new patch list based on the number of cores selected
     % getting the patch list from the source file
     if exist(patch_list_file,'file')
