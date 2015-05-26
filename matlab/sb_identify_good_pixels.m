@@ -7,6 +7,7 @@ function []=sb_identify_good_pixels()
 %
 %   ======================================================================
 %   06/2014 AH: Modify for StaMPS and fix
+%   04/2015 EH: Speed optimisations
 %   ======================================================================
 logit;
 fprintf('Identifying good pixels...\n')
@@ -25,12 +26,15 @@ load(phuwname,'ph_uw')
 
 good_pixels = false(ps.n_ps,ps.n_ifg);
 for m=1:size(intfg_loops,1)
+    
+    %Sum positive interferograms in each loop
     positive = find(intfg_loops(m,:)==1);   
     positive_ints = zeros(size(ph_uw,1),1);
     for p=1:size(positive,2)
        positive_ints = positive_ints + ph_uw(:,positive(1,p));
     end
     
+    %Sum negative interferograms in each loop    
     negative = find(intfg_loops(m,:)==-1);
     negative_ints = zeros(size(ph_uw,1),1);
     for p=1:size(negative,2)
@@ -45,15 +49,14 @@ for m=1:size(intfg_loops,1)
 
     average_resid = 2*pi*(round(average_resid/2/pi));
    
+    phase_resid = positive_ints-negative_ints-average_resid;    
     %hist(positive_ints-negative_ints,100)
-    phase_resid = positive_ints-negative_ints-average_resid;
     %a = phase_resid(find(phase_resid(:,1)<=1 & phase_resid(:,1)>=-1),:);
     %size(a,1)
     
     %Index each interferogram with the pixels that are good=1 and bad=0
     %A good pixel is good if: -1<closure residual<1
-    good_pixels(find(phase_resid(:,1)<=1 & phase_resid(:,1)>=-1),ints_used)=true;   
-    
+    good_pixels(phase_resid(:,1)<=1 & phase_resid(:,1)>=-1,ints_used)=true;      
 end
 
 save(goodname,'good_pixels')

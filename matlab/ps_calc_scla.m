@@ -115,7 +115,7 @@ if exist([apsname,'.mat'],'file')
 end
 
 ref_ps=ps_setref;
-uw.ph_uw=uw.ph_uw-repmat(mean(uw.ph_uw(ref_ps,:)),ps.n_ps,1);
+uw.ph_uw=uw.ph_uw-repmat(mean(uw.ph_uw(ref_ps,:),1),ps.n_ps,1);
 
 if use_small_baselines==0
     if strcmpi(small_baseline_flag,'y')
