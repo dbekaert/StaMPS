@@ -1,0 +1,128 @@
+#!/bin/csh -f
+
+# Cycle through patches in patch.list and extract data for
+# candidiate pixels 
+# To just give a list as input and run rest by default do:
+# 
+# Andy Hooper, Jan 2007
+# ===========================================================================
+# 06/2011 AH: Option to select processing
+# 12/2012 AH: Short and byteswap options
+# 12/2012 DB: Allow for a list to be given as input
+# 02/2013 AH: Short and byteswap options for small baselines
+# ===========================================================================
+# 
+# mt_extract_cands dophase dolonlat dodem docands precision byteswap mask_file patch_list
+#    Arguments are optional: f,d,s (do) or 0 (don't do)
+#    ("s" for short, "d" for double or "f" for float)
+#    Default for each argument is 0 unless no arguments are input 
+#    when default becomes f d d d f 
+#    byteswap: 1 for yes or 0 for no (default)
+#    mask_file: by default none specified ""
+#    patch_list: By default this is patch.list
+#
+#    To run by default and specifying all arguments do:
+#    mt_extract_cands_gsar f d d d f 0 "" patch_list
+#
+### Initial welcome
+set PRG = `basename "$0"`
+set AUT = "Andy Hooper, Sep 2015"
+echo "$PRG $AUT"
+echo " "
+
+if ($#argv > 1) then
+    set dolon = $argv[2]
+else 
+    set dolon = 0
+endif
+
+if ($#argv > 2) then
+    set dolat = $argv[3]
+else 
+    set dolat = 0
+endif
+
+if ($#argv > 3) then
+    set dodem = $argv[4]
+else 
+    set dodem = 0
+endif
+
+if ($#argv > 4) then
+    set docands = $argv[5]
+else 
+    set docands = 0
+endif
+
+if ($#argv > 5) then
+    set byteswap = $argv[6]
+else 
+    set byteswap = 0
+endif
+
+if ($#argv > 6) then
+    set maskfile = $argv[7]
+else 
+    set maskfile = ""
+endif
+
+if ($#argv > 7) then # DB
+        set list = $argv[8]
+        echo List given as input
+        echo $list
+else
+        set list = patch.list
+endif
+
+
+if ($#argv > 0) then
+    set dophase = $argv[1]
+else 
+    set dophase = f
+    set dolon = d
+    set dolat = d
+    set dodem = d
+    set docands = f
+endif
+
+set WORKDIR = $cwd
+set dirname = `echo $WORKDIR | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
+
+foreach patch(`cat $list`)
+
+    cd $patch
+    echo "Patch:" $patch
+
+    if ($docands != 0) then
+        if ( -e $WORKDIR/selsbc.in) then # Select SB candidates 
+            selsbc_patch_new $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $docands $byteswap $WORKDIR/$maskfile
+        else # Select PS candidates 
+            echo selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $docands $byteswap $WORKDIR/$maskfile \n
+            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $docands $byteswap $WORKDIR/$maskfile
+        endif
+    endif
+
+    if ($dolon != 0) then
+        # Retrieve lon for PS candidates
+        pscdem $WORKDIR/psclon.in pscands.1.ij pscands.1.lon $dolon
+    endif
+
+    if ($dolat != 0) then
+        # Retrieve lat for PS candidates
+        pscdem $WORKDIR/psclat.in pscands.1.ij pscands.1.lat $dolat
+    endif
+
+    if ($dodem != 0) then
+        # Retrieve hgt for PS candidates
+        pscdem $WORKDIR/pscdem.in pscands.1.ij pscands.1.hgt $dodem
+    endif
+
+    if ($dophase != 0) then
+        # Retrieve phase for PS candidates
+        pscphase $WORKDIR/pscphase.in pscands.1.ij pscands.1.ph
+    endif
+
+    cd $WORKDIR
+end
+
+
