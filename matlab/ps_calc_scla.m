@@ -18,6 +18,7 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   08/2010 AH: use mean bperp value
 %   11/2010 AH: replace recalc_index with scla_drop_index
 %   01/2012 AH: use short time sep ifgs for single master SCLA calc
+%   09/2015 DB: Include TRAIN support
 %   ================================================================
 logit;
 logit(sprintf('Estimating spatially-correlated look angle error...'),2)
@@ -34,6 +35,9 @@ small_baseline_flag=getparm('small_baseline_flag',1);
 drop_ifg_index=getparm('drop_ifg_index',1);
 scla_method=getparm('scla_method',1);
 scla_deramp=getparm('scla_deramp',1);
+subtr_tropo=getparm('subtr_tropo',1);
+tropo_method=getparm('tropo_method',1);
+
 
 if use_small_baselines~=0
     if small_baseline_flag~='y'
@@ -59,11 +63,13 @@ phuwsbresname=['./phuw_sb_res',num2str(psver)];
 if use_small_baselines==0
     phuwname=['./phuw',num2str(psver)];
     sclaname=['./scla',num2str(psver)];
-    apsname=['./aps',num2str(psver)];
+    apsname_old=['./aps',num2str(psver)];           % renamed to old
+    apsname=['./tca',num2str(psver)];               % the new tca option
 else
     phuwname=['./phuw_sb',num2str(psver)];
     sclaname=['./scla_sb',num2str(psver)];
-    apsname=['./aps_sb',num2str(psver)];
+    apsname_old=['./aps_sb',num2str(psver)];        % renamed to old
+    apsname=['./tca_sb',num2str(psver)];            % the new tca option
 end
 
 
@@ -92,6 +98,24 @@ else
     n_ifg=ps.n_ifg;
 end
 
+
+if strcmpi(subtr_tropo,'y')
+    % Remove the tropo correction - TRAIN support
+    if exist(apsname,'file')~=2
+        % the tca file does not exist. See in case this is SM if it needs
+        % to be inverted 
+        if strcmpi(apsname,['./tca',num2str(psver)])
+            if strcmpi(getparm('small_baseline_flag'),'y')
+                sb_invert_aps(tropo_method);
+            end
+        end
+    end
+    aps = load(apsname);
+    [aps_corr,fig_name_tca,tropo_method] = ps_plot_tca(aps,tropo_method);
+    uw.ph_uw=uw.ph_uw-aps_corr;
+end
+
+
 if strcmpi(scla_deramp,'y')
     fprintf('\n   deramping ifgs...\n')
     ph_ramp=zeros(ps.n_ps,n_ifg,'single');
@@ -109,8 +133,15 @@ end
 
 unwrap_ifg_index=setdiff(unwrap_ifg_index,scla_drop_index);
 
-if exist([apsname,'.mat'],'file')
-    aps=load(apsname);
+
+% Check with Andy:
+% 1) should this not be placed before the ramp computation.
+% 2) if this is spatial fitlering in time - not compatible with TRAIN
+if exist([apsname_old,'.mat'],'file')
+    if strcmpi(subtr_tropo,'y')
+        fprintf(['You are removing atmosphere twice. Do not do this, either do:\n use ' apsname_old ' with subtr_tropo=''n''\n remove ' apsname_old ' use subtr_tropo=''y''\n'])
+    end
+    aps=load(apsname_old);
     uw.ph_uw=uw.ph_uw-aps.ph_aps_slave;
 end
 
@@ -144,6 +175,7 @@ if use_small_baselines==0
     ph=double(diff(uw.ph_uw(:,unwrap_ifg_index),[],2)); % sequential dph, to reduce influence of defo
     bperp=diff(bperp_mat(:,unwrap_ifg_index),[],2);
 else
+    
     bperp_mat=bp.bperp_mat;
     bperp=bperp_mat(:,unwrap_ifg_index);
     day=ps.ifgday(unwrap_ifg_index,2)-ps.ifgday(unwrap_ifg_index,1);

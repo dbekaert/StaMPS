@@ -7,6 +7,7 @@ function []=sb_invert_aps(aps_flag)
 % 11/2013   DB  Include WRF model and change dry to hydrostatic
 % 03/2014   AH  Add backwards compatibility 
 % 12/2014   DB  Invert such that when one date exist the delay is excluded
+% 09/2015   DB  Add some extra options such as MODIS. 
 
 logit;
 
@@ -49,8 +50,7 @@ end
 
 if ~isempty(aps_flag)
     aps=load(apssbname);
-    [aps_corr_sb,fig_name_tca] = ps_plot_tca(aps,aps_flag);
-    
+    [aps_corr_sb,fig_name_tca,aps_flag] = ps_plot_tca(aps,aps_flag);
     
     ix = find(nanmean(aps_corr_sb,1)==0);
     unwrap_ifg_index_new = setdiff(unwrap_ifg_index,ix);
@@ -142,13 +142,50 @@ if ~isempty(aps_flag)
         else
             save(apsname,'ph_tropo_wrf_wet')       
         end
-    else
+        
+        
+    elseif aps_flag==12 % modis correction
+        ph_tropo_modis= aps_corr;
+        if exist(apsname,'file')==2
+            save(apsname,'-append','ph_tropo_modis')
+        else
+            save(apsname,'ph_tropo_modis')       
+        end
+    elseif aps_flag==13 % modis correction (not interpolated)
+        ph_tropo_modis_no_interp= aps_corr;
+         if exist(apsname,'file')==2
+            save(apsname,'-append','ph_tropo_modis_no_interp')
+        else
+            save(apsname,'ph_tropo_modis_no_interp')       
+         end
+
+      
+        
+     elseif aps_flag==18 % current implementation of aps correction (manually estimated)
         strat_corr = aps_corr; % Old implementation
         if exist(apsname,'file')==2
             save(apsname,'-append','strat_corr')
         else
             save(apsname,'strat_corr')       
         end
+        
+    elseif aps_flag==19 % modis correction
+        ph_tropo_modis_recal= aps_corr;
+        if exist(apsname,'file')==2
+            save(apsname,'-append','ph_tropo_modis_recal')
+        else
+            save(apsname,'ph_tropo_modis_recal')       
+        end
+
+    elseif aps_flag==20 % modis correction (not interpolated)
+        ph_tropo_modis_no_interp_recal= aps_corr;
+        if exist(apsname,'file')==2
+            save(apsname,'-append','ph_tropo_modis_no_interp_recal')
+        else
+            save(apsname,'ph_tropo_modis_no_interp_recal')       
+        end
+    else
+        error('Currently other options not supported.\nIf you are combining a combination of two different techniques, try the following:\n plot each technique for a SM correction\n')
     end
 end
 
