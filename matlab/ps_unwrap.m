@@ -13,13 +13,16 @@ function []=ps_unwrap()
 %   01/2012 AH: Add back SULA error before unwrapping
 %   02/2014 AH: Add predefined ph_uw option
 %   10/2014 EH/DB: Suppress the aps removal correlated with topography
+%   09/2015 DB: Include APS removal options
 %   ======================================================================
 logit;
 fprintf('Phase-unwrapping...\n')
-remove_aps = 0;
 small_baseline_flag=getparm('small_baseline_flag',1);
 unwrap_patch_phase=getparm('unwrap_patch_phase',1);
 scla_deramp=getparm('scla_deramp',1);
+subtr_tropo = getparm('subtr_tropo',1);
+aps_name = getparm('tropo_method',1);
+
 
 load psver
 psname=['ps',num2str(psver)];
@@ -142,11 +145,11 @@ end
 
 clear bp
 
-if exist([apsname,'.mat'],'file') && remove_aps==1
+if exist([apsname,'.mat'],'file') && strcmpi(subtr_tropo,'y')
     fprintf('   subtracting slave aps...\n')
     aps=load(apsname);
-    aps_corr = aps.ph_tropo_meris + aps.ph_tropo_era_hydro;  % modification remove meris wet and era dry 
-   
+    [aps_corr,fig_name_tca,aps_flag] = ps_plot_tca(aps,aps_name);
+
     ph_w=ph_w.*exp(-j*aps_corr);
     if unwrap_hold_good_values=='y'
         options.ph_uw_predef=options.ph_uw_predef-aps_corr;
@@ -237,11 +240,10 @@ if scla_subtracted_sw & strcmpi(small_baseline_flag,'y')
     clear bp scla
 end
 
-if exist([apsname,'.mat'],'file') && remove_aps==1
+if exist([apsname,'.mat'],'file') && strcmpi(subtr_tropo,'y')
     fprintf('Adding back slave APS...\n')
     aps=load(apsname);
-    
-    aps_corr = aps.ph_tropo_meris + aps.ph_tropo_era_hydro;  % modification remove meris wet and era dry 
+    [aps_corr,fig_name_tca,aps_flag] = ps_plot_tca(aps,aps_name);
     ph_uw=ph_uw+aps_corr;
     clear aps
 end
