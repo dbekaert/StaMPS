@@ -17,6 +17,8 @@ function []=setparm(parmname,value,newflag)
 %   12/2007 AH Add option to reset to a parameter to the default value
 %   03/2008 AH Default processing amended
 %   03/2010 AH Logging added
+%   09/2015 DB Add the APS option 
+
 
 parmfile='parms';
 localparmfile='localparms.mat';
@@ -90,7 +92,66 @@ else
           elseif isnumeric(value)
             logit([parmname,' = ',num2str(value)],0,parent_flag);
           else
-            logit([parmname,' = ',value],0,parent_flag);
+              
+              
+              
+              % add an extra check for the subtr_tropo flag - DB 09/2015
+              if strcmpi(parmname,'subtr_tropo')
+                  % see if troposphere is being removed.
+                  if strcmpi(value,'y')
+                      % see if the corresponding tropospheric correction
+                      % actually exist
+                      aps_method = getparm('tropo_method');
+                      try
+                          if strcmpi(getparm('small_baseline_flag'),'y')
+                              % loading the aps file
+                              if exist('psver.mat','file')==2
+                                  load psver
+                              else
+                                  load(['..' filesep 'psver.mat']);
+                              end
+                              if exist(['tca_sb' num2str(psver) '.mat'],'file')==2
+                                  aps = load(['tca_sb' num2str(psver) '.mat']);
+                              elseif exist(['..' filesep 'tca_sb' num2str(psver) '.mat'],'file')==2
+                                  aps = load(['..' filesep 'tca_sb' num2str(psver) '.mat']);
+                                  
+                              end
+                              [aps_corr,fig_name_tca,aps_flag] = ps_plot_tca(aps,aps_method);
+                          end
+
+                      catch
+                         fprintf('You will need to change tropo_method to a correction you have processed\n') 
+                      end
+                  end
+              end
+              % Add a check when changing the APS method and catch error
+              % before it occurs
+               % add an extra check for the subtr_tropo flag - DB 09/2015
+              if strcmpi(parmname,'tropo_method')
+                      try
+                          if strcmpi(getparm('small_baseline_flag'),'y')
+                              % loading the aps file
+                              if exist('psver.mat','file')==2
+                                  load psver
+                              else
+                                  load(['..' filesep 'psver.mat']);
+                              end
+                              if exist(['tca_sb' num2str(psver) '.mat'],'file')==2
+                                  aps = load(['tca_sb' num2str(psver) '.mat']);
+                              elseif exist(['..' filesep 'tca_sb' num2str(psver) '.mat'],'file')==2
+                                  aps = load(['..' filesep 'tca_sb' num2str(psver) '.mat']);
+                                  
+                              end
+                              [aps_corr,fig_name_tca,aps_flag] = ps_plot_tca(aps,value);
+                          end
+
+                      catch
+                         fprintf('Your selected tropo_method has not been computed...\n') 
+                      end
+              end
+              
+
+             logit([parmname,' = ',value],0,parent_flag);
           end
         end
         if nargin>2 
