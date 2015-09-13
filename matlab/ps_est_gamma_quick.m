@@ -114,7 +114,7 @@ if exist(laname,'file')
     inc_mean=mean(la.la)+0.052; % incidence angle approx equals look angle + 3 deg
     clear la
 else
-    inc_mean=21*pi/180 % guess the incidence angle
+    inc_mean=21*pi/180; % guess the incidence angle
 end
 max_K=max_topo_err/(lambda*rho*sin(inc_mean)/4/pi);
 %%% ===============================================
