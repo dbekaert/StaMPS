@@ -155,7 +155,7 @@ if ~isempty(ix_split_patches)
     
     
     % run the second component on the merged patches
-    if isempty(ix_merged)
+    if ~isempty(ix_merged)
         fprintf(['Once all the processing has completed, i.e. each core, run the following command to complete your processing\n'])
         fprintf(['stamps(' num2str(ix_merged(1)) ',' num2str(ix_merged(end)) ',[],0,[],2);']);
         
