@@ -24,6 +24,7 @@ function []=ps_select(reest_flag,plot_flag)
 %   05/2012 AH: subtract only pixel being tested, not zero whole grid cell
 %   01/2013 AH: Set default threshold if not enough random pixels
 %   04/2015 DB: Give a warning to remove patch from patch list when no PS are left
+%   09/2015 DB: Store information on nr of PS left. Support auto procesing
 %   ======================================================================
 logit;
 logit('Selecting stable-phase pixels...')
@@ -403,13 +404,6 @@ if reest_flag~=1
     logit(sprintf('%d ps selected after re-estimation of coherence',sum(keep_ix)))
     clear pm
 
-
-   % give warning that no PS are left and step 4 will fail
-   if sum(keep_ix)==0
-       fprintf('\n\n***No PS points left.\nDelete this patch from the patch list, as step 4 will fail upon continuation for this patch*** \n\n')
-   end
-
-
 else % reest_flag==1, skip re-estimation
     pm=rmfield(pm,{'ph_grid'});
     ph_patch2=pm.ph_patch(ix,:);
@@ -419,6 +413,22 @@ else % reest_flag==1, skip re-estimation
     coh_ps2=pm.coh_ps(ix);
     keep_ix=true(size(ix));
 end % end-if reest_flag
+
+
+%%% Keep information about number of PS left.
+if exist('no_ps_info.mat','file')~=2
+   stamps_step_no_ps = zeros([5 1 ]);       % keep for the first 5 steps only
+else
+   load('no_ps_info.mat');
+   % reset as we are currently re-processing
+   stamps_step_no_ps(3:end)=0;
+end
+if sum(keep_ix)==0
+   fprintf('***No PS points left. Update the stamps log for this****\n')
+   % update the flag indicating no PS left in step 3
+   stamps_step_no_ps(3)=1;
+end
+save('no_ps_info.mat','stamps_step_no_ps')
 
 if  plot_flag==1 
     figure
