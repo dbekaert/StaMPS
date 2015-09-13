@@ -32,6 +32,7 @@ function stamps_mc_header(start_step,end_step,patches_flag,est_gamma_parm,patch_
 %               instead by launching multiple matlab jobs
 % 01/2014   DB  Integrate steps 1-4 to split patch lists and steps from 5
 %               on to use a merged dataset
+% 09/2015   DB  Include step 5 in the processing and add some future ideas
 
 % The definition of the stamps steps
 if nargin<1 || isempty(start_step)==1
@@ -40,12 +41,12 @@ end
 if nargin<2 || isempty(end_step)==1
     end_step=4;
 end
-if end_step>=5
-   fprintf('Multi-core currently only supported step 1-4\n')
-   if start_step>=5
-       error('Will aboard ..., Please proceed with regular stamps.m function \n')
-   end
-end
+% if end_step>=5
+%    fprintf('Multi-core currently only supported step 1-4\n')
+%    if start_step>=5
+%        error('Will aboard ..., Please proceed with regular stamps.m function \n')
+%    end
+% end
 
 % keep below such in future there can be a catch to see when step 5 is
 % finnished by all cores before proceeding to the second part of step 5.
@@ -83,7 +84,7 @@ end
 
 % defining the step_range
 step_range = [start_step:end_step];
-ix_split_patches = find(step_range<5);
+ix_split_patches = find(step_range<=5);
 ix_merged = find(step_range>=5);
 
 
@@ -107,6 +108,8 @@ if ~isempty(ix_split_patches)
         patchdir=dir('PATCH*');
         n_patches=size(patchdir,1);
     end
+
+    
     % checking the number of patches to be processed per core
     if n_patches<n_cores
         fprintf('Decrease number of cores, as lesser patches are being processed... \n')
@@ -126,8 +129,10 @@ if ~isempty(ix_split_patches)
             end
             str_temp = patchdir(ix(ll));
             str_temp = str_temp.name;
-            copyfile('parms.mat',[str_temp filesep]);
-            fprintf(fid,'%s\n',str_temp);
+            if ~isempty(str_temp)
+                copyfile('parms.mat',[str_temp filesep]);
+                fprintf(fid,'%s\n',str_temp);
+            end
             if ll==length(ix)
                 fclose(fid);
             end
@@ -139,13 +144,29 @@ if ~isempty(ix_split_patches)
     system(comandstr);
 
     for k=1:n_cores
-        %matlab -nodesktop -nodisplay -r "test('double test',1); exit" > log
-        comandstr = (['matlab -nodesktop -nodisplay -r "stamps(' num2str(step_range(ix_split_patches(1)) ) ',' num2str(step_range(ix_split_patches(end))) ',' patches_flag_str ',' est_gamma_parm_str ',' '''patch_list_split_' num2str(k) '''); exit" > log_stamps_split_' num2str(k) ' & ' ]);
+        comandstr = (['matlab -nodesktop -nodisplay -r "stamps(' num2str(step_range(ix_split_patches(1)) ) ',' num2str(step_range(ix_split_patches(end))) ',' patches_flag_str ',' est_gamma_parm_str ',' '''patch_list_split_' num2str(k) ''',1  ); exit" > log_stamps_split_' num2str(k) ' & ' ]);
         comandstr2 = 'echo "${!}" >> log_stamps_overview';
         command = [comandstr comandstr2];
         [a,b] = system(command);
         fprintf([num2str(k) 'Done \n'])
     end
+    
+    % waiting the processors to complete
+    
+    
+    % run the second component on the merged patches
+    if isempty(ix_merged)
+        fprintf(['Once all the processing has completed, i.e. each core, run the following command to complete your processing\n'])
+        fprintf(['stamps(' num2str(ix_merged(1)) ',' num2str(ix_merged(end)) ',[],0,[],2);']);
+        
+        
+        % the following can be used in future, but needs a check in the
+        % code which waits to proceed untill all cores have finnised
+        % processing. See comment above ~L154.
+%           stamps(ix_merged(1),ix_merged(end),[],0,[],2);
+    end
+    
+    
 
 
 end
