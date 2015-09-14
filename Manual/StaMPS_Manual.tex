@@ -15,6 +15,8 @@
 \usepackage{listings}
 % \usepackage{natbib}
 
+%\usepackage[pdftex,backref,pdfpagelabels,breaklinks=true]{hyperref}  % Creates hyper links N.B. pdf option and index option [pdftex,hyperindex,backref,pdfpagelabels]
+
 % \usepackage{chapterbib}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -39,7 +41,7 @@
 %\usepackage{color}
 \bibliographystyle{agu}
 \usepackage{natbib}
-\usepackage[dvips, bookmarks, colorlinks=false, linkcolor=blue, urlbordercolor={0 0 1},citebordercolor={1 0 0},pdftitle={StaMPS/MTI Manual}, pdfauthor={Andy Hooper }, pdfkeywords={PS, PSI, MT-InSAR, StaMPS}]{hyperref}
+\usepackage[dvips, bookmarks, backref,pdfpagelabels,colorlinks=false, linkcolor=blue, urlbordercolor={0 0 1},citebordercolor={1 0 0},pdftitle={StaMPS/MTI Manual}, pdfauthor={Andy Hooper }, pdfkeywords={PS, PSI, MT-InSAR, StaMPS}]{hyperref}
 %\usepackage{url}
 \usepackage[usenames]{color}
 \newcommand{\cs}[1]{{\texttt{\color{RoyalBlue}#1}}}
@@ -973,7 +975,8 @@ The parameters that control the processing are set to default values which you c
 \colorbox{notegray}{
 \begin{minipage}{0.95\linewidth}
 \begin{small}
-\textbf{Parallelisation of steps 1-4}. You can run  $>>$\cs{stamps\_mc\_header(\cc{start\_step},\cc{end\_step})} just like conventional $>>$\cs{stamps(\cc{start\_step},\cc{end\_step})} to increase the processing speed of the first 4 steps of StaMPS. You can specify the number of cores to be used using $>>$\cs{setparm(`n\_cores',\cc{XX})}, where \cc{XX} are the number of cores to be used. Note that increasing the number of cores above the machine capability will not speed up the processing. The patchlist will be split into \cc{XX} components, for which an individual matlab job will be launched in the background. The command line output for each matlab job is contained int he corresponding log\_stamps\_split\_\cc{XX} file. It is recommended to regulary check the output to catch errors.
+\textbf{Parallelisation of steps 1-5 for patch processing}. \\ 
+You can run  $>>$\cs{stamps\_mc\_header(\cc{start\_step},\cc{end\_step})} just like conventional $>>$\cs{stamps(\cc{start\_step},\cc{end\_step})} to increase the processing speed of the first 5 steps of StaMPS. You can specify the number of cores to be used using $>>$\cs{setparm(`n\_cores',\cc{XX})}, where \cc{XX} are the number of cores to be used. Note that increasing the number of cores above the machine capability will not speed up the processing. The patchlist will be split into \cc{XX} components, for which an individual matlab job will be launched in the background. The command line output for each matlab job is contained int he corresponding log\_stamps\_split\_\cc{XX} file. It is recommended to regulary check the output to catch errors.
 \end{small}
 
  \vspace{0.5mm}
@@ -1004,6 +1007,7 @@ Setting this higher, however,  increases the mean $\gamma$ value (coherence-like
 {\tt clap\_alpha} &		 {\tt 1} &		CLAP $\alpha$ term. Together with the $\beta$ term, determines the relative contribution of the low-pass and adaptive phase elements to the CLAP filter.\\
 {\tt clap\_beta} &		 {\tt 0.3} &		CLAP $\beta$ term\\
 {\tt gamma\_change\_convergence} &		 {\tt 0.005} &		Threshold for change in change in mean value of $\gamma$ (coherence-like measure). Determines when convergence is reached and iteration ceases.\\
+{\tt gamma\_max\_iterations} &		 {\tt 3} &		Maximum number of iterations before iteration process ceases.\\
 \
 \end{tabular}
 \normalsize
@@ -1077,11 +1081,15 @@ If still too few pixels are being selected such that any signal is generally und
 \end{minipage}
 }
 \end{center}
+
+% fix as page structure is not good when this is not included.
+\newpage
+
  \section{Step 6: Phase unwrapping}
 Processing is controlled by the following parameters:
  
  \footnotesize
-\begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
+\begin{tabular}[ht!]{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
 {\tt unwrap\_method} &	 {\tt `3D'} &  Unwrapping method. \textbf{****MORE options need to be included and explained, ref to a paper?****} \\
 {\tt unwrap\_prefilter\_flag} &  {\tt `y'} & Prefilter phase before unwrapping to reduce noise. Other option (not generally recommended) {\tt `n'}.\\
@@ -1092,6 +1100,10 @@ Processing is controlled by the following parameters:
 {\tt unwrap\_gold\_alpha}	 & 0.8	& Value of $\alpha$ for Goldstein filter.\\
  {\tt drop\_ifg\_index} &
 	 {\tt []} & Interferograms listed here (by order number given in $>>$\cs{ps\_info}) will not be unwrapped.	 \\
+ {\tt subtr\_tropo} &
+	 {\tt `n'} & When set to {\tt `y'}, removes an estimate before unwrapping as defined using the correction in {\tt tropo\_method}. Note, this is to ease the unwrapping process, thus after unwrapping the tropospheric signals are added back in. \\	 
+	{\tt tropo\_method} &
+	 {\tt `a\_l'} & Type of tropospheric correction that will be used to remove the tropospheric delays when {\tt subtr\_tropo} is set to  {\tt `y'}. Valid options are those supported by TRAIN (e.g. `a\_l', `a\_e', `a\_w', `a\_m', etc). \\	  
 \end{tabular}
 \normalsize
  
@@ -1110,9 +1122,6 @@ $>>$\cs{ps\_plot(`u')}
 
 Check for unwrapping errors i.e., phase jumps in space which are uncorrelated in time. Pay attention to the color scale. It may help to set it to a narrower range, e.g., $[-2\pi , 2\pi]$ (see plotting options in chapter \ref{ch:plotting}).
  Unwrapping errors are more likely to occur in longer perpendicular baseline interferograms. This is for two reasons, firstly there is more noise associated with each PS pixel, and secondly, the phase due to any spatially-correlated look angle (SCLA) error is larger, as it is proportional to perpendicular baseline. Noise is reduced by spatial filtering before unwrapping, but it is also possible to reduce the SCLA error phase by estimating the SCLA error from the interferograms that have been unwrapped OK by running Step 7. If Step 6 is re-run after Step 7 has been run, the SCLA error phase is temporarily subtracted from the wrapped phase before unwrapping. The unwrapping accuracy is further improved by also temporarily subtracting the atmosphere and orbit error (AOE) phase of the master image, present in all the interferograms, which is also estimated in Step 7.
-
-
-
 \end{small}
  \vspace{0.5mm}
 \end{minipage}
@@ -1125,7 +1134,8 @@ Check for unwrapping errors i.e., phase jumps in space which are uncorrelated in
 
 
 \section{Step 7: Estimate spatially-correlated look angle error}
- Spatially-uncorrelated look angle (SULA) error was calculated in Step 3 and removed in Step 5. In Step 7, spatially-correlated look angle (SCLA) error is calculated which is due almost exclusively to spatially-correlated DEM error (this includes error in the DEM itself, and incorrect mapping of the DEM into radar co-ordinates). Master atmosphere and orbit error (AOE) phase is estimated simultaneously. 
+
+Spatially-uncorrelated look angle (SULA) error was calculated in Step 3 and removed in Step 5. In Step 7, spatially-correlated look angle (SCLA) error is calculated which is due almost exclusively to spatially-correlated DEM error (this includes error in the DEM itself, and incorrect mapping of the DEM into radar co-ordinates). Master atmosphere and orbit error (AOE) phase is estimated simultaneously. 
   
  Processing is controlled by the following parameters:
 
@@ -1136,6 +1146,10 @@ Check for unwrapping errors i.e., phase jumps in space which are uncorrelated in
 {\tt scla\_deramp} &	 {\tt `n'}	& If set to {\tt `y'}, a phase ramp is estimated for each interferogram.\\
  {\tt drop\_ifg\_index} &
 	 {\tt []} & Interferograms listed here (by order number given in $>>$\cs{ps\_info}) will not be included in the SCLA calculations, nor will they be included in Step 6 and previous steps.	 \\
+	  {\tt subtr\_tropo} &
+	 {\tt `n'} & When set to {\tt `y'}, removes an estimate of the tropospheric delay as defined using the correction in {\tt tropo\_method} prior to the computation of the SCLA error. \\	 
+	{\tt tropo\_method} &
+	 {\tt `a\_l'} & Type of tropospheric correction that will be used to remove the tropospheric delays when {\tt subtr\_tropo} is set to  {\tt `y'}. Valid options are those supported by TRAIN (e.g. `a\_l', `a\_e', `a\_w', `a\_m', etc). \\	
 \end{tabular}
 \normalsize
 
@@ -1172,9 +1186,7 @@ will save as a {\tt .mat} file the results of calculating  the option {\tt `d'}.
 
 Once happy that all included interferograms are generally smoother, rerun Step 6. 
 Step 6 will subtract the estimates of SCLA and master AOE before unwrapping (as long as {\tt unwrap\_prefilter\_flag} = {\tt `y'}), and add them back in afterwards . If more interferograms become reliably unwrapped on re-running, remove them from {\tt scla\_drop\_index} before re-running Step 7. This can be repeated until all interferograms are reliably unwrapped, or until no further improvement is seen.
-
 \end{small}
-
  \vspace{0.5mm}
 \end{minipage}
 }
@@ -1292,7 +1304,8 @@ For small baselines processing, some of the parameters have different default va
 \colorbox{notegray}{
 \begin{minipage}{0.95\linewidth}
 \begin{small}
-\textbf{Parallelisation of steps 1-4}. You can run  $>>$\cs{stamps\_mc\_header(\cc{start\_step},\cc{end\_step})} just like conventional $>>$\cs{stamps(\cc{start\_step},\cc{end\_step})} to increase the processing speed of the first 4 steps of StaMPS. You can specify the number of cores to be used using $>>$\cs{setparm(`n\_cores',\cc{XX})}, where \cc{XX} are the number of cores to be used. Note that increasing the number of cores above the machine capability will not speed up the processing. The patchlist will be split into \cc{XX} components, for which an individual matlab job will be launched in the background. The command line output for each matlab job is contained int he corresponding log\_stamps\_split\_\cc{XX} file. It is recommended to regulary check the output to catch errors.
+\textbf{Parallelisation of steps 1-5 for patch processing}.\\
+You can run  $>>$\cs{stamps\_mc\_header(\cc{start\_step},\cc{end\_step})} just like conventional $>>$\cs{stamps(\cc{start\_step},\cc{end\_step})} to increase the processing speed of the first 4 steps of StaMPS. You can specify the number of cores to be used using $>>$\cs{setparm(`n\_cores',\cc{XX})}, where \cc{XX} are the number of cores to be used. Note that increasing the number of cores above the machine capability will not speed up the processing. The patchlist will be split into \cc{XX} components, for which an individual matlab job will be launched in the background. The command line output for each matlab job is contained int he corresponding log\_stamps\_split\_\cc{XX} file. It is recommended to regulary check the output to catch errors.
 \end{small}
  \vspace{0.5mm}
 \end{minipage}
@@ -1300,7 +1313,41 @@ For small baselines processing, some of the parameters have different default va
 \end{center}
  
 \section{Step 6: Phase unwrapping}
-Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. 
+Step 6 includes extra processing after phase-unwrapping to retrieve the phase with respect to the original master by least-squares inversion. An additional parameter, {\tt unwrap\_hold\_good\_values}, is introduced for the unwrapping of the the Small Baseline network. \\
+
+\footnotesize
+\begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
+\textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
+{\tt unwrap\_method} &	 {\tt `3D'} &  Unwrapping method. \textbf{****MORE options need to be included and explained, ref to a paper?****} \\
+{\tt unwrap\_prefilter\_flag} &  {\tt `y'} & Prefilter phase before unwrapping to reduce noise. Other option (not generally recommended) {\tt `n'}.\\
+{\tt unwrap\_patch\_phase} &  {\tt `n'} & Use the patch phase from Step 3 as prefiltered phase. If set to {\tt `n'} (recommended), PS phase is filtered using a Goldstein adaptive phase filter.\\
+{\tt unwrap\_grid\_size} & 200 & Resampling grid spacing. If {\tt unwrap\_prefilter\_flag} is set to {\tt `y'}, phase is resampled to a grid with this spacing.\\
+{\tt unwrap\_gold\_n\_win}	 & 32	& Window size for Goldstein filter.\\
+{\tt unwrap\_time\_win}	& 730 & Smoothing window (in days) for estimating phase noise distribution for each pair of neighbouring pixels. The time series phase for each pair is smoothed using a Gaussian window with standard deviation of this size. Original phase minus smoothed phase is assumed to be noise, which is used for determining probability of a phase jump between the pair in each interferogram.\\
+{\tt unwrap\_gold\_alpha}	 & 0.8	& Value of $\alpha$ for Goldstein filter.\\
+ {\tt drop\_ifg\_index} &
+	 {\tt []} & Interferograms listed here (by order number given in $>>$\cs{ps\_info}) will not be unwrapped.	 \\
+ {\tt subtr\_tropo} &
+	 {\tt `n'} & When set to {\tt `y'}, removes an estimate before unwrapping as defined using the correction in {\tt tropo\_method}. Note, this is to ease the unwrapping process, thus after unwrapping the tropospheric signals are added back in. \\	 
+	{\tt tropo\_method} &
+	 {\tt `a\_l'} & Type of tropospheric correction that will be used to remove the tropospheric delays when {\tt subtr\_tropo} is set to  {\tt `y'}. Valid options are those supported by TRAIN (e.g. `a\_l', `a\_e', `a\_w', `a\_m', etc). \\
+	 {\tt unwrap\_hold\_good\_values} &
+	 {\tt `n' } &	Fix pixels unwrapped correctly in the previous unwrapping iteration. Only applicable for small baseline networks. \\
+ \end{tabular} 
+ \normalsize
+ 
+  
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
+First, unwrap the full small baseline network once with {\tt unwrap\_hold\_good\_values } set to the default `n'. Then set {\tt unwrap\_hold\_good\_values} to `y' and re-run the unwrapping with any small changes, e.g. change the  {\tt unwrap\_grid\_size}, or drop particularly bad interferograms, see other parameters listed above. Subsequent unwrapping iterations, with changes in parameter values or interferograms, will fix all pixels in each interferogram that were unwrapped correctly in the previous iteration and only change pixels involved in unwrapping errors.\\
+\end{small}
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
+
   
 \begin{center}
 \colorbox{notegray}{
@@ -1669,6 +1716,9 @@ to display the image in matlab instead of using {\tt disrg}
 \item Bug fix in ps\_plot.m when no points in reference area
 \item Bug fix in ps\_parms\_default.m when searching for processor flag
 \item Bug fix in sb\_load\_initial.m when saving to large mat files
+\item Track patches with no PS, automatically skip remaining steps
+\item Stamps multi-core support up to step 5 at patch level.
+\item Include a maximum number of interations for step 2.
 \end{itemize}
 
 
