@@ -424,7 +424,7 @@ else
    stamps_step_no_ps(3:end)=0;
 end
 if sum(keep_ix)==0
-   fprintf('***No PS points left. Update the stamps log for this****\n')
+   fprintf('***No PS points left. Updating the stamps log for this****\n')
    % update the flag indicating no PS left in step 3
    stamps_step_no_ps(3)=1;
 end

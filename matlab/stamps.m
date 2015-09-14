@@ -39,6 +39,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   09/2013 DB: update the stamps version number 
 %   09/2015 DB: Check if patches do have PS before proceeding with
 %               processing.
+%   09/2015 DB: Fix when running stamps in a patch folder mode when no PS are left
 %   =================================================================
 
 nfill=40;
@@ -255,7 +256,7 @@ if strcmpi(stamps_PART2_flag,'y')
             keep_patch = 1;
             if exist(filename_PS_check,'file')==2
                 load(filename_PS_check)
-                if sum(stamps_step_no_ps)>1
+                if sum(stamps_step_no_ps)>=1
                    keep_patch=0; 
                 end
             end
@@ -276,10 +277,26 @@ if strcmpi(stamps_PART2_flag,'y')
 
 
     if start_step<=5 & end_step >=5 
+        abord_flag=0;
         if patches_flag=='y'
             ps_merge_patches
+        else
+            % this is processing of an individual patch
+            % see if there are any PS left
+            if exist('no_ps_info.mat','file')==2
+                load('no_ps_info.mat')
+                if sum(stamps_step_no_ps)>=1
+                   abord_flag=1; 
+                end
+            end
         end
-        ps_calc_ifg_std;
+
+        % see if step 5 can be ran
+        if abord_flag==0 
+            ps_calc_ifg_std;
+        else
+            fprintf('No PS left in step 4, so will skip step 5 \n')
+        end
     end
 
 
