@@ -97,7 +97,7 @@ if unwrap_hold_good_values=='y'
     sb_identify_good_pixels
     options.ph_uw_predef=nan(size(ph_w),'single');
     uw=load(phuwname);
-    good=load(goodname)
+    good=load(goodname);
     options.ph_uw_predef(good.good_pixels)=uw.ph_uw(good.good_pixels);
     clear uw good;
 end

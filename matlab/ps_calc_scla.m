@@ -19,6 +19,7 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   11/2010 AH: replace recalc_index with scla_drop_index
 %   01/2012 AH: use short time sep ifgs for single master SCLA calc
 %   09/2015 DB: Include TRAIN support
+%   09/2015 DB/EH: Debug nans, deramping fix using script ps_deramp
 %   ================================================================
 logit;
 logit(sprintf('Estimating spatially-correlated look angle error...'),2)
@@ -101,32 +102,38 @@ end
 
 if strcmpi(subtr_tropo,'y')
     % Remove the tropo correction - TRAIN support
-    if exist(apsname,'file')~=2
-        % the tca file does not exist. See in case this is SM if it needs
-        % to be inverted 
+    % recompute the APS inversion on the fly as user migth have dropped
+    % SB ifgs before and needs new update of the SM APS too.
+    
+%    if exist(apsname,'file')~=2
+%        % the tca file does not exist. See in case this is SM if it needs
+%        % to be inverted 
         if strcmpi(apsname,['./tca',num2str(psver)])
             if strcmpi(getparm('small_baseline_flag'),'y')
                 sb_invert_aps(tropo_method);
             end
         end
-    end
+%    end
     aps = load(apsname);
     [aps_corr,fig_name_tca,tropo_method] = ps_plot_tca(aps,tropo_method);
     uw.ph_uw=uw.ph_uw-aps_corr;
 end
 
-
 if strcmpi(scla_deramp,'y')
     fprintf('\n   deramping ifgs...\n')
-    ph_ramp=zeros(ps.n_ps,n_ifg,'single');
-    G=double([ones(ps.n_ps,1),ps.xy(:,2),ps.xy(:,3)]);
-    for i=1:length(unwrap_ifg_index)
-        d=uw.ph_uw(:,unwrap_ifg_index(i));
-        m=G\double(d(:));
-        ph_this_ramp=G*m;
-        uw.ph_uw(:,unwrap_ifg_index(i))=uw.ph_uw(:,unwrap_ifg_index(i))-ph_this_ramp; % subtract ramp
-        ph_ramp(:,unwrap_ifg_index(i))=ph_this_ramp;
-    end
+    
+    [ph_all,ph_ramp] = ps_deramp(ps,uw.ph_uw);
+    uw.ph_uw = uw.ph_uw - ph_ramp;
+    
+%     ph_ramp=zeros(ps.n_ps,n_ifg,'single');
+%     G=double([ones(ps.n_ps,1),ps.xy(:,2),ps.xy(:,3)]);
+%     for i=1:length(unwrap_ifg_index)
+%         d=uw.ph_uw(:,unwrap_ifg_index(i));
+%         m=G\double(d(:));
+%         ph_this_ramp=G*m;
+%         uw.ph_uw(:,unwrap_ifg_index(i))=uw.ph_uw(:,unwrap_ifg_index(i))-ph_this_ramp; % subtract ramp
+%         ph_ramp(:,unwrap_ifg_index(i))=ph_this_ramp;
+%     end
 else
     ph_ramp=[];
 end
@@ -146,7 +153,7 @@ if exist([apsname_old,'.mat'],'file')
 end
 
 ref_ps=ps_setref;
-uw.ph_uw=uw.ph_uw-repmat(mean(uw.ph_uw(ref_ps,:),1),ps.n_ps,1);
+uw.ph_uw=uw.ph_uw-repmat(nanmean(uw.ph_uw(ref_ps,:),1),ps.n_ps,1);
 
 if use_small_baselines==0
     if strcmpi(small_baseline_flag,'y')

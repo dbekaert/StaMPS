@@ -13,6 +13,7 @@ function [] = sb_fix_unwrap_manual(reset_flag)
 % modifications:
 %   Bekaert David   05/2015     Fix in command line output, fix the code
 %                               for ps_plot
+% Bekaert David     09/2015     Add file restoring.
 %
 
 % flags
@@ -138,7 +139,10 @@ while continue_flag==1
                     repeat2=0;
                     
                     % restore the codes
-                    keyboard 
+                    copyfile('phuw_sb2_original.mat','phuw_sb2.mat')
+                    copyfile('phuw2_original.mat','phuw2.mat')
+                    copyfile('phuw_sb_res2_original.mat','phuw_sb_res2.mat')
+
                 else
                     fprintf('y or n ...\n')
                 end

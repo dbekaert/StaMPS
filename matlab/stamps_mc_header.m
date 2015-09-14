@@ -33,6 +33,7 @@ function stamps_mc_header(start_step,end_step,patches_flag,est_gamma_parm,patch_
 % 01/2014   DB  Integrate steps 1-4 to split patch lists and steps from 5
 %               on to use a merged dataset
 % 09/2015   DB  Include step 5 in the processing and add some future ideas
+% 09/2015   DB  Bug fix 
 
 % The definition of the stamps steps
 if nargin<1 || isempty(start_step)==1
@@ -86,6 +87,8 @@ end
 step_range = [start_step:end_step];
 ix_split_patches = find(step_range<=5);
 ix_merged = find(step_range>=5);
+
+
 
 
 % generating a patchlist in case none is given
@@ -151,23 +154,24 @@ if ~isempty(ix_split_patches)
         fprintf([num2str(k) 'Done \n'])
     end
     
-    % waiting the processors to complete
-    
-    
-    % run the second component on the merged patches
-    if ~isempty(ix_merged)
-        fprintf(['Once all the processing has completed, i.e. each core, run the following command to complete your processing\n'])
-        fprintf(['stamps(' num2str(ix_merged(1)) ',' num2str(ix_merged(end)) ',[],0,[],2);']);
-        
-        
-        % the following can be used in future, but needs a check in the
-        % code which waits to proceed untill all cores have finnised
-        % processing. See comment above ~L154.
-%           stamps(ix_merged(1),ix_merged(end),[],0,[],2);
-    end
-    
-    
-
-
 end
+
+
+% waiting the processors to complete
+
+
+% run the second component on the merged patches
+if ~isempty(ix_merged)
+    fprintf(['Once all the processing has completed, i.e. each core, \nrun the following command to complete your processing\n'])
+    fprintf(['stamps(' num2str(step_range(ix_merged(1))) ',' num2str(step_range(ix_merged(end))) ',[],0,[],2);\n']);
+
+
+    % the following can be used in future, but needs a check in the
+    % code which waits to proceed untill all cores have finnised
+    % processing. See comment above ~L158.
+%           stamps(ix_merged(1),ix_merged(end),[],0,[],2);
+end
+
+
+
 

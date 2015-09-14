@@ -8,6 +8,7 @@ function []=sb_identify_good_pixels()
 %   ======================================================================
 %   06/2014 AH: Modify for StaMPS and fix
 %   04/2015 EH: Speed optimisations
+%   09/2015 EH/DB: Account for Nan values
 %   ======================================================================
 logit;
 fprintf('Identifying good pixels...\n')
@@ -25,6 +26,8 @@ load(loopname);
 load(phuwname,'ph_uw')
 
 good_pixels = false(ps.n_ps,ps.n_ifg);
+
+
 for m=1:size(intfg_loops,1)
     
     %Sum positive interferograms in each loop
@@ -45,7 +48,7 @@ for m=1:size(intfg_loops,1)
     
     %Remove the average residual (closest 2*pi value) to ensure each int is
     %in the same reference
-    average_resid = mean(positive_ints-negative_ints);
+    average_resid = nanmean(positive_ints-negative_ints);
 
     average_resid = 2*pi*(round(average_resid/2/pi));
    
