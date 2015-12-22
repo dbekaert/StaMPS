@@ -8,7 +8,8 @@
 # HB 03/2013 Import DEM information from timing.dorisin
 # ===================================================================
 
-set WORKDIR=".."
+set WORKDIR = ".."
+
 
 if (! -e $WORKDIR/demassist.dorisin) then
     sed -n '1,/step demassist/p' $DORIS_SCR/demassist.dorisin > $WORKDIR/demassist.dorisin
