@@ -5,8 +5,9 @@ function []=plot_sb_baselines(vargin)
 %
 % Modifications:
 % DB 12/2012    fix error for input arguments and add the some syntax
+% DB 01/2016    Suppress the warning. Alternative remove the function.
 
-warning('name of this function changed to sb_baseline_plot')
+% warning('name of this function changed to sb_baseline_plot')
 
 if nargin>0                     % [DB] changed to nargin > 0, as ix cannot be specified otherwize
     sb_baseline_plot(vargin)

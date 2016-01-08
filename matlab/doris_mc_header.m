@@ -14,12 +14,14 @@ function doris_mc_header(operation,n_cores,process_list_file, extra_arguments,ex
 % 09/14  DB:    remove matlab multi-core option
 % 05/15  TI:    Add 'on the fly' list file construction
 % 05/15  DB:    Test and add exceptions
+% 12/15  DB:    Adding dem_assist support to multi-core
+% 12/15  DB:    Include a pause as last core does not always start
 %
 % doris_mc_header('make_coarse',20)
 
 % Checking the input arguments
 % only allow for the follwoing processing commands
-if ~strcmp(operation,'make_cohs') && ~strcmp(operation,'make_small_baselines') && ~strcmp(operation,'make_slcs_envi_vor') && ~strcmp(operation,'make_ifgs') && ~strcmp(operation,'make_resample')  && ~strcmp(operation,'make_dems') && ~strcmp(operation,'make_multilook') && ~strcmp(operation,'make_coreg_simple') && ~strcmp(operation,'make_coarse') && ~strcmp(operation,'make_slcs_alos')
+if ~strcmp(operation,'make_cohs') && ~strcmp(operation,'make_small_baselines') && ~strcmp(operation,'make_slcs_envi_vor') && ~strcmp(operation,'make_ifgs') && ~strcmp(operation,'make_resample')  && ~strcmp(operation,'make_dems') && ~strcmp(operation,'make_multilook') && ~strcmp(operation,'make_coreg_simple') && ~strcmp(operation,'make_coarse') && ~strcmp(operation,'make_dem_assist') && ~strcmp(operation,'make_slcs_alos')
     fprintf('not a valid operation to perform \n')
     keyboard
 end
@@ -46,7 +48,7 @@ if isempty(process_list_file)
 	   system_command = ['ls -d ' pwd '/[1,2]*/interferogram.out | gawk ''BEGIN {FS="interferogram.out"} {print $1}''  > make_cohs.list_tmp'];	
 	   [a,b] = system(system_command);
 	   process_list_file = 'make_cohs.list_tmp';
-	end
+    end
 
 	% make_small_baselines (in INSAR_XXXXXXXX folder)
 	if strcmp(operation,'make_small_baselines')
@@ -100,6 +102,13 @@ if isempty(process_list_file)
 	   [a,b] = system(system_command);
 	   process_list_file = 'make_coarse.list_tmp';
     end
+    
+	% make_dem_assist (in INSAR_XXXXXXXX folder)    
+    if strcmp(operation,'make_dem_assist')
+	   system_command = ['ls -d ' pwd '/[1,2]*/coreg.out | gawk ''BEGIN {FS="coreg.out"} {print $1}''  > make_dem_assist.list_tmp'];
+	   [a,b] = system(system_command);
+	   process_list_file = 'make_dem_assist.list_tmp';
+	end
     
     % make_slcs_envi_vor (in SLC folder)
 	if strcmp(operation,'make_slcs_alos')
@@ -177,6 +186,11 @@ for k=1:n_cores
     fprintf([num2str(k) ' cores launched \n'])   
     
 end
+
+% pausing the system before removing the temp files as some processors
+% could be slower
+fprintf('Allow all processors to start.\nWill pause the system 60sec before deleting files... \n')
+pause(60)
 
 % closing the pool of workers again
 for k=1:n_cores

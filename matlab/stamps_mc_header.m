@@ -34,6 +34,7 @@ function stamps_mc_header(start_step,end_step,patches_flag,est_gamma_parm,patch_
 %               on to use a merged dataset
 % 09/2015   DB  Include step 5 in the processing and add some future ideas
 % 09/2015   DB  Bug fix 
+% 01/2016   DB  Pause between launching cores
 
 % The definition of the stamps steps
 if nargin<1 || isempty(start_step)==1
@@ -151,7 +152,8 @@ if ~isempty(ix_split_patches)
         comandstr2 = 'echo "${!}" >> log_stamps_overview';
         command = [comandstr comandstr2];
         [a,b] = system(command);
-        fprintf([num2str(k) 'Done \n'])
+        fprintf([num2str(k) 'Done, ... pausing 20s for next job launch \n'])
+        pause(20)
     end
     
 end
