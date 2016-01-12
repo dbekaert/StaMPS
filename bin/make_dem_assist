@@ -1,12 +1,26 @@
 #!/bin/tcsh -f
+# 4/12/12 Bekaert : allow the file list to be specified
 
-set WORKDIR=$cwd
 
-if (! -e make_ifgs.list) then
-    \ls -d $WORKDIR/[1,2]*/coreg.out | gawk 'BEGIN {FS="coreg.out"} {print $1}'  > make_ifgs.list
+set nonomatch # DB
+set WORKDIR = $cwd
+
+if ($#argv == 1) then # DB
+        set list = $argv[1]
+        echo Own list given
+        echo $list
+else
+        set list = make_ifgs.list
+        if (! -e $list) then
+		\ls -d $WORKDIR/[1,2]*/coreg.out | gawk 'BEGIN {FS="coreg.out"} {print $1}'  > make_ifgs.list
+        endif
+        echo List generated
+        echo $list
 endif
 
-foreach dir(`cat make_ifgs.list`)
+
+
+foreach dir(`cat $list`)
    echo "\n\n[Entering] : ${dir}\n"
    cd $dir
    step_dem_assist
