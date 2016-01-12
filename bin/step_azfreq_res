@@ -1,0 +1,70 @@
+#!/bin/tcsh -f
+# resamples the slave to the PRF of the master
+# Hannes Bathke, February 2014
+# HB July 2014 removed bug in resource file update
+####################################################### 
+
+
+set WORKDIR = '..'
+
+if ( -e $WORKDIR/looks.txt) then
+    set looks = `cat $WORKDIR/looks.txt`
+else
+    set looks = 4
+endif
+
+if ( -e $WORKDIR/ar.txt) then
+    set ar = `cat $WORKDIR/ar.txt`
+else
+    set ar = 5
+endif
+
+@ azlooks = $looks * $ar
+
+set first_l = `grep 'First_line ' slave.res | gawk 'END {print $4}'`
+
+set first = `grep 'First_pixel ' slave.res | gawk 'END {print $4}'`
+set last = `grep 'Last_pixel '  slave.res | gawk 'END {print $4}'`
+
+set mprf = `grep 'Pulse_Repetition_Frequency'  master.res | gawk 'END {print $4}'`
+set sprf = `grep 'Pulse_Repetition_Frequency'  slave.res | gawk 'END {print $4}'`
+set format = 'complex_short' 
+set slaveslc = `grep -m1 'Data_output_file:'  slave.res | gawk 'END {print $2}'`
+set slaveout = 'slave_azres.slc'
+
+@ width = ($last - $first) + 1
+echo "azi_f_resample $slaveslc $format $width $mprf $sprf $slaveout" > matbgparms.txt
+matlab -nosplash -nodisplay < $STAMPS/matlab/batchjob.m 
+
+set length = `grep 'Output_lines: ' linenum.res | gawk 'END {print $2}'`
+set last_l = `echo "$first_l $length" | awk '{print $1+$2-1}'`
+
+doris.rmstep.sh crop slave.res
+cpxfiddle -w$width -fcr4 -qmag -M$looks/$azlooks -osunraster $slaveout > slave_azres_{$looks}l.ras
+
+# update ressource file
+sed -n '1,/First_pixel_azimuth_time/p' slave.res > tmp_slave.res
+echo "Pulse_Repetition_Frequency (computed, Hz):	" $mprf	>> tmp_slave.res
+sed -n '/Total_azimuth_band_width/,/_Start_crop:/p' slave.res >> tmp_slave.res
+echo "*****************************************************"	>> tmp_slave.res
+echo "*_Start_crop:		slave step01"	>> tmp_slave.res
+echo "*****************************************************" 	>> tmp_slave.res
+echo "Data_output_file:                       $slaveout" 	>> tmp_slave.res
+echo "Data_output_format:                     complex_real4" 	>> tmp_slave.res
+echo "First_line (w.r.t. original_master):   " $first_l >> tmp_slave.res
+echo "Last_line (w.r.t. original_master):    " $last_l >> tmp_slave.res
+echo "First_pixel (w.r.t. original_master):  " $first >> tmp_slave.res
+echo "Last_pixel (w.r.t. original_master):   " $last >> tmp_slave.res
+echo "Number of lines (non-multilooked):     " $length >> tmp_slave.res
+echo "Last_pixel (w.r.t. original_master):   " $width >> tmp_slave.res
+echo "*****************************************************" >> tmp_slave.res
+echo "* End_crop:_NORMAL" >> tmp_slave.res
+echo "*****************************************************" >> tmp_slave.res
+
+
+cp slave.res slave_backup.res
+mv tmp_slave.res slave.res
+rm -f tmp_slave.res 
+# rm -f linenum.res
+
+
