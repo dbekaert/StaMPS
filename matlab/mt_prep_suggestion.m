@@ -4,7 +4,7 @@ function [] = mt_prep_suggestion(small_baseline_flag)
 % By Bekaert David - Jet Propulsion Laboratory
 % Jan 2016
 % modifications:
-%
+%  01/2016      DB  Fixed bug which output wrong information to user
 
 
 if nargin<1
@@ -42,7 +42,7 @@ n_lines = load('templines.txt');
 fprintf(['number of lines = ' num2str(n_lines) '\n'])
 [a,b]= system(['echo `grep ''Number\ of\ pixels\ (multilooked):'' ' ifg_path ' | awk ''NR==1{print $5}''`  > temppixels.txt']);
 n_pixels = load('temppixels.txt');
-fprintf(['number of pixels = ' num2str(n_lines) '\n'])
+fprintf(['number of pixels = ' num2str(n_pixels) '\n'])
 
 
 % stamps recomendation is to have less than 5 million pixels per patch per SLC.

@@ -20,6 +20,8 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   12/2012 AH: weed very small heights if weed_zero_elevation='y'
 %   09/2015 DB: Clean the command line output, store number of PS left.
 %   09/2015 DB: Fix bug when no PS is left after weeding 0 elevation.
+%   01/2016 DB: Replace save with stamps_save which checks for var size when
+%               saving 
 %   ===================================================================
 logit;
 logit('Weeding selected pixels...')
@@ -399,7 +401,8 @@ save('no_ps_info.mat','stamps_step_no_ps')
 
 %% Saving the results
 weedname=['weed',num2str(psver)];
-save(weedname,'ix_weed','ix_weed2','ps_std','ps_max','ifg_index')
+% save(weedname,'ix_weed','ix_weed2','ps_std','ps_max','ifg_index')
+stamps_save(weedname,ix_weed,ix_weed2,ps_std,ps_max,ifg_index)
 
 coh_ps=coh_ps2(ix_weed);
 K_ps=K_ps2(ix_weed);
@@ -412,13 +415,17 @@ else
 end
 
 pmname=['pm',num2str(psver+1)];
-save(pmname,'ph_patch','ph_res','coh_ps','K_ps','C_ps')
+% save(pmname,'ph_patch','ph_res','coh_ps','K_ps','C_ps')
+stamps_save(pmname,ph_patch,ph_res,coh_ps,K_ps,C_ps)
+
 clear ph_patch ph_res coh_ps K_ps C_ps ph_patch2 ph_res2 coh_ps2 K_ps2 C_ps2
 
 ph2=ph2(ix_weed,:);
 ph=ph2;
 phname=['ph',num2str(psver+1)];
-save(phname,'ph')
+% save(phname,'ph')
+stamps_save(phname,ph)
+
 clear ph
 
 xy2=xy2(ix_weed,:);
@@ -434,7 +441,9 @@ clear ps xy2 ij2 lonlat2
 
 if exist(hgtname,'file')
     hgt=hgt(ix_weed);
-    save(['hgt',num2str(psver+1),'.mat'],'hgt');
+    % save(['hgt',num2str(psver+1),'.mat'],'hgt');
+    stamps_save(['hgt',num2str(psver+1),'.mat'],hgt);
+    
     clear hgt
 end
 
@@ -447,7 +456,8 @@ if exist(laname,'file')
         clear lao
     end
     la=la(ix_weed);
-    save(['la',num2str(psver+1),'.mat'],'la');
+%    save(['la',num2str(psver+1),'.mat'],'la');
+    stamps_save(['la',num2str(psver+1),'.mat'],la);
     clear la
 end
 
@@ -461,7 +471,8 @@ if exist(bpname,'file')
         clear bpo
     end
     bperp_mat=bperp_mat(ix_weed,:);
-    save(['bp',num2str(psver+1),'.mat'],'bperp_mat');
+    % save(['bp',num2str(psver+1),'.mat'],'bperp_mat');
+    stamps_save(['bp',num2str(psver+1),'.mat'],bperp_mat);
 end
 
 if exist(['scla_smooth',num2str(psver+1),'.mat'],'file')

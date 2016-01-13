@@ -25,6 +25,8 @@ function []=ps_select(reest_flag,plot_flag)
 %   01/2013 AH: Set default threshold if not enough random pixels
 %   04/2015 DB: Give a warning to remove patch from patch list when no PS are left
 %   09/2015 DB: Store information on nr of PS left. Support auto procesing
+%   01/2016 DB: Replace save with stamps_save which checks for var size when
+%               saving 
 %   ======================================================================
 logit;
 logit('Selecting stable-phase pixels...')
@@ -442,6 +444,7 @@ if  plot_flag==1
 end
 
 
-save(selectname,'ix','keep_ix','ph_patch2','ph_res2','K_ps2','C_ps2','coh_ps2','coh_thresh','coh_thresh_coeffs','clap_alpha','clap_beta','n_win','max_percent_rand','gamma_stdev_reject','small_baseline_flag','ifg_index');
-    
+% save(selectname,'ix','keep_ix','ph_patch2','ph_res2','K_ps2','C_ps2','coh_ps2','coh_thresh','coh_thresh_coeffs','clap_alpha','clap_beta','n_win','max_percent_rand','gamma_stdev_reject','small_baseline_flag','ifg_index');
+stamps_save(selectname,ix,keep_ix,ph_patch2,ph_res2,K_ps2,C_ps2,coh_ps2,coh_thresh,coh_thresh_coeffs,clap_alpha,clap_beta,n_win,max_percent_rand,gamma_stdev_reject,small_baseline_flag,ifg_index);
+
 logit(1);

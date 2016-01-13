@@ -40,6 +40,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   09/2015 DB: Check if patches do have PS before proceeding with
 %               processing.
 %   09/2015 DB: Fix when running stamps in a patch folder mode when no PS are left
+%   01/2016 DB: include stamps_save in step 1-4.
 %   =================================================================
 
 nfill=40;

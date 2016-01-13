@@ -10,6 +10,8 @@ function []=sb_load_initial()
 %   11/2007 AH: change bperp to be bperp at 0 m
 %   12/2012 DB: Add compatibility with Matlab2012B, keep backward compatible
 %   02/2015 DB: save phase using slower method to allow for larger files
+%   01/2016 DB: Replace save with stamps_save which checks for var size when
+%               saving 
 %   ======================================================================
 
 %NB IFGS assumed in ascending date order
@@ -180,9 +182,11 @@ lonlat=lonlat(sort_ix,:);
 savename=['ps',num2str(psver)];
 phname=['ph',num2str(psver)];
 
-save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','ifgday','ifgday_ix','n_image','n_ifg','n_ps','sort_ix','ll0','master_ix','day_ix');
+% save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','ifgday','ifgday_ix','n_image','n_ifg','n_ps','sort_ix','ll0','master_ix','day_ix');
+stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,ifgday,ifgday_ix,n_image,n_ifg,n_ps,sort_ix,ll0,master_ix,day_ix);
 
-save(phname,'ph','-v7.3');
+% save(phname,'ph','-v7.3');
+stamps_save(phname,ph);
 save psver psver
     
 if exist(daname,'file')
@@ -192,7 +196,8 @@ if exist(daname,'file')
   end
   D_A=D_A(sort_ix);
   dasavename=['da',num2str(psver)];
-  save(dasavename,'D_A');
+  %save(dasavename,'D_A');
+  stamps_save(dasavename,D_A);
 end
 
 
@@ -209,7 +214,8 @@ if exist(hgtname,'file')
     end
     hgt=hgt(sort_ix);
     hgtsavename=['hgt',num2str(psver)];
-    save(hgtsavename,'hgt');
+    % save(hgtsavename,'hgt');
+    stamps_save(hgtsavename,hgt);
 end
 
 if ~exist(widthname,'file')
@@ -237,7 +243,8 @@ if exist(laname,'file')
     la1000_ps=griddata_version_control(gridX,gridY,la1000,ij(:,3),ij(:,2),'linear',matlab_version);         % [DB] fix matlab2012 version and older
     la=la0_ps+(la1000_ps-la0_ps).*hgt/1000;
     lasavename=['la',num2str(psver)];
-    save(lasavename,'la');
+    % save(lasavename,'la');
+    stamps_save(lasavename,la);
 end
 
 updir=0;
@@ -270,7 +277,8 @@ else
 end
 
 bpsavename=['bp',num2str(psver)];
-save(bpsavename,'bperp_mat');
+% save(bpsavename,'bperp_mat');
+stamps_save(bpsavename,bperp_mat);
 
 end % end-if
 

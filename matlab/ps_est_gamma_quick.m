@@ -17,6 +17,8 @@ function []=ps_est_gamma_quick(restart_flag)
 %   05/2012 AH: correct weighted phase for range error and save it
 %   05/2012 AH: remove convergence condition that gamma_cc<0
 %   05/2015 AH: add maximum iteration criteria
+%   01/2016 DB: Replace save with stamps_save which checks for var size when
+%               saving 
 %   ==============================================================
 logit;
 logit('Estimating gamma for candidate pixels')
@@ -304,6 +306,8 @@ while loop_end_sw==0
         loop_end_sw=1;
     end
     
-save(pmname,'ph_patch','K_ps','C_ps','coh_ps','N_opt','ph_res','step_number','ph_grid','n_trial_wraps','grid_ij','grid_size','low_pass','i_loop','ph_weight','Nr','Nr_max_nz_ix','coh_bins','coh_ps_save','gamma_change_save') 
+% save(pmname,'ph_patch','K_ps','C_ps','coh_ps','N_opt','ph_res','step_number','ph_grid','n_trial_wraps','grid_ij','grid_size','low_pass','i_loop','ph_weight','Nr','Nr_max_nz_ix','coh_bins','coh_ps_save','gamma_change_save') 
+stamps_save(pmname,ph_patch,K_ps,C_ps,coh_ps,N_opt,ph_res,step_number,ph_grid,n_trial_wraps,grid_ij,grid_size,low_pass,i_loop,ph_weight,Nr,Nr_max_nz_ix,coh_bins,coh_ps_save,gamma_change_save) 
+
 end
 logit(1);

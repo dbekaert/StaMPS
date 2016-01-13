@@ -4,6 +4,8 @@ function []=ps_load_initial_gamma(endian)
 %   Andy Hooper, Dec 2012
 %
 %   =======================================================================
+%   01/2016 DB: Replace save with stamps_save which checks for var size when
+%               saving 
 %   =======================================================================
   
 
@@ -173,24 +175,30 @@ bperp_mat=bperp_mat(sort_ix,:);
 
 savename=['ps',num2str(psver)];
 
-save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','n_ifg','n_image','n_ps','sort_ix','ll0','master_ix','mean_incidence','mean_range');
+% save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','n_ifg','n_image','n_ps','sort_ix','ll0','master_ix','mean_incidence','mean_range');
+stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,n_ifg,n_image,n_ps,sort_ix,ll0,master_ix,mean_incidence,mean_range);
+
 save psver psver
 
 phsavename=['ph',num2str(psver)];
-save(phsavename,'ph');
+%save(phsavename,'ph');
+stamps_save(phsavename,ph);
 
 bpsavename=['bp',num2str(psver)];
-save(bpsavename,'bperp_mat');
+% save(bpsavename,'bperp_mat');
+stamps_save(bpsavename,bperp_mat);
 
 lasavename=['la',num2str(psver)];
 la=look(sort_ix);
-save(lasavename,'la');
+% save(lasavename,'la');
+stamps_save(lasavename,la);
 
 if exist(daname,'file')
   D_A=load(daname);
   D_A=D_A(sort_ix);
   dasavename=['da',num2str(psver)];
-  save(dasavename,'D_A');
+%  save(dasavename,'D_A');
+  stamps_save(dasavename,D_A);
 end
 
 if exist(hgtname,'file')
@@ -200,7 +208,8 @@ if exist(hgtname,'file')
     hgt=hgt(sort_ix);
     fclose(fid);
     hgtsavename=['hgt',num2str(psver)];
-    save(hgtsavename,'hgt');
+%    save(hgtsavename,'hgt');
+    stamps_save(hgtsavename,hgt);
 end
 
 
