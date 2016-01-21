@@ -5,25 +5,18 @@
 # Andy Hooper, September 2015
 #
 # ===========================================================================
-# Expected directory structure:
+# Expected files in specified data directory:
 # PS:
-#   rslc/*.rslc
-#   rslc/*.rslc.par
-#   diff0/*.diff
-#   diff0/*.base
-#   geo/*dem.rdc
-#   geo/*diff_par
-#   dem/*_seg.par
+#   insar_*.gsar (one for each interferogram)
+#   insar_*.gsar.xml (one for each interferogram)
+#   longitude.gsar
+#   longitude.gsar.xml
+#   latitude.gsar
+#   height.gsar
+#   incangle.gsar
+#   mean_amplitude.gsar
 #
-# SB:
-#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/YYYYMMDD.rslc (master)
-#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/YYYYMMDD.rslc (slave)
-#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.rslc.par
-#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.diff
-#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.base
-#   geo/*dem.rdc
-#   geo/*diff_par
-#   dem/*_seg.par
+# SB: not yet implemented
 #
 # A new directory is created in the current directory called INSAR_YYYYMMDD
 #   
@@ -105,7 +98,7 @@ echo $RSC
 else
     set SB_FLAG=0
 endif
-set RSC = $datadir/latitude.gsar.xml
+set RSC = $datadir/longitude.gsar.xml
 
 if ($#argv > 2) then
     set da_thresh = $argv[3]
@@ -123,7 +116,7 @@ echo " "
 set length   = `gawk 'BEGIN {FS=">"} /<ysize/ {print $2; exit}' < $RSC | gawk 'BEGIN {FS="<"} {print $1}'`
 set width   = `gawk 'BEGIN {FS=">"} /<xsize/ {print $2; exit}' < $RSC | gawk 'BEGIN {FS="<"} {print $1}'`
 
-echo "gamma" > processor.txt
+echo "gsar" > processor.txt
 if ($SB_FLAG == 1) then
     matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/sb_parms_initial.m > sb_parms_initial.log
 else
@@ -218,13 +211,21 @@ echo $width > psclon.in
 echo $datadir/longitude.gsar >> psclon.in
 
 echo $width > psclat.in
-echo $datadir/longitude.gsar >> psclat.in
+echo $datadir/latitude.gsar >> psclat.in
 
 echo $width > pscdem.in
-\ls $datadir/height.gsar >> pscdem.in
+echo $datadir/height.gsar >> pscdem.in
+
+echo $width > pscinc.in
+echo $datadir/incangle.gsar >> pscinc.in
+
+echo $width > pscsquint.in
+echo $datadir/squintangle.gsar >> pscsquint.in
+
+\ls $datadir/coreg*$master*.gsar > masteramp.in
 
 
 
 #\ls -d PATCH_* > patch.list
-mt_extract_cands_gsar f d d d f 0 $maskfile
+mt_extract_cands_gsar f f d d d d d 0 $maskfile
 

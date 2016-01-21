@@ -58,6 +58,16 @@ int cshortswap( complex<short>* f )
   f[0]=f2;
 }
 
+int shortswap( short* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  short f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[1];
+  b2[1] = b[0];
+  f[0]=f2;
+}
+
 int cfloatswap( complex<float>* f )
 {
   char* b = reinterpret_cast<char*>(f);
@@ -73,6 +83,19 @@ int cfloatswap( complex<float>* f )
   b2[7] = b[4];
   f[0]=f2;
 }
+
+int floatswap( float* f )
+{
+  char* b = reinterpret_cast<char*>(f);
+  float f2;
+  char* b2 = reinterpret_cast<char*>(&f2);
+  b2[0] = b[3];
+  b2[1] = b[2];
+  b2[2] = b[1];
+  b2[3] = b[0];
+  f[0]=f2;
+}
+
 int longswap( int32_t* f )
 {
   char* b = reinterpret_cast<char*>(f);
@@ -104,6 +127,7 @@ try {
      cout << "  precision(input) s or f (default)" << endl;
      cout << "  byteswap   (input) 1 for to swap bytes, 0 otherwise (default)" << endl;
      cout << "  maskfile   (input)  mask rows and columns (optional)" << endl;
+     cout << "  master amplitude (input) in case files in parmfile are ifgs not SLCs (optional)" << endl;
      throw "";
   }   
      
@@ -156,7 +180,27 @@ try {
   else maskfilename = argv[8];   
 
 
+  char masterampfilename[256]="0000";
+  char masteramp_exists = 0;
+  if (argc < 10) 
+  {
+  }
+  { 
+      ifstream masterparmfile (argv[9], ios::in);
+      if (! masterparmfile.is_open()) 
+      {	  
+          cout << "Error opening file " << argv[9] << "\n"; 
+          throw "";
+      }    
+      masterparmfile >> masterampfilename;
+  }
      
+  ifstream masterampfile (masterampfilename, ios::in);
+  if (masterampfile.is_open()) 
+  {	  
+      masteramp_exists=1;
+      cout << "opening " << masterampfilename << "...\n";
+  }    
      
   ifstream parmfile (argv[1], ios::in);
   if (! parmfile.is_open()) 
@@ -250,6 +294,7 @@ try {
 
   const int linebytes = width*sizeofelement*2;  // bytes per line in amplitude files (SLCs)
   const int patch_linebytes =  patch_width*sizeofelement*2;
+  const int patch_amp_linebytes =  patch_width*sizeofelement;
 
   filebuf *pbuf;
   long size;
@@ -275,6 +320,8 @@ try {
       mask_exists=1;
       cout << "opening " << maskfilename << "...\n";
   }    
+
+  
   
   ofstream ijfile(ijname,ios::out);
   ofstream jifile(jiname,ios::out);
@@ -292,6 +339,21 @@ try {
   for (register int x=0; x<patch_width; x++) // for each pixel in range
   {
       maskline[x] = 0;
+  }
+
+  char* masterampline = new char[patch_linebytes]; // used to store 1 line of all amp files
+  complex<float>* masterlinef = reinterpret_cast<complex<float>*>(masterampline); 
+  complex<short>* masterlines = reinterpret_cast<complex<short>*>(masterampline);
+  for (register int x=0; x<patch_width; x++) // for each pixel in range
+  {
+      if (prec[0]=='s')
+      {
+          masterlines[x] = 1;
+      }
+      else
+      {
+          masterlinef[x] = 1;
+      }
   }
 
   //int linebytes = width*8;                      // bytes per line in amplitude files
@@ -318,8 +380,14 @@ try {
   {
       //maskfile.read (maskline, width);
       maskfile.seekg (pix_start, ios::beg);      // set pointer to start of patch in mask file
-      maskfile.read (maskline, patch_width); // read from pointer nr_pixels*8 bytes
+      maskfile.read (maskline, patch_width); // read from pointer nr_pixels
   }    
+  if (masteramp_exists==1) 
+  {
+      masterampfile.seekg (pos_start, ios::beg);      // set pointer to start of patch in mask file
+      masterampfile.read (&masterampline[0], patch_linebytes); // read from pointer nr_pixels
+  }    
+     
      
   while (! ampfile[1].eof() && y < patch_lines) 
   {
@@ -331,9 +399,33 @@ try {
         register float sumamp = 0;
         register float sumampsq = 0;
         int amp_0 =0;
+
+        complex<float> master_amp; //  master amp value
+        if (prec[0]=='s')
+        {
+            if (byteswap == 1)
+            {
+               cshortswap(&masterlines[x]);
+            }
+            master_amp=masterlines[x];
+        }
+        else
+        {
+            master_amp=masterlinef[x]; // get amp value
+            if (byteswap == 1)
+            {
+               cfloatswap(&master_amp);
+            }
+        }
+        //cout << "master_amp: " << abs(master_amp) << endl;
+        if (abs(master_amp)==0)
+        {
+            master_amp=1;
+        }
+
         for (register int i=0; i<num_files; i++)        // for each amp file
 	   {
-           complex<float> camp; // get amp value
+           complex<float> camp; //  amp value
            //float amp=abs(buffer[i*width+x])/calib_factor[i]; // get amp value
            if (prec[0]=='s')
            {
@@ -352,7 +444,10 @@ try {
                }
            }
 
-           register float amp=abs(camp)/calib_factor[i]; // get amp value
+           //cout << "camp: " << abs(camp) << " calib " << calib_factor[i] << " master " << abs(master_amp) << endl ;
+         
+           register float amp=abs(camp)/calib_factor[i]/abs(master_amp); // get amp value
+           //cout << "amp: " << amp << endl ;
            if (amp <=0.00005) // do not use amp = 0 values for calculating the AD and set flag to 1
            {
             amp_0=1;
@@ -414,8 +509,17 @@ try {
         ampfile[i].seekg (linebytes-patch_linebytes, ios::cur);  // [MA]
         ampfile[i].read (&buffer[i*patch_linebytes], patch_linebytes);
      } 
+     if (mask_exists==1) 
+     {
      maskfile.seekg (width-patch_width, ios::cur);  // [MA]
      maskfile.read (maskline, patch_width);
+     }
+     if (masteramp_exists==1) 
+     {
+         masterampfile.seekg (linebytes-patch_linebytes, ios::cur);  // 
+         masterampfile.read (&masterampline[0], patch_linebytes); // read from pointer nr_pixels
+     }    
+     
      
      if (y/100.0 == rint(y/100.0))
         cout << y << " lines processed\n";
@@ -431,6 +535,10 @@ try {
   if (mask_exists==1) 
   {	  
       maskfile.close();
+  }    
+  if (masteramp_exists==1) 
+  {	  
+      masterampfile.close();
   }    
   }
   catch( char * str ) {
