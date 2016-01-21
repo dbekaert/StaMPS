@@ -6,6 +6,7 @@ function []=ps_load_initial_gamma(endian)
 %   =======================================================================
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
+%   01/2016 AH: Save sensor
 %   =======================================================================
   
 
@@ -66,6 +67,16 @@ freq=readparm(rslcpar,'radar_frequency:');
 lambda=299792458/freq;
 setparm('lambda',lambda,1);
 
+sensor=readparm(rslcpar,'sensor:');
+if ~isempty(strfind('sensor','ASAR'))
+    platform='ENVISAT';
+else
+    platform=sensor; % S1A for Sentinel-1A
+end
+setparm('platform',platform,1);
+
+
+
 ij=load(ijname);
 n_ps=size(ij,1);
 
@@ -77,12 +88,13 @@ rgc=readparm(rslcpar,'center_range_slc');
 naz=readparm(rslcpar,'azimuth_lines');
 prf=readparm(rslcpar,'prf');
 
+
 mean_az=naz/2-0.5; % mean azimuth line
 
 rg=rgn+ij(:,3)*rps;
 look=acos((se^2+rg.^2-re^2)./(2*se*rg)); % Satellite look angles
 
-bperp_mat=zeros(n_ps,n_image);
+bperp_mat=zeros(n_ps,n_image,'single');
 for i=1:n_ifg
     basename=[ifgs{i}(1:nb-4),'base'];
     B_TCN=readparm(basename,'initial_baseline(TCN):',3);

@@ -37,6 +37,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   04/2015 DB: Bugfix of the colorbar when memory is not cleared properly.
 %               harcoded deflation and inflation using jet, rather than
 %               colormap options
+%   12/2015 AH: Speed up plotting when 1 pixel per PS 
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -449,20 +450,50 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     
     demx=round((lonlat(:,1)-x(1))/x_posting)+1;
     demy=round((lonlat(:,2)-y(1))/y_posting)+1;
-
-    R=zeros(size(X));
+    
+    [~,uix]=unique([demy,demx],'rows');
+    
+    demx=demx(uix);
+    demy=demy(uix);
+    in_ph=in_ph(uix);
+    col_ix=col_ix(uix);
+    
     
     pixel_margin1=floor((plot_pixel_size-1)/2);
     pixel_margin2=ceil((plot_pixel_size-1)/2);
     
+    ix1b=demy-pixel_margin1;
+    ix1b(ix1b<1)=1;
+    ix1e=demy+pixel_margin2;
+    ix1e(ix1e<size(X,1))=size(X,1);
+    ix2b=demx-pixel_margin1;
+    ix2b(ix2b<1)=1;
+    ix2e=demx+pixel_margin2;
+    ix2e(ix2e<size(X,2))=size(X,2);
+
+    R=zeros(size(X));
+    
+    
+    nnix=~isnan(col_ix);
+    in_ph=in_ph(nnix);
+    demy=demy(nnix);
+    demx=demx(nnix);
+    if plot_pixel_size==1
+   	  for i=1 : length(in_ph)
+          R(demy(i),demx(i))=col_ix(i)+1;
+      end
+    else
+    
    	for i=1 : length(in_ph)
-        if ~(isnan(col_ix(i)))
-            ix1=demy(i)-pixel_margin1:demy(i)+pixel_margin2;
-            ix2=demx(i)-pixel_margin1:demx(i)+pixel_margin2;
-            ix1=ix1(ix1>0&ix1<=size(X,1));
-            ix2=ix2(ix2>0&ix2<=size(X,2));
-            R(ix1,ix2)=col_ix(i)+1;
-        end
+%        if ~(isnan(col_ix(i)))
+%             ix1=demy(i)-pixel_margin1:demy(i)+pixel_margin2;
+%             ix2=demx(i)-pixel_margin1:demx(i)+pixel_margin2;
+%             ix1=ix1(ix1>0&ix1<=size(X,1));
+%             ix2=ix2(ix2>0&ix2<=size(X,2));
+%             R(ix1,ix2)=col_ix(i)+1;
+              R(ix1b(i):ix1e(i),ix2b(i):ix2e(i))=col_ix(i)+1;
+%        end
+    end
     end
     
     dem_length=size(R,1);
