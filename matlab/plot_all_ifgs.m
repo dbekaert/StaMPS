@@ -53,8 +53,22 @@ ifgstack=[];
 ifgname=[];
 ifgname2=[];
 
-aa=dir;
-for i=1:size(aa,1)
+if strcmpi(getparm('insar_processor'),'gsar')
+    pscname='pscphase.in';
+    fid=fopen(pscname);
+    ifgs=textscan(fid,'%s');
+    fclose(fid);
+    ifgs=ifgs{1}(2:end);
+    for i=1:length(ifgs)
+        ras=dir([ifgs{i},'.*l.ras']);
+        splitras=strsplit(ras.name,'.');
+        [ifg,cc]=imread([ifgs{i},'.',splitras{end-1},'.',splitras{end}]);
+        ifgstack(:,:,i)=ifg;
+        ifgname(i)=str2num(ifgs{i}(end-35:end-28));
+    end
+else
+  aa=dir;
+  for i=1:size(aa,1)
     if aa(i).isdir==1 && strncmp(aa(i).name,'.',1)~=1
         dirname=aa(i).name;
         %if ~strncmp(aa(i).name,'1992',4) & ~strncmp(aa(i).name,'1993',4)
@@ -71,6 +85,7 @@ for i=1:size(aa,1)
         cd ..
         %end
     end
+  end
 end
 
 bb=dir('*crop.slc');

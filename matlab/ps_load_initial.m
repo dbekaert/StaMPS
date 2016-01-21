@@ -24,7 +24,7 @@ function []=ps_load_initial()
 
 %NB IFGS assumed in ascending date order
 logit;
-fprintf('Loading data into matlab...\n')
+logit('Loading data into matlab...')
 
 phname=['pscands.1.ph'];            % for each PS candidate, a float complex value for each ifg
 ijname=['pscands.1.ij'];            % ID# Azimuth# Range# 1 line per PS candidate

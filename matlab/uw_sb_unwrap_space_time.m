@@ -44,9 +44,9 @@ master_ix=find(day==0);
 
 day_pos_ix=find(day>0);
 [tempdummy,I]=min(day(day_pos_ix));
-dph_space=((uw.ph(ui.edges(:,3),:).*conj(uw.ph(ui.edges(:,2),:))));
+dph_space=((uw.ph(ui.edgs(:,3),:).*conj(uw.ph(ui.edgs(:,2),:))));
 if predef_flag=='y'
-    dph_space_uw=uw.ph_uw_predef(ui.edges(:,3),:)-uw.ph_uw_predef(ui.edges(:,2),:);
+    dph_space_uw=uw.ph_uw_predef(ui.edgs(:,3),:)-uw.ph_uw_predef(ui.edgs(:,2),:);
     predef_ix=~isnan(dph_space_uw);
     dph_space_uw=dph_space_uw(predef_ix);
 else
@@ -373,7 +373,7 @@ else
           uw=load('uw_grid');
           ph_noise=angle(uw.ph.*conj(uw.ph_lowpass));
           clear uw
-          dph_noise_sf=((ph_noise(ui.edges(:,3),:)-(ph_noise(ui.edges(:,2),:))));      
+          dph_noise_sf=((ph_noise(ui.edgs(:,3),:)-(ph_noise(ui.edgs(:,2),:))));      
           m_minmax=repmat([-pi,pi],5,1).*repmat([0.5;0.25;1;0.25;1],1,2);
           anneal_opts=[1;15;0;0;0;0;0];
           covm=cov((dph_noise_sf)); % estimate of covariance
@@ -436,7 +436,7 @@ else
        
         fprintf('   Smoothing using local phase gradients (elapsed time=%ds)\n',round(toc))
         for i=1:ui.n_edge
-            nodes_ix=ui.edges(i,[2:3]);
+            nodes_ix=ui.edgs(i,[2:3]);
             ifreq_edge=mean(ifreq_ij(nodes_ix,:));
             jfreq_edge=mean(jfreq_ij(nodes_ix,:));
             diff_i=diff(ij(nodes_ix,1));

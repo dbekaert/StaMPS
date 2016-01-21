@@ -16,7 +16,7 @@ end
 
 %NB IFGS assumed in ascending date order
 logit;
-fprintf('Loading data into matlab...\n')
+logit('Loading data into matlab...')
 
 phname=['./pscands.1.ph']; % for each PS candidate, a float complex value for each ifg
 ijname=['./pscands.1.ij']; % ID# Azimuth# Range# 1 line per PS candidate
@@ -41,7 +41,7 @@ ifgs=ifgs{1}(2:end);
 nb=length(ifgs{1});
 master_day=str2num(ifgs{1}(nb-21:nb-14));
 n_ifg=length(ifgs);
-n_image=n_ifg-1;
+n_image=n_ifg;
 day=zeros(n_ifg,1);
 for i=1:n_ifg
     day(i)=str2num(ifgs{i}(nb-12:nb-5));
@@ -201,7 +201,7 @@ bpsavename=['bp',num2str(psver)];
 stamps_save(bpsavename,bperp_mat);
 
 lasavename=['la',num2str(psver)];
-la=look(sort_ix);
+la=inci(sort_ix); % store incidence not look angle for gamma
 % save(lasavename,'la');
 stamps_save(lasavename,la);
 

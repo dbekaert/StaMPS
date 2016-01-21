@@ -44,6 +44,7 @@ patchdir(i+1).name='.';
 currdir=pwd;
 
 for i=1:length(patchdir)
+  if ~isempty(patchdir(i).name)
     cd(patchdir(i).name)
     logit([pwd,' reset'])
 
@@ -68,7 +69,7 @@ for i=1:length(patchdir)
     end
 
     cd(currdir)
-
+  end
 end
 logit(1);
 

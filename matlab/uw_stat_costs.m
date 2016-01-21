@@ -59,7 +59,7 @@ grid_edges=[colix(abs(colix)>0);rowix(abs(rowix)>0)];
 n_edges=hist(abs(grid_edges),[1:ui.n_edge])';
 
 if strcmpi(unwrap_method,'2D')
-    edge_length=sqrt(diff(x(ui.edges(:,2:3)),[],2).^2+diff(y(ui.edges(:,2:3)),[],2).^2);
+    edge_length=sqrt(diff(x(ui.edgs(:,2:3)),[],2).^2+diff(y(ui.edgs(:,2:3)),[],2).^2);
     %sigsq_noise=ones(ui.n_edge,1);
     if uw.pix_size==0
         pix_size=5;  % if we don't know resolution
@@ -69,7 +69,7 @@ if strcmpi(unwrap_method,'2D')
     if isempty(variance)
         sigsq_noise=zeros(size(edge_length));
     else
-        sigsq_noise=variance(ui.edges(:,2))+variance(ui.edges(:,3));
+        sigsq_noise=variance(ui.edgs(:,2))+variance(ui.edgs(:,3));
     end
     sigsq_aps=(2*pi)^2; % fixed for now as one fringe
     aps_range=20000; % fixed for now as 20 km

@@ -36,7 +36,9 @@ function [oscilatior_corr_ifgs,oscilatior_corr_velocity] = env_oscilator_corr(en
 
 
 if nargin<1 || isempty(envisat_flag)
-    % checking if this is envisat or not
+  % checking if this is envisat or not
+  platform=getparm('platform');
+  if isempty(platform)
     if exist('master.res','file')==2
         master_file = 'master.res';
     elseif exist('../master.res','file')==2
@@ -51,15 +53,19 @@ if nargin<1 || isempty(envisat_flag)
         a = fileread(master_file);
         ix = strfind(a,'ASAR');
        if ~isempty(ix)
-           envisat_flag = 'y';
-           fprintf('This is Envisat, oscilator drift is being removed... \n')
-       else
-            envisat_flag = 'n';
+           platform='ENVISAT';
        end
     else
+        fprintf('Could not check if this is Envisat \n')
+    end
+  end
+  if strcmpi(platform,'ENVISAT')
+      envisat_flag = 'y';
+      fprintf('This is Envisat, oscilator drift is being removed... \n')
+  else
        envisat_flag = 'n';
-       fprintf('Could not check if this is Envisat \n')
-   end
+  end
+
 end
 
 small_baseline_flag = getparm('small_baseline_flag');

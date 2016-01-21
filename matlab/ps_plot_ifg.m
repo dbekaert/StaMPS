@@ -37,6 +37,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   04/2015 DB: Bugfix of the colorbar when memory is not cleared properly.
 %               harcoded deflation and inflation using jet, rather than
 %               colormap options
+%   09/2015 AH: Don't plot dropped patches on sides in amplitude plots
 %   12/2015 AH: Speed up plotting when 1 pixel per PS 
 %   ======================================================================
 
@@ -201,7 +202,6 @@ if bg_flag==4 % plot on amplitude image
     [n,m]=size(amp_mean);
     c=[gray(256);c];
 
-    az_ix=pixel_aspect_ratio:pixel_aspect_ratio:m*pixel_aspect_ratio;
     plot_pixel_size=round(abs(plot_pixel_m/mean_x_post));
     
     pixel_margin1=floor((plot_pixel_size-1)/2);
@@ -217,6 +217,14 @@ if bg_flag==4 % plot on amplitude image
         end
     end
    
+    ix=sum(amp_mean)~=0; % dropped patches
+    amp_mean=amp_mean(:,ix);
+    m=sum(ix);
+    ix=sum(amp_mean,2)~=0; % dropped patches
+    amp_mean=amp_mean(ix,:);
+    
+    az_ix=pixel_aspect_ratio:pixel_aspect_ratio:m*pixel_aspect_ratio;
+    
     if cos(heading*pi/180)<0 
         amp_mean=flipud(fliplr(amp_mean));
     end 
@@ -263,7 +271,6 @@ elseif bg_flag==5 % plot on amplitude image, let amp show through color
     cd=ci;
     [n,m]=size(cd);
 
-    az_ix=pixel_aspect_ratio:pixel_aspect_ratio:m*pixel_aspect_ratio;
     plot_pixel_size=round(abs(plot_pixel_m/mean_x_post));
     
     pixel_margin1=floor((plot_pixel_size-1)/2);
@@ -282,6 +289,15 @@ elseif bg_flag==5 % plot on amplitude image, let amp show through color
     %if abs(heading)>90 
     %    amp_mean=flipud(fliplr(cd));
     %end 
+    
+    ix=sum(cd)~=0; % dropped patches
+    cd=cd(:,ix);
+    m=sum(ix);
+    ix=sum(cd,2)~=0; % dropped patches
+    cd=cd(ix,:);
+    
+    az_ix=pixel_aspect_ratio:pixel_aspect_ratio:m*pixel_aspect_ratio;
+   
     if cos(heading*pi/180)<0 
         cd=flipud(fliplr(cd));
     end 

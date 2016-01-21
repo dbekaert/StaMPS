@@ -24,7 +24,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   stamps operates on them all.
 %
 %   Andy Hooper, June 2006
-%
+
 %   =================================================================
 %   07/2006 AH: END_STEP added
 %   09/2006 AH: ps_load removed (obsolete)
@@ -40,6 +40,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   09/2015 DB: Check if patches do have PS before proceeding with
 %               processing.
 %   09/2015 DB: Fix when running stamps in a patch folder mode when no PS are left
+%   09/2015 AH: allow for non-differentiation of caps by dir
 %   01/2016 DB: include stamps_save in step 1-4.
 %   =================================================================
 
@@ -48,10 +49,15 @@ fillstr=[repmat('#',1,nfill),'\n'];
 skipstr='\n';
 msgstr=fillstr;
 
-msgstr(round(nfill)/2-11:round(nfill/2)+12)=' StaMPS/MTI Version 3.3 ';
-fprintf([skipstr,fillstr,msgstr]);
-msgstr(round(nfill)/2-11:round(nfill/2)+12)=' Beta version, Sep 2013 ';
-fprintf([msgstr,fillstr,skipstr]);
+fprintf(skipstr);
+logit(fillstr);
+msgstr(round(nfill)/2-12:round(nfill/2)+13)=' StaMPS/MTI Version 4.0b2 ';
+logit(msgstr);
+msgstr(round(nfill)/2-12:round(nfill/2)+13)='  Beta version, Jan 2016  ';
+logit(msgstr);
+logit(fillstr);
+fprintf(skipstr);
+
 
 
 quick_est_gamma_flag=getparm('quick_est_gamma_flag');
@@ -117,7 +123,8 @@ if strcmpi(patches_flag,'y')
             end
         end
     else
-        patchdir=dir('PATCH*');
+        patchdir=dir('PATCH_*');
+        patchdir = patchdir(find(~cellfun(@(x) strcmpi(x,'patch_noover.in'),{patchdir(:).name})));
     end
     if isempty(patchdir)
         patches_flag='n';
@@ -129,9 +136,9 @@ end
 
 if ~strcmpi(patches_flag,'y')
     patchdir(1).name='.';
-    fprintf('Processing current directory only...\n')
+    logit('Will process current directory only')
 else
-    fprintf('Processing patch directories...\n')
+    logit('Will process patch subdirectories')
 end
 
 currdir=pwd;
@@ -143,33 +150,52 @@ msgstr=fillstr;
 
 % limit the processing to step 1-5a
 if strcmpi(stamps_PART1_flag,'y')
-    for i=1:length(patchdir)
-        cd(patchdir(i).name)
-        logit(sprintf('\nProcessing PATCH %s',pwd))
+  for i=1:length(patchdir)
+    if ~isempty(patchdir(i).name)
+      cd(patchdir(i).name)
+      patchsplit=strsplit(pwd,'/');
+      %fprintf(skipstr);
+      %logit(sprintf('Processing %s',patchsplit{end}))
+    
+      if start_step==1
+        msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 1 ';
+        fprintf(skipstr);
+        logit(fillstr);
+        logit(msgstr);
+        logit(fillstr)
+        logit(['Directory is ',patchsplit{end}])
+        fprintf(skipstr);
 
-        if start_step==1
-            msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 1 ';
-            fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
-            if strcmpi(small_baseline_flag,'y')
-                if strcmpi(insar_processor,'gamma')
-                    sb_load_initial_gamma;
-                else
-                    sb_load_initial;
-                end
+        if strcmpi(small_baseline_flag,'y')
+            if strcmpi(insar_processor,'gamma')
+                sb_load_initial_gamma;
+            elseif strcmpi(insar_processor,'gsar')
+                sb_load_initial_gsar;
             else
-                if strcmpi(insar_processor,'gamma')
-                    ps_load_initial_gamma;
-                else
-                    ps_load_initial;
-                end
+                sb_load_initial;
             end
+        else
+            if strcmpi(insar_processor,'gamma')
+                ps_load_initial_gamma;
+            elseif strcmpi(insar_processor,'gsar')
+                ps_load_initial_gsar;
+            else
+                ps_load_initial;
+            end
+        end
         elseif start_step <=4
             setpsver(1)
         end
 
         if start_step<=2 & end_step >=2 
-            msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 2 ';
-            fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
+            msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 2 ';
+            fprintf(skipstr);
+            logit(fillstr);
+            logit(msgstr);
+            logit(fillstr)
+            logit(['Directory is ',patchsplit{end}])
+            fprintf(skipstr);
+
             if strcmpi(quick_est_gamma_flag,'y')
                 ps_est_gamma_quick(est_gamma_parm);
             else
@@ -178,8 +204,14 @@ if strcmpi(stamps_PART1_flag,'y')
         end
 
         if start_step<=3 & end_step >=3 
-            msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 3 ';
-            fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
+            msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 3 ';
+            fprintf(skipstr);
+            logit(fillstr);
+            logit(msgstr);
+            logit(fillstr)
+            logit(['Directory is ',patchsplit{end}])
+            fprintf(skipstr);
+
             if strcmpi(quick_est_gamma_flag,'y')
                 ps_select;
             else
@@ -188,8 +220,13 @@ if strcmpi(stamps_PART1_flag,'y')
         end
 
         if start_step<=4 & end_step >=4 
-            msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 4 ';
-            fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
+            msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 4 ';
+            fprintf(skipstr);
+            logit(fillstr);
+            logit(msgstr);
+            logit(fillstr)
+            logit(['Directory is ',patchsplit{end}])
+            fprintf(skipstr);
 
             % check if step 3 had more than 0 PS points
             if exist('no_ps_info.mat','file')==2
@@ -214,8 +251,13 @@ if strcmpi(stamps_PART1_flag,'y')
         end
 
         if start_step<=5 & end_step >=5 
-            msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 5 ';
-            fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
+            msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 5 ';
+            fprintf(skipstr);
+            logit(fillstr);
+            logit(msgstr);
+            logit(fillstr)
+            logit(['Directory is ',patchsplit{end}])
+            fprintf(skipstr);
 
 
             % check if step 4 had more than 0 PS points
@@ -237,8 +279,11 @@ if strcmpi(stamps_PART1_flag,'y')
 
 
         cd(currdir)
+      end
     end
 end
+
+patchsplit=strsplit(pwd,'/');
 
 
 % check if one can process second part of step 5b and above
@@ -280,6 +325,9 @@ if strcmpi(stamps_PART2_flag,'y')
     if start_step<=5 & end_step >=5 
         abord_flag=0;
         if patches_flag=='y'
+            fprintf(skipstr);
+            logit(['Directory is ',patchsplit{end}])
+            fprintf(skipstr);
             ps_merge_patches
         else
             % this is processing of an individual patch
@@ -302,8 +350,14 @@ if strcmpi(stamps_PART2_flag,'y')
 
 
     if start_step<=6 & end_step >=6 
-        msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 6 ';
-        fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
+        msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 6 ';
+        fprintf(skipstr);
+        logit(fillstr);
+        logit(msgstr);
+        logit(fillstr)
+        logit(['Directory is ',patchsplit{end}])
+        fprintf(skipstr);
+
         ps_unwrap
         if strcmpi(small_baseline_flag,'y')
             sb_invert_uw
@@ -311,8 +365,14 @@ if strcmpi(stamps_PART2_flag,'y')
     end
 
     if start_step<=7 & end_step >=7 
-        msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 7 ';
-        fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
+        msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 7 ';
+        fprintf(skipstr);
+        logit(fillstr);
+        logit(msgstr);
+        logit(fillstr)
+        logit(['Directory is ',patchsplit{end}])
+        fprintf(skipstr);
+
         if strcmpi(small_baseline_flag,'y')
             ps_calc_scla(1,1)   % small baselines
             ps_smooth_scla(1)
@@ -324,8 +384,14 @@ if strcmpi(stamps_PART2_flag,'y')
     end
 
     if start_step<=8 & end_step >=8
-        msgstr(round(nfill)/2-7:round(nfill/2)+7)=' StaMPS Step 8 ';
-        fprintf([skipstr,fillstr,msgstr,fillstr,skipstr]);
+        msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 8 ';
+        fprintf(skipstr);
+        logit(fillstr);
+        logit(msgstr);
+        logit(fillstr)
+        logit(['Directory is ',patchsplit{end}])
+        fprintf(skipstr);
+
         if strcmpi(scn_kriging_flag,'y')
             ps_scn_filt_krig
         else
@@ -334,3 +400,4 @@ if strcmpi(stamps_PART2_flag,'y')
     end
 end
 
+logit(1);

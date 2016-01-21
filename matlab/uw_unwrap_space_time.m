@@ -51,7 +51,7 @@ if close_master_ix>1
     close_master_ix=[close_master_ix-1;close_master_ix];
 end
 
-dph_space=(uw.ph(ui.edges(:,3),:).*conj(uw.ph(ui.edges(:,2),:)));
+dph_space=(uw.ph(ui.edgs(:,3),:).*conj(uw.ph(ui.edgs(:,2),:)));
 ifreq_ij=[];
 jfreq_ij=[];
 
@@ -229,7 +229,7 @@ else
         spread2=zeros(size(spread),'single');
 
         for i=1:ui.n_edge
-            nodes_ix=ui.edges(i,[2:3]);
+            nodes_ix=ui.edgs(i,[2:3]);
             ifreq_edge=mean(ifreq_ij(nodes_ix,:));
             jfreq_edge=mean(jfreq_ij(nodes_ix,:));
             spread2(i,:)=diff(ifreq_ij(nodes_ix,:))+diff(jfreq_ij(nodes_ix,:));

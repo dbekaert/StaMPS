@@ -32,6 +32,8 @@ function ps_parms_default()
 %   02/2014 AH: add unwrap_hold_good_values
 %   08/2014 DB: explicit search if there is not a processor.txt file 
 %   05/2015 AH: add gamma_max_iterations 
+%   09/2015 AH: change default weed_neighbours = 'n' 
+%   09/2015 AH: change default max_topo_err = 20 
 %   ======================================================================
 
 
@@ -53,7 +55,7 @@ parmfields_before=fieldnames(parms);
 num_fields=size(parmfields_before,1);
 
 if ~isfield(parms,'max_topo_err')
-    parms.max_topo_err=5;
+    parms.max_topo_err=20;
 end
 
 if ~isfield(parms,'quick_est_gamma_flag')
@@ -145,7 +147,7 @@ if ~isfield(parms,'weed_zero_elevation')
 end
 
 if ~isfield(parms,'weed_neighbours')
-    parms.weed_neighbours='y';
+    parms.weed_neighbours='n';
 end
 
 if ~isfield(parms,'unwrap_method')

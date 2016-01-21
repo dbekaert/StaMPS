@@ -40,6 +40,7 @@ clap_beta=getparm('clap_beta',1);
 max_topo_err=getparm('max_topo_err',1);
 lambda=getparm('lambda',1);
 gamma_change_convergence=getparm('gamma_change_convergence',1);
+gamma_max_iterations=getparm('gamma_max_iterations',1);
 small_baseline_flag=getparm('small_baseline_flag',1);
 
 if strcmpi(small_baseline_flag,'y')

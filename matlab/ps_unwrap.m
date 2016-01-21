@@ -171,22 +171,30 @@ options.scf_flag=getparm('unwrap_spatial_cost_func_flag',1);
 
 max_topo_err=getparm('max_topo_err',1);
 lambda=getparm('lambda',1);
+
+
 %%% ===============================================
 %%% The code below needs to be made sensor specific
 %%% ===============================================
 rho = 830000; % mean range - need only be approximately correct
-laname=['./la',num2str(psver),'.mat'];
-if exist(laname,'file')
-    la=load(laname);
-    inc_mean=mean(la.la)+0.052; % incidence angle approx equals look angle + 3 deg
-    clear la
+if isfield(ps,'mean_incidence')
+    inc_mean=ps.mean_incidence;
 else
-    inc_mean=21*pi/180; % guess the incidence angle
+    laname=['./la',num2str(psver),'.mat'];
+    if exist(laname,'file')
+        la=load(laname);
+        inc_mean=mean(la.la)+0.052; % incidence angle approx equals look angle + 3 deg
+        clear la
+    else
+        inc_mean=21*pi/180; % guess the incidence angle
+    end
 end
 max_K=max_topo_err/(lambda*rho*sin(inc_mean)/4/pi);
 %%% ===============================================
 %%% The code above needs to be made sensor specific
 %%% ===============================================
+
+
 
 bperp_range=max(ps.bperp)-min(ps.bperp);
 options.n_trial_wraps=(bperp_range*max_K/(2*pi));
@@ -212,12 +220,22 @@ if unwrap_hold_good_values=='y'
     options.ph_uw_predef=options.ph_uw_predef(:,unwrap_ifg_index);
 end
 
-[ph_uw_some,msd_some]=uw_3d(ph_w(:,unwrap_ifg_index),ps.xy,day,ifgday_ix(unwrap_ifg_index,:),ps.bperp(unwrap_ifg_index),options);
+arch=computer('arch');
+if ~strcmpi(arch(1:3),'win')
+    [ph_uw_some,msd_some]=uw_3d(ph_w(:,unwrap_ifg_index),ps.xy,day,ifgday_ix(unwrap_ifg_index,:),ps.bperp(unwrap_ifg_index),options);
+else
+    logit('Windows detected: using old unwrapping code without statistical cost processing')
+    [ph_uw_some]=uw_nosnaphu(ph_w(:,unwrap_ifg_index),ps.xy,day,options);
+end
 
+
+    
 ph_uw=zeros(ps.n_ps,ps.n_ifg,'single');
 msd=zeros(ps.n_ifg,1,'single');
 ph_uw(:,unwrap_ifg_index)=ph_uw_some;
-msd(unwrap_ifg_index)=msd_some;
+if exist('msd_some','var')
+    msd(unwrap_ifg_index)=msd_some;
+end
 
 if scla_subtracted_sw & ~strcmpi(small_baseline_flag,'y')
     fprintf('Adding back SCLA and master AOE...\n')

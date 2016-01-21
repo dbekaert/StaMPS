@@ -17,6 +17,7 @@ function []=ps_merge_patches(psver)
 %   10/2010 DB: Fix when PS all rejected when sum weight<min_weight (resampling)
 %   06/2010 AH: Move mean amplitude merging to ps_load_mean_amp.m 
 %   02/2011 DB: Fix dimension for min computation of ps.xy 
+%   09/2015 AH: Delete previous merged amplitude files
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
@@ -85,6 +86,7 @@ hgt=zeros(0,0);
 amp=zeros(0,0,'single');
 
 for i=1:n_patch
+  if ~isempty(dirname(i).name)
     fprintf('   Processing %s\n',dirname(i).name)
     cd(dirname(i).name);
     ps=load(psname);
@@ -423,6 +425,7 @@ end
       end
     end
     cd ..
+  end
 end
 
 ps_new=ps;
@@ -607,5 +610,14 @@ save psver psver
 vars=who;
 vars=setxor(vars,{'n_patch';'dirname'});
 clear(vars{:})
+
+if exist('./mean_amp.flt','file')  
+    delete('./mean_amp.flt') 
+end
+
+if exist('./amp_mean.mat','file')  
+    delete('./amp_mean.mat') 
+end
+
 
 logit(1);

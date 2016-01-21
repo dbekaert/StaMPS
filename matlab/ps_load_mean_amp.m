@@ -53,6 +53,7 @@ if ~exist(ampname,'file')
   end
   n_patch=length(dirname);
   for i=1:n_patch
+   if ~isempty(dirname(i).name)
     cd(dirname(i).name);
     if exist('./mean_amp.flt','file')    
         pxy=load('patch.in');
@@ -61,6 +62,7 @@ if ~exist(ampname,'file')
         fclose(fid);
     end 
     cd ..
+   end
   end
 
   fid=fopen('./mean_amp.flt','w');

@@ -20,6 +20,7 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   12/2012 AH: weed very small heights if weed_zero_elevation='y'
 %   09/2015 DB: Clean the command line output, store number of PS left.
 %   09/2015 DB: Fix bug when no PS is left after weeding 0 elevation.
+%   09/2015 AH: use matlab triangulation if triangle program not installed
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
 %   ===================================================================
@@ -287,29 +288,48 @@ if n_ps~=0
     if no_weed_noisy==0
 
         step_name='DROP NOISY';
-        fprintf([step_name '\n'])
-
-        nodename=['psweed.1.node'];
-        fid=fopen(nodename,'w');
-        fprintf(fid,'%d 2 0 0\n',n_ps);
-
-        for i=1:n_ps
-            fprintf(fid,'%d %f %f\n',i,xy_weed(i,2),xy_weed(i,3));
+        arch=computer('arch');
+        if strcmpi(arch(1:3),'win')
+            use_triangle='n';
+        else
+            tripath=system('which triangle >& /dev/null');
+            if tripath==0
+                use_triangle='y';
+            else
+                use_triangle='n';
+            end  
         end
+        
+        if use_triangle=='y'
+            nodename=['psweed.1.node'];
+            fid=fopen(nodename,'w');
+            fprintf(fid,'%d 2 0 0\n',n_ps);
 
-        fclose(fid);
+            for i=1:n_ps
+                fprintf(fid,'%d %f %f\n',i,xy_weed(i,2),xy_weed(i,3));
+            end
 
-        !triangle -e psweed.1.node
+            fclose(fid);
+  
+            system('triangle -e psweed.1.node > triangle_weed.log');
 
-        fid=fopen('psweed.2.edge','r');
-        header=str2num(fgetl(fid));
-        N=header(1);
-        edges=zeros(N,4);
-        for i=1:N
-            edges(i,:)=str2num(fgetl(fid));
+            fid=fopen('psweed.2.edge','r');
+            header=str2num(fgetl(fid));
+            N=header(1);
+            edgs=zeros(N,4);
+            for i=1:N
+                edgs(i,:)=str2num(fgetl(fid));
+            end
+            fclose(fid);
+            edgs=edgs(:,2:3);
+        else
+            xy_weed=double(xy_weed);
+            tri=delaunay(xy_weed(:,2),xy_weed(:,3));
+            tr=triangulation(tri,xy_weed(:,2),xy_weed(:,3));
+            edgs=edges(tr);
         end
-        fclose(fid);
-        n_edge=size(edges,1);
+        n_edge=size(edgs,1);
+
         ph_weed=ph2(ix_weed,:).*exp(-j*(K_ps2(ix_weed)*bperp'));  % subtract range error 
         ph_weed=ph_weed./abs(ph_weed);
         if ~strcmpi(small_baseline_flag,'y')
@@ -317,7 +337,7 @@ if n_ps~=0
         end
         edge_std=zeros(n_edge,1);
         edge_max=zeros(n_edge,1);
-        dph_space=(ph_weed(edges(:,3),:).*conj(ph_weed(edges(:,2),:)));
+        dph_space=(ph_weed(edgs(:,2),:).*conj(ph_weed(edgs(:,1),:)));
         dph_space=dph_space(:,ifg_index);
         n_use=length(ifg_index);
         for i=1:length(drop_ifg_index)
@@ -370,8 +390,8 @@ if n_ps~=0
         ps_std=inf(n_ps,1,'single');
         ps_max=inf(n_ps,1,'single');
         for i=1:n_edge
-           ps_std(edges(i,2:3))=min([ps_std(edges(i,2:3)),[edge_std(i);edge_std(i)]],[],2);
-           ps_max(edges(i,2:3))=min([ps_max(edges(i,2:3)),[edge_max(i);edge_max(i)]],[],2);
+           ps_std(edgs(i,:))=min([ps_std(edgs(i,:)),[edge_std(i);edge_std(i)]],[],2);
+           ps_max(edgs(i,:))=min([ps_max(edgs(i,:)),[edge_max(i);edge_max(i)]],[],2);
         end
         ix_weed2=ps_std<weed_standard_dev&ps_max<weed_max_noise;
         ix_weed(ix_weed)=ix_weed2;

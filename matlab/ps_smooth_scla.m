@@ -7,6 +7,7 @@ function []=ps_smooth_scla(use_small_baselines)
 %   03/2009 AH: save in scla_smooth mat files
 %   06/2009 AH: orbital ramps added 
 %   01/2012 AH: Filtering strategy changed to just remove outliers
+%   09/2015 AH: use matlab triangulation if triangle program not installed
 %   ======================================================================
 %
 logit;
@@ -42,25 +43,47 @@ n_ifg=ps.n_ifg;
 
 logit(sprintf('Number of points per ifg: %d',n_ps))
 
-nodename=['scla.1.node'];
-fid=fopen(nodename,'w');
-fprintf(fid,'%d 2 0 0\n',n_ps);
-ps.xy(:,1)=1:n_ps;
-fprintf(fid,'%d %f %f\n',ps.xy');
-fclose(fid);
-
-!triangle -e scla.1.node
-
-fid=fopen('scla.2.edge','r');
-header=str2num(fgetl(fid));
-N=header(1);
-edges=zeros(N,4);
-edges=fscanf(fid,'%d %d %d %d\n',[4,N])';
-fclose(fid);
-n_edge=size(edges,1);
-if n_edge~=N
-    error('missing lines in scla.2.edge')
+arch=computer('arch');
+if strcmpi(arch(1:3),'win')
+    use_triangle='n';
+else
+    tripath=system('which triangle >& /dev/null');
+    if tripath==0
+        use_triangle='y';
+    else
+        use_triangle='n';
+    end  
 end
+    
+if use_triangle=='y'
+    nodename=['scla.1.node'];
+    fid=fopen(nodename,'w');
+    fprintf(fid,'%d 2 0 0\n',n_ps);
+    ps.xy(:,1)=1:n_ps;
+    fprintf(fid,'%d %f %f\n',ps.xy');
+    fclose(fid);
+
+    system('triangle -e scla.1.node > triangle_scla.log');
+
+    fid=fopen('scla.2.edge','r');
+    header=str2num(fgetl(fid));
+    N=header(1);
+    edgs=zeros(N,4);
+    edgs=fscanf(fid,'%d %d %d %d\n',[4,N])';
+    fclose(fid);
+    edgs=edgs(:,2:3);
+    n_edge=size(edgs,1);
+    if n_edge~=N
+        error('missing lines in scla.2.edge')
+    end
+else
+    xy=double(ps.xy);
+    tri=delaunay(xy(:,2),xy(:,3));
+    tr=triangulation(tri,xy(:,2),xy(:,3));
+    edgs=edges(tr);
+    n_edge=size(edgs,1);
+end
+
   
 logit(sprintf('Number of arcs per ifg=%d',n_edge))
 
@@ -70,7 +93,7 @@ Cneigh_min=inf(n_ps,1,'single');
 Cneigh_max=-inf(n_ps,1,'single');
 
 for i=1:n_edge % find min and max neighbour for each ps
-    ix=edges(i,2:3);
+    ix=edgs(i,1:2);
     Kneigh_min(ix)=min([Kneigh_min(ix),K_ps_uw(fliplr(ix))],[],2);
     Kneigh_max(ix)=max([Kneigh_max(ix),K_ps_uw(fliplr(ix))],[],2);
     Cneigh_min(ix)=min([Cneigh_min(ix),C_ps_uw(fliplr(ix))],[],2);
