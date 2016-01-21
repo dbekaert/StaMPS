@@ -45,14 +45,14 @@ goodERS(){
 goodENV(){
   [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
 
-  for f in $(ls -1d ${DATADIR}/*); do
+  for f in $(ls -1d ${DATADIR}/A*.N1); do
     echo info: $f
-    bname=$( basename ${f}/A*.N1 )
-    date=$( basename ${f}/A*.N1 | ${AWK} -F '_' '{print substr($3,7)}' )
+    bname=$( basename ${f} )
+    date=$( basename ${f} | ${AWK} -F '_' '{print substr($3,7)}' )
     cd $CWD/SLC
     mkdir ${date}
     cd  ${date}
-    ln -s ${f}/A*.N1
+    ln -s ${f}
     ln -s ${bname} image.slc
     
     envisat_dump_header ASA*.N1 | awk '/sub_sat_track/{print "HEADING   "$3}' > image.slc.rsc
@@ -65,7 +65,7 @@ goodCSK(){
   [[  -d "$CWD/SLC" ]] || { echo "Creating $CWD/SLC" ; mkdir -p $CWD/SLC ; }
 
   for f in $(find ${DATADIR} -name "C*.h5"); do
-    echo info: $f
+    eGcho info: $f
     bname=$( basename ${f} )
     date=$(echo $bname | ${AWK} -F '_' {'print substr($9,1,8)'} )
     cskdir=${f%/*}
@@ -143,7 +143,7 @@ goodSENSE(){
         elif [ -n "$file3" ]; then
           sense=$(ls -1 ${DATADIR}/*/*.tif &>/dev/null && echo RS2_HH)
         else
-          sense=$(ls -1 ${DATADIR}/*/ASA* &>/dev/null && echo ENV || echo ERS)
+          sense=$(ls -1 ${DATADIR}/ASA* &>/dev/null && echo ENV || echo ERS)
         fi
         echo $sense
 }

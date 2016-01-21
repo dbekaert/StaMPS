@@ -13,6 +13,8 @@
 #   diff0/*.base
 #   geo/*dem.rdc
 #   geo/*diff_par
+#   geo/YYYYMMDD.lon (master)
+#   geo/YYYYMMDD.lat (master)
 #   dem/*_seg.par
 #
 # SB:
@@ -23,10 +25,13 @@
 #   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.base
 #   geo/*dem.rdc
 #   geo/*diff_par
+#   geo/YYYYMMDD.lon (master)
+#   geo/YYYYMMDD.lat (master)
 #   dem/*_seg.par
 #   
 # ===========================================================================
 # 02/2013 AH: Add small baselines option
+# 01/2016 AH: Add option to extract lon/lat from raster
 # ===========================================================================
 
 ### Initial welcome
@@ -212,30 +217,33 @@ else
     \ls $datadir/diff0/*.diff >> pscphase.in
 endif
 
-#echo $width > psclonlat.in
-#echo $datadir'/geo/*.*' >> psclonlat.in
 
 echo $width > pscdem.in
 \ls $datadir/geo/*dem.rdc >> pscdem.in
-
-
-
 #\ls -d PATCH_* > patch.list
-mt_extract_cands 1 0 1 1 s 1 $maskfile
 
-type pt2geo >& /dev/null
+\ls $datadir/geo/*.lon >& /dev/null
 if ( $status == 0 ) then
-  set dempar = `\ls $datadir/dem/*_seg.par`
-  set diffpar = `\ls $datadir/geo/*.diff_par`
-  echo $dempar
-  echo $diffpar
+  echo $width > psclonlat.in
+  \ls -1 $datadir/geo/*.lon | head -1 >> psclonlat.in
+  \ls -1 $datadir/geo/*.lat |head -1 >> psclonlat.in
+  mt_extract_cands 1 1 1 1 s 1 $maskfile
+else
+  mt_extract_cands 1 0 1 1 s 1 $maskfile
+  type pt2geo >& /dev/null
+  if ( $status == 0 ) then
+   set dempar = `\ls $datadir/dem/*_seg.par`
+   set diffpar = `\ls $datadir/geo/*.diff_par`
+   echo $dempar
+   echo $diffpar
 
-  foreach patch(`\cat patch.list`)
+   foreach patch(`\cat patch.list`)
 
     cd $patch
     echo "Patch:" $patch
 
     #Retrieve lon/lat for PS candidates
     pt2geo pscands.1.ij.int - $RSC - pscands.1.hgt $dempar $diffpar 1 1  pt.map pscands.1.xy pscands.1.ll
-  end
+   end
+  endif
 endif

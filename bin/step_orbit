@@ -9,7 +9,7 @@
 # 11/2009 MA: Copy orbit_$prod.dorisin to each SLC dir for manually updating precise orbits
 # ===========================================================================
 
-set WORKDIR=$cwd
+set WORKDIR=".."
 
 set dirdate = `pwd | gawk 'BEGIN {FS="/"} {print $NF}'`
 if ($dirdate == "") then
@@ -36,9 +36,10 @@ if ($precise_orbits == "") then
      set prod = "Envisat"
   endif
   if (-e $DORIS_SCR/orbit_$prod.dorisin) then
-      #doris $DORIS_SCR/orbit_$prod.dorisin > step_orbit.log
-      cp $DORIS_SCR/orbit_$prod.dorisin .        # MA
-      doris orbit_$prod.dorisin > step_orbit.log # MA
+      if (! -e $WORKDIR/orbit_$prod.dorisin) then
+          cp $DORIS_SCR/orbit_$prod.dorisin $WORKDIR        
+      endif
+      doris $WORKDIR/orbit_$prod.dorisin > step_orbit.log 
       set n_orbits = `grep NUMBER_OF_DATAPOINTS: slave.res | gawk '{print $2}'`
       if ($n_orbits == 0) then
           cp -f SLC/slave.res .
