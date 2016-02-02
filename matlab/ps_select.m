@@ -27,6 +27,8 @@ function []=ps_select(reest_flag,plot_flag)
 %   09/2015 DB: Store information on nr of PS left. Support auto procesing
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
+%   02/2016 DB: Identified bug when patch size is smaller than filter size.
+%               For now drop this patch. This needs to be fixed better.stam
 %   ======================================================================
 logit;
 logit('Selecting stable-phase pixels...')
@@ -99,6 +101,7 @@ if ~strcmpi(small_baseline_flag,'y')
 end
 n_ps=ps.n_ps;
 xy=ps.xy;
+
 
 pm=load(pmname);
 if exist([daname,'.mat'],'file')
@@ -277,26 +280,35 @@ if reest_flag~=1
             j_min=j_min-j_max+n_j;
             j_max=n_j;
         end
-        ps_bit_i=ps_ij(1)-i_min+1;
-        ps_bit_j=ps_ij(2)-j_min+1;
-
-        ph_bit=pm.ph_grid(i_min:i_max,j_min:j_max,:);
-
-        ph_bit(ps_bit_i,ps_bit_j,:)=0;
-        %ph_bit(ps_bit_i,ps_bit_j,:)=ph_bit(ps_bit_i,ps_bit_j,:)-shiftdim(pm.ph_weight(i,:),-1);
         
-        % JJS oversample update for PS removal + [MA] general usage update
-        ix_i=ps_bit_i-(slc_osf-1):ps_bit_i+(slc_osf-1);
-        ix_i=ix_i(ix_i>0&ix_i<=size(ph_bit,1));
-        ix_j=ps_bit_j-(slc_osf-1):ps_bit_j+(slc_osf-1);
-        ix_j=ix_j(ix_j>0&ix_j<=size(ph_bit,2));
-        ph_bit(ix_i,ix_j)=0;
+        % it could occur that your patch size is smaller than the filter size
+        % crude bug fix is to drop this patch. It needs fixing in future...
+        if j_min<1 || i_min<1
+            % THIS NEEDS TO BECOME AN ACTUAL FIX, but not sure how...
+            ph_patch2(i,:) =0;
+        else
+ 
+            % remove the pixel for which the smoothign is computed
+            ps_bit_i=ps_ij(1)-i_min+1;
+            ps_bit_j=ps_ij(2)-j_min+1;
+            ph_bit=pm.ph_grid(i_min:i_max,j_min:j_max,:);
+            ph_bit(ps_bit_i,ps_bit_j,:)=0;
 
-        for i_ifg=1:n_ifg
-            ph_filt(:,:,i_ifg)=clap_filt_patch(ph_bit(:,:,i_ifg),clap_alpha,clap_beta,pm.low_pass);
+            %ph_bit(ps_bit_i,ps_bit_j,:)=ph_bit(ps_bit_i,ps_bit_j,:)-shiftdim(pm.ph_weight(i,:),-1);
+
+            % JJS oversample update for PS removal + [MA] general usage update
+            ix_i=ps_bit_i-(slc_osf-1):ps_bit_i+(slc_osf-1);
+            ix_i=ix_i(ix_i>0&ix_i<=size(ph_bit,1));
+            ix_j=ps_bit_j-(slc_osf-1):ps_bit_j+(slc_osf-1);
+            ix_j=ix_j(ix_j>0&ix_j<=size(ph_bit,2));
+            ph_bit(ix_i,ix_j)=0;
+
+            for i_ifg=1:n_ifg
+                ph_filt(:,:,i_ifg)=clap_filt_patch(ph_bit(:,:,i_ifg),clap_alpha,clap_beta,pm.low_pass);
+            end
+
+            ph_patch2(i,:)=squeeze(ph_filt(ps_bit_i,ps_bit_j,:));
         end
-
-        ph_patch2(i,:)=squeeze(ph_filt(ps_bit_i,ps_bit_j,:));
         if i/10000==floor(i/10000)
             logit(sprintf('%d patches re-estimated',i))
         end
