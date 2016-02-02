@@ -39,6 +39,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %               colormap options
 %   09/2015 AH: Don't plot dropped patches on sides in amplitude plots
 %   12/2015 AH: Speed up plotting when 1 pixel per PS 
+%   02/2016 DB: Fix in case the colormatrix has NaN values
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -491,6 +492,7 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     
     
     nnix=~isnan(col_ix);
+    col_ix= col_ix(nnix);
     in_ph=in_ph(nnix);
     demy=demy(nnix);
     demx=demx(nnix);
@@ -500,16 +502,18 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
       end
     else
     
-   	for i=1 : length(in_ph)
-%        if ~(isnan(col_ix(i)))
-%             ix1=demy(i)-pixel_margin1:demy(i)+pixel_margin2;
-%             ix2=demx(i)-pixel_margin1:demx(i)+pixel_margin2;
-%             ix1=ix1(ix1>0&ix1<=size(X,1));
-%             ix2=ix2(ix2>0&ix2<=size(X,2));
-%             R(ix1,ix2)=col_ix(i)+1;
-              R(ix1b(i):ix1e(i),ix2b(i):ix2e(i))=col_ix(i)+1;
-%        end
-    end
+        for i=1 : length(in_ph)
+    %        if ~(isnan(col_ix(i)))
+    %             ix1=demy(i)-pixel_margin1:demy(i)+pixel_margin2;
+    %             ix2=demx(i)-pixel_margin1:demx(i)+pixel_margin2;
+    %             ix1=ix1(ix1>0&ix1<=size(X,1));
+    %             ix2=ix2(ix2>0&ix2<=size(X,2));
+    %             R(ix1,ix2)=col_ix(i)+1;
+
+
+                  R(ix1b(i):ix1e(i),ix2b(i):ix2e(i))=col_ix(i)+1;
+    %        end
+        end
     end
     
     dem_length=size(R,1);
@@ -536,7 +540,7 @@ elseif bg_flag==6     % xy axes
     x_posting=plot_pixel_m;
     y_posting=plot_pixel_m;
     plot_pixel_size=1;
-    
+
     x=[min(ps.xy(:,2))-2*x_posting:x_posting:max(ps.xy(:,2))+2*x_posting];
     y=[min(ps.xy(:,3))-2*y_posting:y_posting:max(ps.xy(:,3))+2*y_posting];
     
