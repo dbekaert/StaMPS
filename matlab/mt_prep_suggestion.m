@@ -5,6 +5,7 @@ function [] = mt_prep_suggestion(small_baseline_flag)
 % Jan 2016
 % modifications:
 %  01/2016      DB  Fixed bug which output wrong information to user
+%  02/2016      DB  Include alterantives to retrieve width and length
 
 
 if nargin<1
@@ -43,6 +44,25 @@ fprintf(['number of lines = ' num2str(n_lines) '\n'])
 [a,b]= system(['echo `grep ''Number\ of\ pixels\ (multilooked):'' ' ifg_path ' | awk ''NR==1{print $5}''`  > temppixels.txt']);
 n_pixels = load('temppixels.txt');
 fprintf(['number of pixels = ' num2str(n_pixels) '\n'])
+
+if isempty(n_lines) || isempty(n_pixels)
+    fprintf('Will try width.txt and len.txt instread \n')
+    width_file = 'width.txt';
+    len_file = 'len.txt';
+    if ~(exist(width_file,'file')==2)
+        width_file = [ '..' filesep width_file];
+        len_file = ['..' filesep len_file];
+    end
+    
+    if exist(width_file,'file')==2
+        n_pixels = load(width_file);
+        n_lines = load(len_file);
+    else
+       error('Cannot retrieve width or length') 
+    end
+    
+end
+    
 
 
 % stamps recomendation is to have less than 5 million pixels per patch per SLC.
