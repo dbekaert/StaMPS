@@ -40,6 +40,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   09/2015 AH: Don't plot dropped patches on sides in amplitude plots
 %   12/2015 AH: Speed up plotting when 1 pixel per PS 
 %   02/2016 DB: Fix in case the colormatrix has NaN values
+%   02/2016 DB: Bug fix for BW background, which made PS pixels as larger as the image width. 
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -482,11 +483,11 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     ix1b=demy-pixel_margin1;
     ix1b(ix1b<1)=1;
     ix1e=demy+pixel_margin2;
-    ix1e(ix1e<size(X,1))=size(X,1);
+    ix1e(ix1e>size(X,1))=size(X,1);     % DB
     ix2b=demx-pixel_margin1;
     ix2b(ix2b<1)=1;
     ix2e=demx+pixel_margin2;
-    ix2e(ix2e<size(X,2))=size(X,2);
+    ix2e(ix2e>size(X,2))=size(X,2);     % DB
 
     R=zeros(size(X));
     
