@@ -274,7 +274,7 @@ end
 
 bpsavename=['bp',num2str(psver)];
 % save(bpsavename,'bperp_mat');
-save(bpsavename,bperp_mat);
+stamps_save(bpsavename,bperp_mat);
 
 %end % end-if
 
