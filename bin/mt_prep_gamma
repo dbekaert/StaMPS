@@ -244,6 +244,7 @@ else
 
     #Retrieve lon/lat for PS candidates
     pt2geo pscands.1.ij.int - $RSC - pscands.1.hgt $dempar $diffpar 1 1  pt.map pscands.1.xy pscands.1.ll
+    cd ..
    end
   endif
 endif
