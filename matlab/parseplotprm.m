@@ -15,6 +15,7 @@
 %   10/2014 DB: Support for ionospheric delays
 %   03/2014 DB: Fix for a bug introduced when APS option does not exist.
 %               Add the missing option too  
+%   10/2016 DB: Replace break with error message
 
 % list of arguments for ps_plot excluding value type
 arglist={'plot_flag','lims','ref_ifg','ifg_list','n_x','cbar_flag',...
@@ -226,8 +227,7 @@ if plot_flag > 1 && ts_flag==1
 end
 
 if plot_flag < 0 && ts_flag==1
-    disp('No time series plotting is possible with backgrounds option -1')
-    break
+    error('No time series plotting is possible with backgrounds option -1')
 end
 % checking if a valid option is slected for the aps_bands potting
 if aps_band_flag==1 && aps_flag~=2 && aps_flag~=11
