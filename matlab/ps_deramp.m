@@ -9,6 +9,7 @@ function [ph_all,ph_ramp] = ps_deramp(ps,ph_all)
 % 11/2013   DB  Fix such deramped SM from SB inversion works as well
 % 12/2013   DB  Add the ramp as output as well
 % 05/2015   DB  Remove warning outputed to user
+% 04/2016   DB  Make sure to use double to avoid machine precision warnings
 
 fprintf(['Deramping computed on the fly. \n'])
 
@@ -23,7 +24,7 @@ ph_ramp = NaN(size(ph_all));
 for k=1:ps.n_ifg
     ix = isnan(ph_all(:,k));
     if ps.n_ps-sum(ix)>5
-        coeff = lscov(A(~ix,:),ph_all(~ix,k));
+        coeff = lscov(double(A(~ix,:)),double(ph_all(~ix,k)));
         ph_ramp(:,k)=A*coeff;
         ph_all(:,k)=ph_all(:,k)-ph_ramp(:,k);
     else
