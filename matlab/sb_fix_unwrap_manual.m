@@ -1,4 +1,4 @@
-function [] = sb_fix_unwrap_manual(reset_flag)
+function [] = sb_fix_unwrap_manual(ifg_list,reset_flag)
 % [] = sb_fix_unwrap_manual(reset_flag)
 % script to manually fix unwrapping errors in Small Baseline processing
 %
@@ -14,10 +14,14 @@ function [] = sb_fix_unwrap_manual(reset_flag)
 %   Bekaert David   05/2015     Fix in command line output, fix the code
 %                               for ps_plot
 % Bekaert David     09/2015     Add file restoring.
+% Bekaert David     12/2015     Also plot the unwrapped phase
 %
 
 % flags
 if nargin<1
+    ifg_list =[];
+end
+if nargin<2
     reset_flag=0;
 end
 deramp_flag =0;         % optional deramp rsb. Might be needed when processed with gamma
@@ -47,9 +51,16 @@ ps = load('ps2.mat');
 
 % plotting the current rsb data
 if deramp_flag==1
-    ps_plot('rsb-o',1,0,0);
+    ps_plot('usb-do',1,0,0,ifg_list);
+    set(gcf,'position',[ 75   522   560   420])
+    ps_plot('rsb-o',1,0,0,ifg_list);
+     set(gcf,'position',[ 1136         515         560         420])
 else
-    ps_plot('rsb',1,0,0);
+    ps_plot('usb-d',1,0,0,ifg_list);
+        set(gcf,'position',[ 75   522   560   420])
+
+    ps_plot('rsb',1,0,0,ifg_list);
+     set(gcf,'position',[ 1136         515         560         420])
 end
 
 % get the interferogram that the user needs to adapt
@@ -72,9 +83,17 @@ end
 % were not created from relative differences, i.e. each interferogram had a
 % baseline estimated and there might be some ramping errors because of that.
 if deramp_flag==1
+%     ps_plot('usb-do',1,0,0,ix_ifg);
+%         set(gcf,'position',[ 75   522   560   420])
+
     ps_plot('rsb-o',1,0,0,ix_ifg);
+     set(gcf,'position',[ 1136         515         560         420])
 else
+%     ps_plot('usb-d',1,0,0,ix_ifg);
+%         set(gcf,'position',[ 75   522   560   420])
+
     ps_plot('rsb',1,0,0,ix_ifg);
+     set(gcf,'position',[ 1136         515         560         420])
 end
 
 % gettign the polygon for which the correction will be made
@@ -115,9 +134,17 @@ while continue_flag==1
     sb_invert_uw
 
     if deramp_flag==1
+        ps_plot('usb-do',1,0,0,ix_ifg);
+            set(gcf,'position',[ 75   522   560   420])
+
         ps_plot('rsb-o',1,0,0,ix_ifg);
+         set(gcf,'position',[ 1136         515         560         420])
     else
+        ps_plot('usb-d',1,0,0,ix_ifg);
+            set(gcf,'position',[ 75   522   560   420])
+
         ps_plot('rsb',1,0,0,ix_ifg);
+         set(gcf,'position',[ 1136         515         560         420])
     end    
     
     repeat=1;
