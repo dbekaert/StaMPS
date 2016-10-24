@@ -18,8 +18,12 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   08/2010 AH: use mean bperp value
 %   11/2010 AH: replace recalc_index with scla_drop_index
 %   01/2012 AH: use short time sep ifgs for single master SCLA calc
+<<<<<<< .mine
+%   07/2014 AH: remove Rank Deficient warning 
+=======
 %   09/2015 DB: Include TRAIN support
 %   09/2015 DB/EH: Debug nans, deramping fix using script ps_deramp
+>>>>>>> .r434
 %   ================================================================
 logit;
 logit(sprintf('Estimating spatially-correlated look angle error...'),2)
@@ -164,19 +168,15 @@ if use_small_baselines==0
              G(i,ps.ifgday_ix(i,2))=1;
         end
         if isfield(uw,'unwrap_ifg_index_sm')
-            %unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,ps.master_ix)
             unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,scla_drop_index);
-        else
-            %unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix)
         end
-        G=G(:,unwrap_ifg_index);
+        drop_master_ix=setdiff(unwrap_ifg_index,ps.master_ix);
+        G=G(:,drop_master_ix);
         bperp_some=[G\double(bp.bperp_mat')]';
-        bperp_mat(:,unwrap_ifg_index)=bperp_some;
+        bperp_mat(:,drop_master_ix)=bperp_some;
         clear bperp_some
     else
-
         bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
-        %unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
     end
     day=diff(ps.day(unwrap_ifg_index));
     ph=double(diff(uw.ph_uw(:,unwrap_ifg_index),[],2)); % sequential dph, to reduce influence of defo

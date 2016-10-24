@@ -5,6 +5,7 @@
 # Andy Hooper, November 2007
 # ===========================================================================
 # 09/2010   MA:   update for oversampling
+# 06/2016   AH:   allow for different posting in lon and lat
 # ===========================================================================
 
 ### Initial welcome
@@ -94,7 +95,7 @@ grep CRD_IN_SIZE $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_SIZE") print $3}
 grep CRD_IN_SIZE $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_SIZE") print $2}' >> demparms.in 
 grep CRD_IN_UL $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_UL") print $3}' >> demparms.in 
 grep CRD_IN_UL $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_UL") print $2}' >> demparms.in 
-grep CRD_IN_DELTA $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_DELTA") print $2}' >> demparms.in 
+grep CRD_IN_DELTA $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_DELTA") ; if ($3 != "//") print $2 " " $3; else print $2}'
 grep CRD_IN_FORMAT $INSARDIR/dem.dorisin | gawk '{if ($1=="CRD_IN_FORMAT") print $2}' >> demparms.in 
 
 if ($dirname == "SMALL_BASELINES") then

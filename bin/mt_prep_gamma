@@ -31,6 +31,7 @@
 #   
 # ===========================================================================
 # 02/2013 AH: Add small baselines option
+# 10/2015 AH: Allow format to be float
 # 01/2016 AH: Add option to extract lon/lat from raster
 # ===========================================================================
 
@@ -125,7 +126,21 @@ echo " "
 
 set length   = `gawk '/azimuth_lines/ {print $2}'     < $RSC`
 set width    = `gawk '/range_samples/ {print $2}'     < $RSC`
+set precision    = `gawk '/image_format/ {print $2}'     < $RSC`
 
+if ($precision == "FCOMPLEX") then
+    set prec = "f"
+else
+    if ($precision == "SCOMPLEX") then
+        set prec = "s"
+    else  
+        echo "Unknown image format in" $RSC 
+        exit(4)
+    endif
+endif
+echo "Precision is" $prec
+
+end
 echo "gamma" > processor.txt
 if ($SB_FLAG == 1) then
     matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/sb_parms_initial.m > sb_parms_initial.log
@@ -146,7 +161,7 @@ else
     \ls $datadir/*slc/*.*slc >> $WORKDIR/calamp.in
     set selfile = $WORKDIR/selpsc.in
 endif
-calamp calamp.in $width $WORKDIR/calamp.out s 1 $maskfile
+calamp calamp.in $width $WORKDIR/calamp.out $prec 1 $maskfile
 
 # Set up patches
 echo $da_thresh > $selfile
@@ -222,14 +237,15 @@ echo $width > pscdem.in
 \ls $datadir/geo/*dem.rdc >> pscdem.in
 #\ls -d PATCH_* > patch.list
 
+
 \ls $datadir/geo/*.lon >& /dev/null
 if ( $status == 0 ) then
   echo $width > psclonlat.in
   \ls -1 $datadir/geo/*.lon | head -1 >> psclonlat.in
   \ls -1 $datadir/geo/*.lat |head -1 >> psclonlat.in
-  mt_extract_cands 1 1 1 1 s 1 $maskfile
+  mt_extract_cands 1 1 1 1 $prec 1 $maskfile
 else
-  mt_extract_cands 1 0 1 1 s 1 $maskfile
+  mt_extract_cands 1 0 1 1 $prec 1 $maskfile
   type pt2geo >& /dev/null
   if ( $status == 0 ) then
    set dempar = `\ls $datadir/dem/*_seg.par`
