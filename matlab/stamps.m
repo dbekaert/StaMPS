@@ -42,6 +42,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   09/2015 DB: Fix when running stamps in a patch folder mode when no PS are left
 %   09/2015 AH: allow for non-differentiation of caps by dir
 %   01/2016 DB: include stamps_save in step 1-4.
+%   08/2016 AH: Fix bug of scn_kriging_flag not being set
 %   =================================================================
 
 nfill=40;
@@ -65,7 +66,7 @@ unwrap_method=getparm('unwrap_method');
 unwrap_prefilter_flag=getparm('unwrap_prefilter_flag');
 small_baseline_flag=getparm('small_baseline_flag');
 insar_processor=getparm('insar_processor');
-
+scn_kriging_flag=getparm('scn_kriging_flag');
 
 if nargin<1 || isempty(start_step)==1
     start_step=1;

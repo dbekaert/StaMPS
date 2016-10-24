@@ -15,7 +15,7 @@
 %   10/2014 DB: Support for ionospheric delays
 %   03/2014 DB: Fix for a bug introduced when APS option does not exist.
 %               Add the missing option too  
-%   10/2016 DB: Replace break with error message
+%   08/2016 AH: Remove "break" that is incompatible with Matlab2015
 
 % list of arguments for ps_plot excluding value type
 arglist={'plot_flag','lims','ref_ifg','ifg_list','n_x','cbar_flag',...

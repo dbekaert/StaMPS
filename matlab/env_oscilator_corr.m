@@ -111,7 +111,7 @@ else
     if strcmp(small_baseline_flag,'y')
         oscilatior_corr_ifgs = zeros([ps.n_ps ps.n_ifg]);
     else
-        n_ifg = ps.n_image;
+        n_ifg = ps.n_ifg;
         oscilatior_corr_ifgs = zeros([ps.n_ps n_ifg]);
     end
     oscilatior_corr_velocity = zeros([ps.n_ps 1]);

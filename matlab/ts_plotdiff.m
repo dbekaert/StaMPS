@@ -8,6 +8,7 @@
 %   11/2010 MMC & MA: plotting time series using 'ts' option 
 %   03/2011 AH convert radius to m, remove line fitting and add mean
 %   02/2015 AH Store phase in mm instead of radians
+%   08/2016 AH Replace break with return
 %   ======================================================================
 
 % Place button for new TS plots
@@ -20,7 +21,7 @@ radiusfactor = radiusfactor(1);								% select only the first value, i checked 
 
 %if radiusfactor > 3600
 %    disp('radius factor should be <= 3600')
-%    break
+%    return
 %end
 
 momfig_name=['(', get(gcf,'name'), ')']; % inherent fig_name from the velocity plot
@@ -66,7 +67,7 @@ n_pts_near11=sum(in11);  % how many ps found
 if sum(in) == 0 || sum(in11) == 0
     disp(['No points found in radius of ', num2str(r) ] )
     disp('Please make new selection increasing radius factor...')
-    break     % no pts selecte
+    return     % no pts selecte
 end
 
 % PLOT selection and points
