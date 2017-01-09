@@ -1,7 +1,10 @@
-function [] = aps_save(save_name,varargin)
+function [] = stamps_save(save_name,varargin)
 % stamps_save(save_name,varargin) 
 % function that decides on which save option to use.
-% Large matlab variables (2^31 Bytes) should use the later -v7.3 option
+% Large matlab variables (2^31 Bytes) should use the later -v7.3 option.
+% If the file already exist you do not need to use the -append option like
+% used for the save command. This is automatically taken care of.
+% This is a copy of the TRAIN aps_save.m code. 
 %
 % INPUTS: 
 % save_name     String with the filename of the save datafile
@@ -32,6 +35,10 @@ function [] = aps_save(save_name,varargin)
 % By Bekaert David - Jan 2016
 % modifications:
 %
+% DB    12/2016     Update to the version of TRAIN which allows for
+%                   appending, error catching and folder generation if
+%                   needed. Refer to TRAIN toolbox for the latest version.
+%
 
 % maximum number of bytes before using the -v3.7 option to save
 n_bytes_max = 2^31;       % is about 2 GB
@@ -52,12 +59,43 @@ for k=1:length(varargin)
     end
 end
 
-
-% choose the saving option
-if strcmpi(switch_option,'y')
-   fprintf('Your variables are reaching 2GB limit, revert to save -v7.3 \nThis will be slower but avoids matlab not saving the data\n') ;
-   eval(['save(''' save_name '''' var_str ',''-v7.3'');'])
-else
-   eval(['save(''' save_name '''' var_str ');'])
+% check if the save folder exists, if not make it.
+[path,temp,temp] = fileparts(save_name);
+if ~isempty(path)
+    if exist(path,'dir')~=7
+        mkdir(path);
+    end
 end
 
+% choose the saving option
+if exist(save_name,'file')==2
+    fprintf('File exist will append\n')
+    if strcmpi(switch_option,'y')
+       fprintf('Your variables are reaching 2GB limit, revert to save -v7.3 \nThis will be slower but avoids matlab not saving the data\n') ;
+       % Matlab refuese to append in the "-v7.3" mode to an different formatted file.
+       % check if this is "-v7.3" file
+       x = evalc(['type(''', save_name, ''')']);
+       test_flag = strcmp(x(2:20), 'MATLAB 7.3 MAT-file');
+       % save the data
+       if test_flag==1 
+           eval(['save(''' save_name '''' var_str ',''-v7.3'');'])
+       else
+          fprintf('matlab cannot save this file because it was originally not saved with -v7.3 option.\nWill change the formating...\n') 
+          % solution load the file and write it as -v3.7
+          temp = load(save_name);
+          movefile(save_name,[save_name '_original']);          % backup original file.
+          save(save_name, '-struct', 'temp','-v7.3');
+          % now append the new data.
+          eval(['save(''' save_name '''' var_str ',''-v7.3'');'])
+       end
+    else
+       eval(['save(''' save_name '''' var_str ',''-append'');'])
+    end      
+else
+    if strcmpi(switch_option,'y')
+       fprintf('Your variables are reaching 2GB limit, revert to save -v7.3 \nThis will be slower but avoids matlab not saving the data\n') ;
+       eval(['save(''' save_name '''' var_str ',''-v7.3'');'])
+    else
+       eval(['save(''' save_name '''' var_str ');'])
+    end
+end
