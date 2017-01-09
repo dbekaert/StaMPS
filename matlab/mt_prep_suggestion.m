@@ -40,13 +40,11 @@ clear temp
 fprintf(['Getting interferogram size from : ' ifg_path '\n'])
 [a,b]= system(['echo `grep ''Number\ of\ lines\ (multilooked):'' ' ifg_path ' | awk ''NR==1{print $5}''` > templines.txt' ]);
 n_lines = load('templines.txt');
-fprintf(['number of lines = ' num2str(n_lines) '\n'])
 [a,b]= system(['echo `grep ''Number\ of\ pixels\ (multilooked):'' ' ifg_path ' | awk ''NR==1{print $5}''`  > temppixels.txt']);
 n_pixels = load('temppixels.txt');
-fprintf(['number of pixels = ' num2str(n_pixels) '\n'])
 
 if isempty(n_lines) || isempty(n_pixels)
-    fprintf('Will try width.txt and len.txt instread \n')
+    fprintf('Will try width.txt and len.txt instead \n')
     width_file = 'width.txt';
     len_file = 'len.txt';
     if ~(exist(width_file,'file')==2)
@@ -62,7 +60,9 @@ if isempty(n_lines) || isempty(n_pixels)
     end
     
 end
-    
+
+fprintf(['number of lines = ' num2str(n_lines) '\n'])    
+fprintf(['number of pixels = ' num2str(n_pixels) '\n'])
 
 
 % stamps recomendation is to have less than 5 million pixels per patch per SLC.
