@@ -33,6 +33,7 @@ function [oscilatior_corr_ifgs,oscilatior_corr_velocity] = env_oscilator_corr(en
 % 06/2014       DB      Fix in case not envisat and forced SM.
 % 11/2014       DB      Fix to make windows and linux compatible 
 % 03/2015       DB      Clean script output
+% 01/2017       DB      Bug fix for non-envisat SM case. n_ifg was not n_image
 
 
 if nargin<1 || isempty(envisat_flag)
@@ -111,7 +112,7 @@ else
     if strcmp(small_baseline_flag,'y')
         oscilatior_corr_ifgs = zeros([ps.n_ps ps.n_ifg]);
     else
-        n_ifg = ps.n_ifg;
+        n_ifg = ps.n_image;     % bug fix DB
         oscilatior_corr_ifgs = zeros([ps.n_ps n_ifg]);
     end
     oscilatior_corr_velocity = zeros([ps.n_ps 1]);
