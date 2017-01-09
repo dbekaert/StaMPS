@@ -34,6 +34,7 @@ function ps_parms_default()
 %   05/2015 AH: add gamma_max_iterations 
 %   09/2015 AH: change default weed_neighbours = 'n' 
 %   09/2015 AH: change default max_topo_err = 20 
+%   10/2016 DB: Change other processor type to a warning not an error.
 %   ======================================================================
 
 
@@ -404,7 +405,7 @@ if ~isfield(parms,'insar_processor')
        parms.insar_processor=processor; % 
 
        if ~strcmpi(processor,'gamma') & ~strcmpi(processor,'doris')
-           error('This processor is not supported (doris and gamma)')
+           fprintf('WARNING: This processor is not supported (doris and gamma)')
        end
    end
 end
