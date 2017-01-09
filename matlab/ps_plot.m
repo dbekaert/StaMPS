@@ -1,5 +1,5 @@
 function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
-%function []=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,...
+%function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,plot_flag,lims,ref_ifg,ifg_list,n_x,...
 %    cbar_flag,textsize,textcolor,lon_rg,lat_rg)
 % PS_PLOT plot ps values for selected ifgs
 %    PS_PLOT(VALUE_TYPE,BACKGROUND,PHASE_LIMS,REF_IFG,IFG_LIST,N_X,...
@@ -206,6 +206,7 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %   03/2015 DB: Remove the reference for the K spatial map option
 %   03/2015 DB: Update and clean for relaese with TRAIN
 %   05/2015 DB: Fix to separate hgt from t options
+%   12/2016 DB: Update output syntax, remove warning ps_plot('V-Do')
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -565,7 +566,6 @@ if aps_tide_iono_flag==1
         end
     end
 end
-
 
 switch(group_type)
     case {'hgt'}
@@ -1354,10 +1354,6 @@ switch(group_type)
             fig_name = 'v-o';
             
         case {'v-do'}
-            if strcmp('n',scla_deramp)
-                disp('Warning: scla_deramp flag set to n. Set to y and rerun Step 7 before using the -o plot command.')
-                return;
-            end
             scla=load(sclaname);
             ph_uw=ph_uw - scla.ph_scla;
             % deramping ifgs
