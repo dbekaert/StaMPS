@@ -14,6 +14,7 @@ function []=ps_unwrap()
 %   02/2014 AH: Add predefined ph_uw option
 %   10/2014 EH/DB: Suppress the aps removal correlated with topography
 %   09/2015 DB: Include APS removal options
+%   01/2017 DB: Double check if K_ps is not empty 
 %   ======================================================================
 logit;
 fprintf('Phase-unwrapping...\n')
@@ -76,7 +77,9 @@ else
     if exist(['./',pmname,'.mat'],'file')
         pm=load(pmname,'K_ps');
         if isfield(pm,'K_ps')
-            ph_w=ph_w.*exp(j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat));
+            if ~isempty(pm.K_ps)
+                ph_w=ph_w.*exp(j*(repmat(pm.K_ps,1,ps.n_ifg).*bperp_mat));
+            end
         end
     end
 end
