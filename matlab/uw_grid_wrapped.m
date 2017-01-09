@@ -11,6 +11,7 @@ function []=uw_grid_wrapped(ph_in,xy_in,pix_size,prefilt_win,goldfilt_flag,lowfi
 % 01/2013 AH: No gridding option (pix_size=0)
 % 04/2013 AH: Correct bug calling wrap_filt
 % 02/2014 AH: Add predefined ph_uw option
+% 01/2017 DB: add stamps_save for large variables
 % ============================================================
 
 fprintf('Resampling phase to grid...\n')
@@ -172,5 +173,5 @@ ij=[nz_i,nz_j];
 
 
 
-save('uw_grid','ph','ph_in','ph_lowpass','ph_uw_predef','ph_in_predef','xy','ij','nzix','grid_x_min','grid_y_min','n_i','n_j','n_ifg','n_ps','grid_ij','pix_size')    
+stamps_save('uw_grid',ph,ph_in,ph_lowpass,ph_uw_predef,ph_in_predef,xy,ij,nzix,grid_x_min,grid_y_min,n_i,n_j,n_ifg,n_ps,grid_ij,pix_size)    
 
