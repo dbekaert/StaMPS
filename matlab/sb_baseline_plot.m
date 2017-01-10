@@ -11,6 +11,7 @@ function []=plot_sb_baselines(ix)
 %   12/2012 DB: Added meaning of ix to the syntax of the code
 %   04/2013 DB: Command variable
 %   03/2014 DB: Suppress command line output
+%   01/2017 DB: Relax the name for SB such it could have a prefix or suffix
 %   ======================================================================
 
 
@@ -21,8 +22,17 @@ end
 
 currdir=pwd;
 dirs=strread(currdir,'%s','delimiter','/');
-if strcmp(dirs{end},'SMALL_BASELINES') 
-    [a,b] = system(['\ls -d [1,2]* | sed ''' 's/_/ /''' ' > small_baselines.list']);
+
+
+if ~isempty(findstr(dirs{end},'SMALL_BASELINES'))
+    
+    if strcmp(dirs{end},'SMALL_BASELINES') 
+        [a,b] = system(['\ls -d [1,2]* | sed ''' 's/_/ /''' ' > small_baselines.list']);
+    else
+        cd ../SMALL_BASELINES
+        [a,b] = system(['\ls -d [1,2]* | sed ''' 's/_/ /''' ' > ' currdir filesep 'small_baselines.list']);
+        cd(currdir)
+    end
     load ../psver
     psname=['../ps',num2str(psver)];
     small_baseline_flag='y';
@@ -79,6 +89,7 @@ hold on
 p=plot(ps.day,ps.bperp,'ro');
 set(p,'markersize',12,'linewidth',2)
 hold off
+box on
 datetick('x',12)
 ylabel('B_{perp}')
 
