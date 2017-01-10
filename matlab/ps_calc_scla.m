@@ -18,12 +18,9 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   08/2010 AH: use mean bperp value
 %   11/2010 AH: replace recalc_index with scla_drop_index
 %   01/2012 AH: use short time sep ifgs for single master SCLA calc
-<<<<<<< .mine
 %   07/2014 AH: remove Rank Deficient warning 
-=======
 %   09/2015 DB: Include TRAIN support
 %   09/2015 DB/EH: Debug nans, deramping fix using script ps_deramp
->>>>>>> .r434
 %   ================================================================
 logit;
 logit(sprintf('Estimating spatially-correlated look angle error...'),2)
