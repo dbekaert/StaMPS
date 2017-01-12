@@ -15,6 +15,8 @@ function []=ps_unwrap()
 %   10/2014 EH/DB: Suppress the aps removal correlated with topography
 %   09/2015 DB: Include APS removal options
 %   01/2017 DB: Double check if K_ps is not empty 
+%   01/2017 DB: Check if the good values have right number of PS, if not
+%               likely from an earlier pixel selection run, so do not apply.
 %   ======================================================================
 logit;
 fprintf('Phase-unwrapping...\n')
@@ -96,12 +98,16 @@ if ~strcmpi(small_baseline_flag,'y') | ~exist(phuwname)
     unwrap_hold_good_values='n';
     logit('Code to hold good values skipped')
 end
-if unwrap_hold_good_values=='y' 
+if unwrap_hold_good_values=='y'     
     sb_identify_good_pixels
     options.ph_uw_predef=nan(size(ph_w),'single');
     uw=load(phuwname);
     good=load(goodname);
-    options.ph_uw_predef(good.good_pixels)=uw.ph_uw(good.good_pixels);
+    if ps.n_ps==size(good.good_pixels,1)
+        options.ph_uw_predef(good.good_pixels)=uw.ph_uw(good.good_pixels);
+    else
+        fprintf('   wrong number of PS in keep good pixels - skipped...\n')
+    end
     clear uw good;
 end
 
