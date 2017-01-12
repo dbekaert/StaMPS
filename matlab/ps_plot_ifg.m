@@ -40,7 +40,9 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   09/2015 AH: Don't plot dropped patches on sides in amplitude plots
 %   12/2015 AH: Speed up plotting when 1 pixel per PS 
 %   02/2016 DB: Fix in case the colormatrix has NaN values
-%   02/2016 DB: Bug fix for BW background, which made PS pixels as larger as the image width. 
+%   02/2016 DB: Bug fix for BW background, which made PS pixels as large as the image width. 
+%   01/2017 DB: Bug fix in case there is nan for BW background
+%   01/2017 DB: Add the hardcoded option to do some filtering
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -53,6 +55,9 @@ heading=getparm('heading');
 ref_radius=getparm('ref_radius');
 ref_centre=getparm('ref_centre_lonlat');
 small_baseline_flag=getparm('small_baseline_flag');
+
+filter_extra = 'n';
+filter_type = 'mean';
 
 if nargin < 1
     error('PS_PLOT_IFG(PHASE,BACKGROUND,LIMS)')
@@ -128,6 +133,7 @@ end
 
 min_ph=0;
 max_ph=0;
+
 
 
 
@@ -495,14 +501,17 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     nnix=~isnan(col_ix);
     col_ix= col_ix(nnix);
     in_ph=in_ph(nnix);
-    demy=demy(nnix);
+    demy=demy(nnix);       
     demx=demx(nnix);
+    ix1b=ix1b(nnix); % DB    Bug fix 01/2017
+    ix1e=ix1e(nnix); % DB    Bug fix 01/2017
+    ix2e=ix2e(nnix); % DB    Bug fix 01/2017
+    ix2b=ix2b(nnix); % DB    Bug fix 01/2017
     if plot_pixel_size==1
    	  for i=1 : length(in_ph)
           R(demy(i),demx(i))=col_ix(i)+1;
       end
     else
-    
         for i=1 : length(in_ph)
     %        if ~(isnan(col_ix(i)))
     %             ix1=demy(i)-pixel_margin1:demy(i)+pixel_margin2;
@@ -516,6 +525,24 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     %        end
         end
     end
+    
+    
+    % optional to do extra filtering
+    if strcmpi(filter_extra,'y')
+        if strcmpi(filter_type,'median')
+
+            R(R==0)=NaN;
+            R2 = nanmedfilt2(R, [3 3]);
+            R2(isnan(R)) = 0;
+            R = R2;
+        elseif strcmpi(filter_type,'mean')
+            f = @(A)mean(A(~isnan(A)));
+            R2 = nlfilter(R, [3 3], f);
+            R2(isnan(R)) = 0;
+            R = R2;
+        end
+    end
+    
     
     dem_length=size(R,1);
     dem_width=size(R,2);
