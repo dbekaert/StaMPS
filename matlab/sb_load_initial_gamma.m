@@ -6,6 +6,7 @@ function []=sb_load_initial_gamma(endian)
 %   =======================================================================
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
+%   01/2017 AH Fix bug that sets ifg(master_ix) to ones
 %   =======================================================================
   
 
@@ -115,7 +116,6 @@ end
 
 zero_ph=sum(ph==0,2);
 nonzero_ix=zero_ph<=1;       % if more than 1 phase is zero, drop node
-ph(:,master_ix)=1;
 
 if exist(xyname,'file')
     fid=fopen(xyname,'r');
