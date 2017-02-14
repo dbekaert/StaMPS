@@ -21,6 +21,7 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   07/2014 AH: remove Rank Deficient warning 
 %   09/2015 DB: Include TRAIN support
 %   09/2015 DB/EH: Debug nans, deramping fix using script ps_deramp
+%   09/2016 AH: Drop master from single master baseline calc for SB
 %   ================================================================
 logit;
 logit(sprintf('Estimating spatially-correlated look angle error...'),2)
@@ -167,8 +168,9 @@ if use_small_baselines==0
         if isfield(uw,'unwrap_ifg_index_sm')
             unwrap_ifg_index=setdiff(uw.unwrap_ifg_index_sm,scla_drop_index);
         end
-        drop_master_ix=setdiff(unwrap_ifg_index,ps.master_ix);
-        G=G(:,drop_master_ix);
+        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
+
+        G=G(:,unwrap_ifg_index);
         bperp_some=[G\double(bp.bperp_mat')]';
         bperp_mat(:,drop_master_ix)=bperp_some;
         clear bperp_some

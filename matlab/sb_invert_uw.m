@@ -78,6 +78,8 @@ for i=1:ps.n_ifg
     G(i,ps.ifgday_ix(i,2))=1;
 end
 %G=G(:,[1:ps.master_ix-1,ps.master_ix+1:end]); % take out master as ref
+
+
 if sum(abs(G(:,ps.master_ix)))==0; 
    error('Apparently none of the unwrapped interferograms include the original master image')
 else
@@ -86,7 +88,6 @@ end
 
 
 G2=G(unwrap_ifg_index,:);
-
 nzc_ix=sum(abs(G2))~=0; % index for non-zero columns
 G2=G2(:,nzc_ix);
 
