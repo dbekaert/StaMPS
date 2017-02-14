@@ -6,6 +6,8 @@ function []=sb_load_initial_gamma(endian)
 %   =======================================================================
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
+%   12/2016 AH: Save sensor
+%   12/2016 AH: set xy from lonlat 
 %   01/2017 AH Fix bug that sets ifg(master_ix) to ones
 %   =======================================================================
   
@@ -71,6 +73,14 @@ freq=readparm(rslcpar,'radar_frequency:');
 lambda=299792458/freq;
 setparm('lambda',lambda,1);
 
+sensor=readparm(rslcpar,'sensor:');
+if ~isempty(strfind('sensor','ASAR'))
+    platform='ENVISAT';
+else
+    platform=sensor; % S1A for Sentinel-1A
+end
+setparm('platform',platform,1);
+
 ij=load(ijname);
 n_ps=size(ij,1);
 
@@ -117,31 +127,18 @@ end
 zero_ph=sum(ph==0,2);
 nonzero_ix=zero_ph<=1;       % if more than 1 phase is zero, drop node
 
-if exist(xyname,'file')
-    fid=fopen(xyname,'r');
-    xy=fread(fid,[2,inf],'float',endian);
-    xy=xy';
-    fclose(fid);
-else % should only fall through here if pt2geo not installed
-    xy=fliplr(ij(:,2:3));
-    xy(:,1)=xy(:,1)*20;  % assume ERS/Envisat
-    xy(:,2)=xy(:,2)*4.5; % assume ERS/Envisat
-    if cosd(heading)<0 
-        xy(:,1:2)=-xy(:,1:2); % descending
-    end
-
-end
-
 if exist(llname,'file')
     fid=fopen(llname,'r');
     lonlat=fread(fid,[2,inf],'float',endian);
     lonlat=lonlat';
     fclose(fid);
 else
-    lonlat=local2llh(xy'/1000,[0;0])';
+    error([llname,' does not exist']);
 end
 
 ll0=(max(lonlat)+min(lonlat))/2;
+
+xy=llh2local(lonlat,ll0)'*1000;
 
 sort_x=sortrows(xy,1);
 sort_y=sortrows(xy,2);

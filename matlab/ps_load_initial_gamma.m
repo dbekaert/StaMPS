@@ -7,6 +7,7 @@ function []=ps_load_initial_gamma(endian)
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
 %   01/2016 AH: Save sensor
+%   12/2016 AH: set xy from lonlat 
 %   =======================================================================
   
 
@@ -125,30 +126,18 @@ zero_ph=sum(ph==0,2);
 nonzero_ix=zero_ph<=1;       % if more than 1 phase is zero, drop node
 ph(:,master_ix)=1;
 
-if exist(xyname,'file')
-    fid=fopen(xyname,'r');
-    xy=fread(fid,[2,inf],'float',endian);
-    xy=xy';
-    fclose(fid);
-else % should only fall through here if pt2geo not installed
-    xy=fliplr(ij(:,2:3));
-    xy(:,1)=xy(:,1)*20;  % assume ERS/Envisat
-    xy(:,2)=xy(:,2)*4.5; % assume ERS/Envisat
-    if cosd(heading)<0 
-        xy(:,1:2)=-xy(:,1:2); % descending
-    end
-end
-
 if exist(llname,'file')
     fid=fopen(llname,'r');
     lonlat=fread(fid,[2,inf],'float',endian);
     lonlat=lonlat';
     fclose(fid);
 else
-    lonlat=local2llh(xy'/1000,[0;0])';
+    error([llname,' does not exist']);
 end
 
 ll0=(max(lonlat)+min(lonlat))/2;
+
+xy=llh2local(lonlat',ll0)'*1000;
 
 sort_x=sortrows(xy,1);
 sort_y=sortrows(xy,2);
