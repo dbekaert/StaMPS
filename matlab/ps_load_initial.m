@@ -17,8 +17,8 @@ function []=ps_load_initial()
 %   04/2010 KS: Fixed small issue with new logit function
 %   10/2009 MA: Oversampling factor file introduced
 %   12/2012 DB: Add compatiblility with Matlab2012B, keep backward compatible
-%   01/2016 DB: Replace save with stamps_save which checks for var size when
-%               saving 
+%   01/2016 DB: Replace save with stamps_save which checks for var size when saving 
+%   04/2017 DB: Include fix for isce2stamps calamp.out slc filenaming
 %   ======================================================================
 
 
@@ -113,11 +113,18 @@ if exist(calname,'file')
     caldate=zeros(length(calfile),1);
     for i = 1 : length(calfile)
         aa=strread(calfile{i},'%s','delimiter','/');
-        bb=str2num(aa{end}(1:8));
-        if isempty(bb)
-            bb=str2num(aa{end-1}(1:8));
+        try 
+            bb=str2num(aa{end}(1:8));
+            if isempty(bb)
+                bb=str2num(aa{end-1}(1:8));
+            end
+        catch
+            if strcmpi(aa{end-1},'master');
+                bb=str2num(aa{end-2}(end-7:end));
+            end            
         end
-        caldate(i)=bb;    end
+        caldate(i)=bb;    
+    end
     not_master_ix=caldate~=master_day_yyyymmdd;
     caldate=caldate(not_master_ix);
     calconst=calconst(not_master_ix);
