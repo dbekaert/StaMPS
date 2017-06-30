@@ -12,6 +12,7 @@ function []=plot_sb_baselines(ix)
 %   04/2013 DB: Command variable
 %   03/2014 DB: Suppress command line output
 %   01/2017 DB: Relax the name for SB such it could have a prefix or suffix
+%   01/2017 DB: add fontsize
 %   ======================================================================
 
 
@@ -19,6 +20,7 @@ if nargin <1
    ix=[];
 end
 
+fontsize = 25;
 
 currdir=pwd;
 dirs=strread(currdir,'%s','delimiter','/');
@@ -79,10 +81,10 @@ day=str2num(datestr(ps.day,'yyyymmdd'));
 x=I(x);
 y=I(y);
 
-figure
+h_fig=figure('name','Baseline plot','position',[ 440   170   821   628]);
 for i=1:length(x)
     l=line([ps.day(x(i)),ps.day(y(i))],[ps.bperp(x(i)),ps.bperp(y(i))]);
-    text((ps.day(x(i))+ps.day(y(i)))/2,(ps.bperp(x(i))+ps.bperp(y(i)))/2,num2str(ix(i)));
+    text((ps.day(x(i))+ps.day(y(i)))/2,(ps.bperp(x(i))+ps.bperp(y(i)))/2,num2str(ix(i)),'fontsize',fontsize-7);
     set(l,'color',[0 1 0],'linewidth',2)
 end
 hold on
@@ -90,7 +92,12 @@ p=plot(ps.day,ps.bperp,'ro');
 set(p,'markersize',12,'linewidth',2)
 hold off
 box on
+set(gca,'fontsize',fontsize)
 datetick('x',12)
-ylabel('B_{perp}')
+ylabel('B_{perp}','fontsize',fontsize)
+try
+    print(h_fig,'-dpng','baseline_plot.png')
+catch
+end
 
 
