@@ -10,6 +10,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   STEP 6 = Unwrap phase
 %   STEP 7 = Calculate spatially correlated look angle (DEM) error 
 %   STEP 8 = Filter spatially correlated noise 
+%   STEP 0 = Continue from the last known stage till the end-stage selected
 %   
 %   PATCHES_FLAG Default 'y'. Set to 'n' to process all data as one patch
 %
@@ -43,6 +44,9 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   09/2015 AH: allow for non-differentiation of caps by dir
 %   01/2016 DB: include stamps_save in step 1-4.
 %   08/2016 AH: Fix bug of scn_kriging_flag not being set
+%   06/2017 DB: Catching when no PS are left from step 1, allow for re-run
+%               when parameters have changed.
+%   06/2017 DB: Option to continue from last know processing step
 %   =================================================================
 
 nfill=40;
@@ -149,7 +153,11 @@ fillstr=[repmat('#',1,nfill),'\n'];
 msgstr=fillstr;
 
 
+
+
+
 % limit the processing to step 1-5a
+start_step_or = start_step;
 if strcmpi(stamps_PART1_flag,'y')
   for i=1:length(patchdir)
     if ~isempty(patchdir(i).name)
@@ -158,6 +166,45 @@ if strcmpi(stamps_PART1_flag,'y')
       %fprintf(skipstr);
       %logit(sprintf('Processing %s',patchsplit{end}))
     
+      % store if patch dir is empty
+      if exist('no_ps_info.mat','file')~=2
+         stamps_step_no_ps = zeros([5 1 ]);       % keep for the first 5 steps only
+         save('no_ps_info.mat','stamps_step_no_ps')
+      end
+      
+
+        % if start_step is 0, then start from the latest stage it was
+        if start_step_or==0
+            % check the processing stage of stamps for all the patches
+            % step 4 find a ps_weed file
+            % step 3 find a ps_select file
+            % step 2 find a pm file
+            % step 1 find a ps file
+            % or no PS in case stamps_step_no_ps is found with a 1 in there 
+
+            if exist('weed1.mat','file')==2
+                   start_step=5;
+                   setpsver(2);
+            elseif exist('select1.mat','file')==2
+                   start_step=4;
+            elseif exist('pm1.mat','file')==2
+                   start_step=3;
+            elseif exist('ps1.mat','file')==2
+                   start_step=2;
+            else
+                start_step=1;
+            end
+
+            if start_step>end_step
+                fprintf(['\n' patchsplit{end} ': already up to end stage ' num2str(end_step) ' \n'])
+            else
+                fprintf(['\n' patchsplit{end} ': complete up to stage ' num2str(start_step-1) ' \n'])
+            end
+        end
+
+
+
+      
       if start_step==1
         msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 1 ';
         fprintf(skipstr);
@@ -167,22 +214,60 @@ if strcmpi(stamps_PART1_flag,'y')
         logit(['Directory is ',patchsplit{end}])
         fprintf(skipstr);
 
+ 
+        
         if strcmpi(small_baseline_flag,'y')
-            if strcmpi(insar_processor,'gamma')
-                sb_load_initial_gamma;
-            elseif strcmpi(insar_processor,'gsar')
-                sb_load_initial_gsar;
-            else
-                sb_load_initial;
+            try 
+                if strcmpi(insar_processor,'gamma')
+                    sb_load_initial_gamma;
+                elseif strcmpi(insar_processor,'gsar')
+                    sb_load_initial_gsar;
+                else
+                    sb_load_initial;
+                end
+                load('no_ps_info.mat');
+                % reset as we are currently re-processing
+                stamps_step_no_ps(1:end)=0;
+                
+            catch
+
+               load('no_ps_info.mat');
+               % reset as we are currently re-processing
+               stamps_step_no_ps(1:end)=0;
+               fprintf('***No PS points left. Updating the stamps log for this****\n')
+               % update the flag indicating no PS left in step 1
+               stamps_step_no_ps(1)=1;
+               psver =1;
+               save('psver.mat','psver')
+                
             end
+            save('no_ps_info.mat','stamps_step_no_ps')
+
         else
-            if strcmpi(insar_processor,'gamma')
-                ps_load_initial_gamma;
-            elseif strcmpi(insar_processor,'gsar')
-                ps_load_initial_gsar;
-            else
-                ps_load_initial;
+            try 
+                if strcmpi(insar_processor,'gamma')
+                    ps_load_initial_gamma;
+                elseif strcmpi(insar_processor,'gsar')
+                    ps_load_initial_gsar;
+                else
+                    ps_load_initial;
+                end
+                load('no_ps_info.mat');
+                % reset as we are currently re-processing
+                stamps_step_no_ps(1:end)=0;
+            catch
+                load('no_ps_info.mat');
+                % reset as we are currently re-processing
+                stamps_step_no_ps(1:end)=0;
+                fprintf('***No PS points left. Updating the stamps log for this****\n')
+                % update the flag indicating no PS left in step 1
+                stamps_step_no_ps(1)=1;
+                save('no_ps_info.mat','stamps_step_no_ps')
+                psver =1;
+                save('psver.mat','psver')
+
             end
+            save('no_ps_info.mat','stamps_step_no_ps')
         end
         elseif start_step <=4
             setpsver(1)
@@ -197,11 +282,23 @@ if strcmpi(stamps_PART1_flag,'y')
             logit(['Directory is ',patchsplit{end}])
             fprintf(skipstr);
 
-            if strcmpi(quick_est_gamma_flag,'y')
-                ps_est_gamma_quick(est_gamma_parm);
+            % check if step 1 had more than 0 PS points
+            load('no_ps_info.mat');
+            % reset as we are currently re-processing
+            stamps_step_no_ps(2:end)=0;
+            
+            % run step 2 when there are PS left in step 1
+            if stamps_step_no_ps(1)==0
+                if strcmpi(quick_est_gamma_flag,'y')
+                    ps_est_gamma_quick(est_gamma_parm);
+                else
+                    ps_est_gamma(est_gamma_parm);
+                end
             else
-                ps_est_gamma(est_gamma_parm);
-            end
+                stamps_step_no_ps(2)=1;
+                fprintf('No PS left in step 1, so will skip step 2 \n')
+            end  
+            save('no_ps_info.mat','stamps_step_no_ps')
         end
 
         if start_step<=3 & end_step >=3 
@@ -213,11 +310,25 @@ if strcmpi(stamps_PART1_flag,'y')
             logit(['Directory is ',patchsplit{end}])
             fprintf(skipstr);
 
-            if strcmpi(quick_est_gamma_flag,'y')
-                ps_select;
+            
+            
+            % check if step 2 had more than 0 PS points
+            load('no_ps_info.mat');
+            % reset as we are currently re-processing
+            stamps_step_no_ps(3:end)=0;
+            
+            % run step 3 when there are PS left in step 2
+            if stamps_step_no_ps(2)==0
+                if strcmpi(quick_est_gamma_flag,'y')
+                    ps_select;
+                else
+                    ps_select(1);
+                end
             else
-                ps_select(1);
-            end
+                fprintf('No PS left in step 2, so will skip step 3 \n')
+                stamps_step_no_ps(3)=1;
+            end              
+            save('no_ps_info.mat','stamps_step_no_ps')
         end
 
         if start_step<=4 & end_step >=4 
@@ -230,14 +341,10 @@ if strcmpi(stamps_PART1_flag,'y')
             fprintf(skipstr);
 
             % check if step 3 had more than 0 PS points
-            if exist('no_ps_info.mat','file')==2
-               load('no_ps_info.mat');
-               % reset as we are currently re-processing
-            else
-               % keep backward compatibility
-               stamps_step_no_ps = zeros([5 1 ]);       % keep for the first 5 steps only
-            end
-
+            load('no_ps_info.mat');
+            % reset as we are currently re-processing
+            stamps_step_no_ps(4:end) =0;       % keep for the first 5 steps only
+            
 
             % run step 4 when there are PS left in step 3
             if stamps_step_no_ps(3)==0
@@ -248,7 +355,10 @@ if strcmpi(stamps_PART1_flag,'y')
                 end
             else
                 fprintf('No PS left in step 3, so will skip step 4 \n')
+                stamps_step_no_ps(4)=1;
+
             end
+            save('no_ps_info.mat','stamps_step_no_ps')
         end
 
         if start_step<=5 & end_step >=5 
@@ -262,20 +372,18 @@ if strcmpi(stamps_PART1_flag,'y')
 
 
             % check if step 4 had more than 0 PS points
-            if exist('no_ps_info.mat','file')==2
-               load('no_ps_info.mat');
-               % reset as we are currently re-processing
-            else
-               % keep backward compatibility
-               stamps_step_no_ps = zeros([5 1 ]);       % keep for the first 5 steps only
-            end
-
+            load('no_ps_info.mat');
+            % reset as we are currently re-processing
+            stamps_step_no_ps(5:end) = 0;       % keep for the first 5 steps only
+            
             % run step 5 when there are PS left in step 3
             if stamps_step_no_ps(4)==0
                 ps_correct_phase;
             else
                 fprintf('No PS left in step 4, so will skip step 5 \n')
+                stamps_step_no_ps(5)=1;
             end
+            save('no_ps_info.mat','stamps_step_no_ps')
         end
 
 
