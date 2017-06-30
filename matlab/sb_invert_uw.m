@@ -14,6 +14,7 @@ function []=sb_invert_uw()
 %   01/2013 AH: Invert topo-correlated atmosphere if calculated
 %   04/2013 AH: Remove inversion of topo-correlated atmosphere
 %   09/2014 DB: Fix for nanmean of the reference area
+%   06/2017 DB: Include stamps save for large variables
 %   ======================================================================
 logit;
 
@@ -31,8 +32,6 @@ ps=load(psname);
 
 drop_ifg_index=getparm('drop_ifg_index');
 unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
-
-
 
 if exist([pmname,'.mat'],'file') 
     rc=load(rcname);
@@ -78,8 +77,6 @@ for i=1:ps.n_ifg
     G(i,ps.ifgday_ix(i,2))=1;
 end
 %G=G(:,[1:ps.master_ix-1,ps.master_ix+1:end]); % take out master as ref
-
-
 if sum(abs(G(:,ps.master_ix)))==0; 
    error('Apparently none of the unwrapped interferograms include the original master image')
 else
@@ -88,12 +85,13 @@ end
 
 
 G2=G(unwrap_ifg_index,:);
+
 nzc_ix=sum(abs(G2))~=0; % index for non-zero columns
 G2=G2(:,nzc_ix);
 
 
 if rank(G2)<size(G2,2) 
-    save(phuwsbresname,'sb_cov')
+    stamps_save(phuwsbresname,sb_cov)
     error('There are isolated subsets (cannot be inverted w.r.t. master)')
 end
 
@@ -115,8 +113,8 @@ unwrap_ifg_index_sm=[1:ps.n_image]; % single master index
 nzc_ix(ps.master_ix)=1;
 unwrap_ifg_index_sm=unwrap_ifg_index_sm(nzc_ix);
 
-save(phuwname,'ph_uw','unwrap_ifg_index_sm')
-save(phuwsbresname,'ph_res','sb_cov','sm_cov')
+stamps_save(phuwname,ph_uw,unwrap_ifg_index_sm)
+stamps_save(phuwsbresname,ph_res,sb_cov,sm_cov)
 
 %if exist('strat_sb','var')
 %    strat_corr=zeros(size(ph_uw),'single');

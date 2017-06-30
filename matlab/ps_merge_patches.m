@@ -18,9 +18,11 @@ function []=ps_merge_patches(psver)
 %   06/2010 AH: Move mean amplitude merging to ps_load_mean_amp.m 
 %   02/2011 DB: Fix dimension for min computation of ps.xy 
 %   09/2015 AH: Delete previous merged amplitude files
+%   06/2017 DB: Include stamps save for large variables
 %   ======================================================================
 logit;
 fprintf('Merging patches...\n')
+
 
 if nargin < 1
   psver=2;
@@ -512,12 +514,12 @@ ph_rc(ph_rc~=0)=ph_rc(ph_rc~=0)./abs(ph_rc(ph_rc~=0));
 if ~strcmpi(small_baseline_flag,'y')
     ph_reref=ph_reref(sort_ix,:);
 end
-save(rcname,'ph_rc','ph_reref');
+stamps_save(rcname,ph_rc,ph_reref);
 clear ph_rc ph_reref
 
 if size(ph_uw,1)==n_ps_orig
     ph_uw=ph_uw(sort_ix,:);
-    save(phuwname,'ph_uw');
+    stamps_save(phuwname,ph_uw);
 end
 clear ph_uw
 
@@ -542,14 +544,14 @@ if size(coh_ps,1)==n_ps_orig
 else
     coh_ps=[];
 end
-save(pmname,'ph_patch','ph_res','K_ps','C_ps','coh_ps');
+stamps_save(pmname,ph_patch,ph_res,K_ps,C_ps,coh_ps);
 clear ph_patch ph_res K_ps C_ps coh_ps
 
 if size(ph_scla,1)==n_ps
     ph_scla=ph_scla(sort_ix,:);
     K_ps_uw=K_ps_uw(sort_ix,:);
     C_ps_uw=C_ps_uw(sort_ix,:);
-    save(sclaname,'ph_scla','K_ps_uw','C_ps_uw');
+    stamps_save(sclaname,ph_scla,K_ps_uw,C_ps_uw);
 end
 clear ph_scla K_ps_uw C_ps_uw
 
@@ -557,7 +559,7 @@ if strcmpi(small_baseline_flag,'y') & size(ph_scla_sb,1)==n_ps
   ph_scla=ph_scla_sb(sort_ix,:);
   K_ps_uw=K_ps_uw_sb(sort_ix,:);
   C_ps_uw=C_ps_uw_sb(sort_ix,:);
-  save(sclasbname,'ph_scla','K_ps_uw','C_ps_uw');
+  stamps_save(sclasbname,ph_scla,K_ps_uw,C_ps_uw);
   clear ph_scla K_ps_uw C_ps_uw 
 end
 clear ph_scla_sb K_ps_uw_sb C_ps_uw_sb
@@ -565,7 +567,7 @@ clear ph_scla_sb K_ps_uw_sb C_ps_uw_sb
 if size(ph_scn_slave,1)==n_ps
   %ph_scn_master=ph_scn_master(sort_ix,:);
   ph_scn_slave=ph_scn_slave(sort_ix,:);
-  save(scnname,'ph_scn_slave');
+  stamps_save(scnname,ph_scn_slave);
 end
 clear ph_scn_slave
 
@@ -574,7 +576,7 @@ if size(ph,1)==n_ps_orig
 else
     ph=[];
 end
-save(phname,'ph');
+stamps_save(phname,ph);
 clear ph
 
 
@@ -583,7 +585,7 @@ if size(la,1)==n_ps_orig
 else
     la=[];
 end
-save(laname,'la');
+stamps_save(laname,la);
 clear la
 
 if size(hgt,1)==n_ps_orig
@@ -591,11 +593,11 @@ if size(hgt,1)==n_ps_orig
 else
     hgt=[];
 end
-save(hgtname,'hgt');
+stamps_save(hgtname,hgt);
 clear hgt
 
 bperp_mat=bperp_mat(sort_ix,:);
-save(bpname,'bperp_mat');
+stamps_save(bpname,bperp_mat);
 clear bperp_mat
 
 ps_new.n_ps=n_ps;

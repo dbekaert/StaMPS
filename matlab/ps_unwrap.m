@@ -17,6 +17,7 @@ function []=ps_unwrap()
 %   01/2017 DB: Double check if K_ps is not empty 
 %   01/2017 DB: Check if the good values have right number of PS, if not
 %               likely from an earlier pixel selection run, so do not apply.
+%   06/2017 DB: Include stamps save for large variables
 %   ======================================================================
 logit;
 fprintf('Phase-unwrapping...\n')
@@ -103,7 +104,7 @@ if unwrap_hold_good_values=='y'
     options.ph_uw_predef=nan(size(ph_w),'single');
     uw=load(phuwname);
     good=load(goodname);
-    if ps.n_ps==size(good.good_pixels,1)
+    if ps.n_ps==size(good.good_pixels,1) & ps.n_ps==size(uw.ph_uw,1)
         options.ph_uw_predef(good.good_pixels)=uw.ph_uw(good.good_pixels);
     else
         fprintf('   wrong number of PS in keep good pixels - skipped...\n')
@@ -288,5 +289,5 @@ end
 
 ph_uw(:,setdiff([1:ps.n_ifg],unwrap_ifg_index))=0;
 
-save(phuwname,'ph_uw','msd')
+stamps_save(phuwname,ph_uw,msd)
 logit(1);

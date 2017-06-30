@@ -22,6 +22,7 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   09/2015 DB: Include TRAIN support
 %   09/2015 DB/EH: Debug nans, deramping fix using script ps_deramp
 %   09/2016 AH: Drop master from single master baseline calc for SB
+%   06/2017 DB: include stamps_save for larger variables
 %   ================================================================
 logit;
 logit(sprintf('Estimating spatially-correlated look angle error...'),2)
@@ -280,6 +281,6 @@ if ~isempty(oldscla)
     movefile([sclaname,'.mat'],['tmp_',sclaname(3:end),datestr(olddatenum,'_yyyymmdd_HHMMSS'),'.mat']);
 end
 
-save(sclaname,'ph_scla','K_ps_uw','C_ps_uw','ph_ramp','ifg_vcm')
-    
+stamps_save(sclaname,ph_scla,K_ps_uw,C_ps_uw,ph_ramp,ifg_vcm)
+
 logit(1);
