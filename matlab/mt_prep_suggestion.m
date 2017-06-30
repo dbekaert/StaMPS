@@ -6,6 +6,8 @@ function [] = mt_prep_suggestion(small_baseline_flag)
 % modifications:
 %  01/2016      DB  Fixed bug which output wrong information to user
 %  02/2016      DB  Include alterantives to retrieve width and length
+%  04/2017      DB  Include mt_prep_isce suggestion change to default 25
+%                   ifgs for the 5 million pixel limitation
 
 
 if nargin<1
@@ -68,9 +70,9 @@ fprintf(['number of pixels = ' num2str(n_pixels) '\n'])
 % stamps recomendation is to have less than 5 million pixels per patch per SLC.
 % with the larger amoutn of itnerferograms this actually becomes tricky to
 % define for an SLC. So lets assume that that would have been for a 
-% set of 50 interferograms.
-n_pixels_suggested_StaMPS = 5*10^6;
-n_ifgs_suggested_StaMPS = 50;
+% set of 25 interferograms.
+n_pixels_suggested_StaMPS = 4*10^6;
+n_ifgs_suggested_StaMPS = 25;
 n_total_suggested_StaMPS=  n_pixels_suggested_StaMPS*n_ifgs_suggested_StaMPS;
 
 % number of actual pixels in pur dataset
@@ -92,6 +94,10 @@ end
 fprintf(['\nSuggested mtprep call:\n'])
 if strcmpi(small_baseline_flag,'y')
     fprintf(['mt_prep 0.6 ' num2str(n_patches_range) ' ' num2str(n_patches_azimuth) ' 50 200 \n'])
+    fprintf(['mt_prep_isce 0.6 ' num2str(n_patches_range) ' ' num2str(n_patches_azimuth) ' 50 200 \n'])
+
 else
     fprintf(['mt_prep 0.4 ' num2str(n_patches_range) ' ' num2str(n_patches_azimuth) ' 50 200 \n'])
+    fprintf(['mt_prep_isce 0.4 ' num2str(n_patches_range) ' ' num2str(n_patches_azimuth) ' 50 200 \n'])
+
 end
