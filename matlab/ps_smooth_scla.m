@@ -8,6 +8,7 @@ function []=ps_smooth_scla(use_small_baselines)
 %   06/2009 AH: orbital ramps added 
 %   01/2012 AH: Filtering strategy changed to just remove outliers
 %   09/2015 AH: use matlab triangulation if triangle program not installed
+%   06/2017 DB: Include stamps save for large variables
 %   ======================================================================
 %
 logit;
@@ -134,5 +135,5 @@ end
 
 ph_scla=repmat(K_ps_uw,1,size(bperp_mat,2)).*bperp_mat;
 
-save(sclasmoothname,'K_ps_uw','C_ps_uw','ph_scla','ph_ramp')    
+stamps_save(sclasmoothname,K_ps_uw,C_ps_uw,ph_scla,ph_ramp)    
 logit(1);
