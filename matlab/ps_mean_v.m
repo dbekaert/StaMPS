@@ -23,10 +23,17 @@ function [fig_name_tca]=ps_mean_v(ifg_list,n_boot,subtract_switches,use_small_ba
 %   05/2014 DB: big fix in case of a nan 
 %   07/2014 EH: Fix for nanmean in case of single element compared to vector
 %   03/2015 DB: Do all deramping on the fly, make consistent for TRAIN release
+%   05/2017 DB: use stamps save to save larger variables than 2GB.
+%   06/2017 DB: Include the option to choose between chol decompostion for
+%               bootstrapping (not to invert covariance often), or conventional
+%               bootstrapping requiring to invert covariance matrix for each iteration.
 %   ======================================================================
 
 
 fprintf('Calculating standard deviation of mean velocity...\n')
+
+
+chol_flag = 'n';
 
 if nargin<1
     ifg_list=[];
@@ -106,6 +113,7 @@ else
 end
 
 
+
 uw=load(phuwname);
 ph_uw=uw.ph_uw;
 clear uw
@@ -163,7 +171,8 @@ otherwise
         error('unknown subtract flags')
 end
 
-if use_small_baselines==0 & unwrap_ifg_index(1)~=ps.master_ix & unwrap_ifg_index(end)~=ps.master_ix
+if use_small_baselines==0 
+    %AH2CHECK %%%%%%% & unwrap_ifg_index(1)~=ps.master_ix & unwrap_ifg_index(end)~=ps.master_ix
     unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
 end
 
@@ -189,30 +198,96 @@ ph_uw=ph_uw-repmat(nanmean(ph_uw(ref_ps,:),1),ps.n_ps,1);
 lambda=getparm('lambda');
 ph_uw=double(ph_uw/4/pi*lambda*1000)'; 
 G=[ones(N,1),double(day)/365.25] ;
+
+% computing mean velocity
 mean_v=lscov(G,ph_uw,ifg_cov)';
 mean_v=mean_v(:,2);
 
-ph_uw=chol(inv(ifg_cov))*ph_uw;
-G=chol(inv(ifg_cov))*G;
 
+% perform the bootstrapping
 n=10000; % process n PS at a time
 i=1;
-mean_v_std=zeros(ps.n_ps,1,'single');
+mean_v_std=NaN(ps.n_ps,1,'single');
 rand_init=sum(100*clock);
-while i<ps.n_ps
-    if i+n< ps.n_ps
-       i_end=i+n-1;
-    else
-       i_end=ps.n_ps;
+n_ifg = size(ph_uw,1);
+
+
+if strcmpi(chol_flag,'y')
+    % cholesky decomposition of the set of linear equations including
+    % covariance. This allows to use the decomposition values in a uniform
+    % LSQ inversion. i.e. the covariance matrix does not need to be
+    % inverted each time.
+    ph_uw=chol(inv(ifg_cov))*ph_uw;
+    G=chol(inv(ifg_cov))*G;
+
+    % looping over the PS segments
+    while i<ps.n_ps
+        if i+n< ps.n_ps
+           i_end=i+n-1;
+        else
+           i_end=ps.n_ps;
+        end
+        ph_bit=ph_uw(:,i:i_end);
+
+        % in-case of nans and only a subset being processed
+        ix_non_nan = sum(isnan(ph_bit),1)==0;
+        
+        % fix the random generator, such its the same for each segment
+        rand('twister',rand_init);
+
+        % skip the segment in case of nan's
+        if sum(ix_non_nan)>0
+            if sum(ix_non_nan)== length(ix_non_nan)
+                [mean_v_dist,boot_ix] = bootstrp(n_boot, @(x) single(lscov(G(x,:),ph_bit(x,:))), [1:N]);
+                 temp = std(mean_v_dist(:,2:2:end))';
+            else
+                [mean_v_dist_temp,boot_ix] = bootstrp(n_boot, @(x) single(lscov(G(x,:),ph_bit(x,ix_non_nan))), [1:N]);
+                temp = NaN([size(ph_bit,2) 1]); 
+                temp(ix_non_nan) = std(mean_v_dist_temp(:,2:2:end))';
+                clear mean_v_dist_temp
+            end
+            mean_v_std(i:i_end) =temp;       
+        end
+        i=i+n;
+        fprintf('%d PS processed\n',i-1)
     end
-    ph_bit=ph_uw(:,i:i_end);
-    rand('twister',rand_init)
     
-    [mean_v_dist,boot_ix] = bootstrp(n_boot, @(x) single(lscov(G(x,:),ph_bit(x,:))), [1:N]);
-    mean_v_std(i:i_end) = std(mean_v_dist(:,2:2:end))';
-    i=i+n;
-    fprintf('%d PS processed\n',i-1)
+    
+else
+    % conventional bootstrapping where the coveriance matrix is inverted on
+    % each set PS segments.
+    while i<ps.n_ps
+        if i+n< ps.n_ps
+           i_end=i+n-1;
+        else
+           i_end=ps.n_ps;
+        end
+        ph_bit=ph_uw(:,i:i_end);
+
+        % in-case of nans and only a subset being processed
+        ix_non_nan = sum(isnan(ph_bit),1)==0;
+        
+        % fix the random generator, such its the same for each segment
+        rand('twister',rand_init)
+
+        % skip the segment in case of nan's
+        if sum(ix_non_nan)>0
+            if sum(ix_non_nan)== length(ix_non_nan)
+                [mean_v_dist,boot_ix] = bootstrp(n_boot, @(x) single(lscov(G(x,:),ph_bit(x,:),ifg_cov)), [1:N]);
+                temp = std(mean_v_dist(:,2:2:end))';
+            else
+               fprintf('test\n')
+               [mean_v_dist_temp,boot_ix] = bootstrp(n_boot, @(x) single(lscov(G(x,:),ph_bit(x,ix_non_nan),ifg_cov(ix_non_nan,ix_non_nan))), [1:N]);
+               temp = NaN([size(ph_bit,2) 1]); 
+               temp(ix_non_nan) = std(mean_v_dist_temp(:,2:2:end))';
+               clear mean_v_dist_temp
+            end
+            mean_v_std(i:i_end) =temp;       
+        end
+        i=i+n;
+        fprintf('%d PS processed\n',i-1)
+    end
 end
 
-save(mvname,'n_boot','subtract_switches','mean_v','mean_v_std')
+stamps_save(mvname,n_boot,subtract_switches,mean_v,mean_v_std)
 
