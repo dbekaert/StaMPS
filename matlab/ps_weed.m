@@ -23,6 +23,7 @@ function []=ps_weed(all_da_flag,no_weed_adjacent,no_weed_noisy)
 %   09/2015 AH: use matlab triangulation if triangle program not installed
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
+%   10/2017 DB: if inc is present also do weeding on it.
 %   ===================================================================
 logit;
 logit('Weeding selected pixels...')
@@ -63,13 +64,14 @@ phname=['ph',num2str(psver)];
 selectname=['select',num2str(psver)];
 hgtname=['hgt',num2str(psver),'.mat'];
 laname=['la',num2str(psver),'.mat'];
+incname=['inc',num2str(psver),'.mat'];
 bpname=['bp',num2str(psver),'.mat'];
-
 psothername=['ps_other'];
 psothername=['pm_other'];
 selectothername=['select_other'];
 hgtothername=['hgt_other'];
 laothername=['la_other'];
+incothername=['inc_other'];
 bpothername=['bp_other'];
 
 ps=load(psname);
@@ -479,6 +481,20 @@ if exist(laname,'file')
 %    save(['la',num2str(psver+1),'.mat'],'la');
     stamps_save(['la',num2str(psver+1),'.mat'],la);
     clear la
+end
+
+
+if exist(incname,'file')
+    inc=load(incname);
+    inc=[inc.inc(ix2)];
+    if all_da_flag~=0
+        inco=load(incothername);
+        inc=[inc;inco.inc_other(ix_other)];
+        clear inco
+    end
+    inc=inc(ix_weed);
+    stamps_save(['inc',num2str(psver+1),'.mat'],inc);
+    clear inc
 end
 
 if exist(bpname,'file')
