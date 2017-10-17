@@ -19,6 +19,8 @@ function []=ps_est_gamma_quick(restart_flag)
 %   05/2015 AH: add maximum iteration criteria
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
+%   09/2017 DB: if inc file is present directly use that instead of look
+%               angle file
 %   ==============================================================
 logit;
 logit('Estimating gamma for candidate pixels')
@@ -60,6 +62,7 @@ psname=['ps',num2str(psver)];
 phname=['ph',num2str(psver)];
 bpname=['bp',num2str(psver)];
 laname=['la',num2str(psver),'.mat'];
+incname=['inc',num2str(psver),'.mat'];
 pmname=['pm',num2str(psver),'.mat'];
 daname=['da',num2str(psver),'.mat'];
 
@@ -112,12 +115,20 @@ ph=ph./A;
 %%% ===============================================
 %%% The code below needs to be made sensor specific
 %%% ===============================================
-if exist(laname,'file')
-    la=load(laname);
-    inc_mean=mean(la.la)+0.052; % incidence angle approx equals look angle + 3 deg
-    clear la
+if exist(incname,'file')
+    fprintf('Found inc angle file \n')
+    inc=load(incname);
+    inc_mean=mean(inc.inc(inc.inc~=0));
+    clear inc
 else
-    inc_mean=21*pi/180; % guess the incidence angle
+    if exist(laname,'file')
+        fprintf('Found look angle file \n')
+        la=load(laname);
+        inc_mean=mean(la.la)+0.052; % incidence angle approx equals look angle + 3 deg
+        clear la
+    else
+        inc_mean=21*pi/180; % guess the incidence angle
+    end
 end
 max_K=max_topo_err/(lambda*rho*sin(inc_mean)/4/pi);
 %%% ===============================================
