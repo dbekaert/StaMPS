@@ -7,7 +7,6 @@ function [ref_ps]=ps_setref(ps2)
 %   02/2010 AH option to also use circular reference area
 %   04/2013 DB Allow for another ps2 to be specified
 %   05/2014 DB when ref_radius is set to -inf then no reference is selected
-
 if nargin<1
     load psver
     psname=['ps',num2str(psver)];
@@ -48,8 +47,8 @@ end
 if isempty(ref_ps)
    if nargin ==1
        fprintf('None of your external data points have a reference, all are set as reference. \n')
+       ref_ps=[1:ps2.n_ps]';
    end
-   ref_ps=[1:ps2.n_ps]';
 end
 
 if nargin <1
