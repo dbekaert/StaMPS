@@ -58,17 +58,18 @@ if ~isempty(iono_flag)
     if rank(G3)<size(G3,2) 
         error('There are isolated subsets that do not have an APS estimate (cannot be inverted w.r.t. master)')
     end
-    aps_corr_sb= aps_corr_sb(:,unwrap_ifg_index_new);
 
+    aps_corr_sb= aps_corr_sb(:,unwrap_ifg_index_new);
     G2 =G3;
     
-    
     % check if the master to be inverted actually has a delay estimated with it.
-    ifgs_days = unique(reshape(ps.ifgday((sum(aps_corr_sb)~=0),:),[],1));
+    ifgday_new = ps.ifgday(unwrap_ifg_index_new,:);
+    ifgs_days = unique(reshape(ifgday_new((sum(aps_corr_sb)~=0),:),[],1));
+
     if sum(ps.master_day==ifgs_days)~=1
         error('Master does not have an APS estimated, inversion not possible')
     end
-    
+
     aps_corr=zeros(ps.n_ps,ps.n_image,'single');
     aps_corr(:,nzc_ix)=lscov(G2,double(aps_corr_sb'))';
     
