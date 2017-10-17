@@ -23,6 +23,7 @@ function []=ps_calc_scla(use_small_baselines,coest_mean_vel)
 %   09/2015 DB/EH: Debug nans, deramping fix using script ps_deramp
 %   09/2016 AH: Drop master from single master baseline calc for SB
 %   06/2017 DB: include stamps_save for larger variables
+%   09/2017 DB: drop_master_ix is not defined, fix this
 %   ================================================================
 logit;
 logit(sprintf('Estimating spatially-correlated look angle error...'),2)
@@ -173,7 +174,7 @@ if use_small_baselines==0
 
         G=G(:,unwrap_ifg_index);
         bperp_some=[G\double(bp.bperp_mat')]';
-        bperp_mat(:,drop_master_ix)=bperp_some;
+        bperp_mat(:,unwrap_ifg_index)=bperp_some;
         clear bperp_some
     else
         bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
