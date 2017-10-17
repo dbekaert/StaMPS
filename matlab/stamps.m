@@ -213,15 +213,27 @@ if strcmpi(stamps_PART1_flag,'y')
         logit(fillstr)
         logit(['Directory is ',patchsplit{end}])
         fprintf(skipstr);
-
- 
-        
         if strcmpi(small_baseline_flag,'y')
             try 
                 if strcmpi(insar_processor,'gamma')
                     sb_load_initial_gamma;
                 elseif strcmpi(insar_processor,'gsar')
                     sb_load_initial_gsar;
+                elseif  strcmpi(insar_processor,'isce')
+                    if exist('data_inc','var')==0
+                        % already in patch dir, file contained in the InSAR dir
+                        inc_angle = ['..' filesep 'inc_angle.raw'];
+                        if exist(inc_angle,'file')~=2
+                             inc_angle = ['..' filesep inc_angle];
+                        end
+                        if exist(inc_angle,'file')==2
+                            fprintf('Found inc angle file, will load the data \n')
+                            data_inc = (load_isce(inc_angle));
+                        else
+                            data_inc=[];
+                        end
+                    end
+                    sb_load_initial_isce(data_inc)
                 else
                     sb_load_initial;
                 end
@@ -249,6 +261,22 @@ if strcmpi(stamps_PART1_flag,'y')
                     ps_load_initial_gamma;
                 elseif strcmpi(insar_processor,'gsar')
                     ps_load_initial_gsar;
+                elseif  strcmpi(insar_processor,'isce')
+                     if exist('data_inc','var')==0
+                        % already in patch dir, file contained in the InSAR dir
+                        inc_angle = ['..' filesep 'inc_angle.raw'];
+                        if exist(inc_angle,'file')~=2
+                             inc_angle = ['..' filesep inc_angle];
+                        end
+                        if exist(inc_angle,'file')==2
+                            fprintf('Found inc angle file, will load the data \n')
+                            data_inc = (load_isce(inc_angle));
+                        else
+                            data_inc=[];
+                        end
+                    end
+                    ps_load_initial_isce(data_inc)  
+         
                 else
                     ps_load_initial;
                 end
@@ -271,8 +299,11 @@ if strcmpi(stamps_PART1_flag,'y')
         end
         elseif start_step <=4
             setpsver(1)
-        end
+      end
 
+        
+      
+      
         if start_step<=2 & end_step >=2 
             msgstr(round(nfill)/2-3:round(nfill/2)+4)=' Step 2 ';
             fprintf(skipstr);
