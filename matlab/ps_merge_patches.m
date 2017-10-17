@@ -19,7 +19,9 @@ function []=ps_merge_patches(psver)
 %   02/2011 DB: Fix dimension for min computation of ps.xy 
 %   09/2015 AH: Delete previous merged amplitude files
 %   06/2017 DB: Include stamps save for large variables
+%   10/2017 DB: If inc angle file is present also merge it.
 %   ======================================================================
+
 logit;
 fprintf('Merging patches...\n')
 
@@ -46,6 +48,7 @@ sclasbname=['scla_sb',num2str(psver)];
 scnname=['scn',num2str(psver)];
 bpname=['bp',num2str(psver)];
 laname=['la',num2str(psver)];
+incname=['inc',num2str(psver)];
 hgtname=['hgt',num2str(psver)];
 
 if exist('./patch.list','file')
@@ -84,6 +87,7 @@ C_ps_uw=zeros(0,0,'single');
 C_ps_uw_sb=zeros(0,0,'single');
 bperp_mat=zeros(0,0,'single');
 la=zeros(0,0);
+inc=zeros(0,0);
 hgt=zeros(0,0);
 amp=zeros(0,0,'single');
 
@@ -347,6 +351,25 @@ end
       clear lain
     end
 
+     if exist(['./',incname,'.mat'],'file')
+      incin=load(incname);
+      if grid_size==0
+        inc=[inc;incin.inc(ix,:)];
+      elseif grid_size ~=0 && ix_no_ps~=1
+        inc_g=zeros(n_ps_g,1);
+        incin.inc=incin.inc(ix,:);
+        for i=1:n_ps_g
+          weights=ps_weight(f_ix(i):l_ix(i));
+          inc_g(i)=sum(incin.inc(f_ix(i):l_ix(i)).*weights,1)/sum(weights(:,1));
+        end  
+        inc=[inc;inc_g];
+        clear inc_g
+      end
+      clear incin
+    end
+    
+    
+    
     if exist(['./',hgtname,'.mat'],'file')
       hgtin=load(hgtname);
       if grid_size==0
@@ -587,6 +610,16 @@ else
 end
 stamps_save(laname,la);
 clear la
+
+if size(inc,1)==n_ps_orig
+    inc=inc(sort_ix,:);
+else
+    inc=[];
+end
+stamps_save(incname,inc);
+clear inc
+
+
 
 if size(hgt,1)==n_ps_orig
     hgt=hgt(sort_ix,:);
