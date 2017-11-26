@@ -14,6 +14,7 @@
 // 01/2010 MCC Drop low amplitudes
 // 12/2012 AH Add byteswap and short options
 // 12/2012 AH Correct mask processing
+// 08/2017 AH add "else" in  mask processing
 // ==============================================
 
 #include <string.h> 
@@ -185,6 +186,7 @@ try {
   if (argc < 10) 
   {
   }
+  else
   { 
       ifstream masterparmfile (argv[9], ios::in);
       if (! masterparmfile.is_open()) 
@@ -194,7 +196,7 @@ try {
       }    
       masterparmfile >> masterampfilename;
   }
-     
+
   ifstream masterampfile (masterampfilename, ios::in);
   if (masterampfile.is_open()) 
   {	  
@@ -349,10 +351,18 @@ try {
       if (prec[0]=='s')
       {
           masterlines[x] = 1;
+          if (byteswap == 1)
+          {
+             cshortswap(&masterlines[x]);
+          }
       }
       else
       {
           masterlinef[x] = 1;
+          if (byteswap == 1)
+          {
+             cfloatswap(&masterlinef[x]);
+          }
       }
   }
 

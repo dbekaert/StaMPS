@@ -48,8 +48,7 @@ CFLAGS	=	-O3
 ##################################################################
 
 ### The programs we want
-PROGS	=	selsbc_patch_new \
-		calamp \
+PROGS	=	calamp \
 		selpsc_patch \
 		selsbc_patch \
 		cpxsum \

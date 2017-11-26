@@ -10,6 +10,7 @@
 # 12/2012 AH: Short and byteswap options
 # 12/2012 DB: Allow for a list to be given as input
 # 02/2013 AH: Short and byteswap options for small baselines
+# 08/2017 AH: Leave maskfile from selpsc/sbc if not present 
 # ===========================================================================
 # 
 # mt_extract_cands dophase dolonlat dodem docands precision byteswap mask_file patch_list
@@ -90,28 +91,47 @@ set dirname = `echo $WORKDIR | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
 foreach patch(`cat $list`)
 
     cd $patch
+    echo ""
     echo "Patch:" $patch
 
     if ($docands == 1) then
         if ( -e $WORKDIR/selsbc.in) then # Select SB candidates 
-            selsbc_patch_new $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile
+          if ( $maskfile != "" ) then 
+            echo "selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile"
+            selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile
+          else
+            echo "selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap"
+            selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap 
+          endif
         else # Select PS candidates 
+          if ( $maskfile != "" ) then 
+            echo "selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile"
             selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap $WORKDIR/$maskfile
+          else
+            echo "selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap "
+            selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $prec $byteswap 
+          endif
         endif
     endif
 
     if ($dolonlat == 1) then
         # Retrieve lon/lat for PS candidates
+        echo ""
+        echo "psclonlat $WORKDIR/psclonlat.in pscands.1.ij pscands.1.ll"
         psclonlat $WORKDIR/psclonlat.in pscands.1.ij pscands.1.ll
     endif
 
     if ($dodem == 1) then
         # Retrieve hgt for PS candidates
+        echo ""
+        echo "pscdem $WORKDIR/pscdem.in pscands.1.ij pscands.1.hgt"
         pscdem $WORKDIR/pscdem.in pscands.1.ij pscands.1.hgt
     endif
 
     if ($dophase == 1) then
         # Retrieve phase for PS candidates
+        echo ""
+        echo "pscphase $WORKDIR/pscphase.in pscands.1.ij pscands.1.ph"
         pscphase $WORKDIR/pscphase.in pscands.1.ij pscands.1.ph
     endif
 

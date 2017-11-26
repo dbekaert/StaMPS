@@ -7,7 +7,8 @@ function []=ps_load_initial_gamma(endian)
 %   01/2016 DB: Replace save with stamps_save which checks for var size when
 %               saving 
 %   01/2016 AH: Save sensor
-%   12/2016 AH: set xy from lonlat 
+%   12/2016 AH: Set xy from lonlat 
+%   08/2017 AH: Allow for missing null ifg
 %   =======================================================================
   
 
@@ -31,11 +32,17 @@ pscname=['../pscphase.in'];
 
 psver=1;
 fid=fopen(rscname);
+if fid<0
+    error([rscname,' does not exist'])
+end
 rslcpar=textscan(fid,'%s');
 rslcpar=rslcpar{1}{1};
 fclose(fid);
 
 fid=fopen(pscname);
+if fid<0
+    error([pscname,' does not exist'])
+end
 ifgs=textscan(fid,'%s');
 fclose(fid);
 ifgs=ifgs{1}(2:end);
@@ -60,6 +67,12 @@ monthday=master_day-year*10000-month*100;
 master_day=datenum(year,month,monthday);
 
 master_ix=sum(day<master_day)+1;
+if day(master_ix)~=master_day
+    master_master_flag='0' % no null master-master ifg provided
+    day=[day(1:master_ix-1);master_day;day(master_ix:end)];
+else
+    master_master_flag='1' % yes, null master-master ifg provided
+end
 
 heading=readparm(rslcpar,'heading:');
 setparm('heading',heading,1);
@@ -105,8 +118,13 @@ for i=1:n_ifg
     bperp_mat(:,i)=bc.*cos(look)-bn.*sin(look); % Convert baselines from (T)CN to perp-para coordinates
     %bpara=bc*sin(look)+bn*cos(look)
 end
+
 bperp=mean(bperp_mat)';
-bperp_mat=bperp_mat(:,[1:master_ix-1,master_ix+1:end]);
+if master_master_flag==1
+    bperp_mat=bperp_mat(:,[1:master_ix-1,master_ix+1:end]);
+else
+    bperp=[bperp(1:master_ix-1);0;bperp(master_ix:end)];
+end
 %bperp=[bperp(1:master_ix-1);0;bperp(master_ix:end)]; % insert master-master bperp (zero)
 %bperp_mat=repmat(single(bperp([1:master_ix-1,master_ix+1:end]))',n_ps,1);
 
@@ -124,7 +142,13 @@ end
 
 zero_ph=sum(ph==0,2);
 nonzero_ix=zero_ph<=1;       % if more than 1 phase is zero, drop node
-ph(:,master_ix)=1;
+if master_master_flag==1
+    ph(:,master_ix)=1;
+else
+    ph=[ph(:,1:master_ix-1),ones(n_ps,1),ph(:,master_ix:end)];
+    n_ifg=n_ifg+1;
+    n_image=n_image+1;
+end
 
 if exist(llname,'file')
     fid=fopen(llname,'r');

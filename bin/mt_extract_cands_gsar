@@ -110,7 +110,7 @@ foreach patch(`cat $list`)
 
     if ($docands != 0) then
         if ( -e $WORKDIR/selsbc.in) then # Select SB candidates 
-            selsbc_patch_new $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $docands $byteswap $WORKDIR/$maskfile
+            selsbc_patch $WORKDIR/selsbc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $docands $byteswap $WORKDIR/$maskfile
         else # Select PS candidates 
             echo selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $docands $byteswap $WORKDIR/$maskfile masteramp.in
             selpsc_patch $WORKDIR/selpsc.in patch.in pscands.1.ij pscands.1.da mean_amp.flt $docands $byteswap $WORKDIR/$maskfile $WORKDIR/masteramp.in

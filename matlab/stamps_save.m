@@ -38,8 +38,9 @@ function [] = stamps_save(save_name,varargin)
 % DB    12/2016     Update to the version of TRAIN which allows for
 %                   appending, error catching and folder generation if
 %                   needed. Refer to TRAIN toolbox for the latest version.
+% AH    08/2017     If no directory specified, ensure only current directory 
+%                   searched. Add '.mat' if not specified.
 %
-
 % maximum number of bytes before using the -v3.7 option to save
 n_bytes_max = 2^31;       % is about 2 GB
 
@@ -59,17 +60,23 @@ for k=1:length(varargin)
     end
 end
 
+if length(save_name)<5 | save_name(end-3:end)~='.mat'
+    save_name=[save_name,'.mat'];
+end
+
 % check if the save folder exists, if not make it.
 [path,temp,temp] = fileparts(save_name);
 if ~isempty(path)
     if exist(path,'dir')~=7
         mkdir(path);
     end
+else
+    save_name=['./',save_name]; % ensure only current directory searched
 end
 
 % choose the saving option
 if exist(save_name,'file')==2
-    fprintf('File exist will append\n')
+    %fprintf('File exists will append\n')
     if strcmpi(switch_option,'y')
        fprintf('Your variables are reaching 2GB limit, revert to save -v7.3 \nThis will be slower but avoids matlab not saving the data\n') ;
        % Matlab refuese to append in the "-v7.3" mode to an different formatted file.

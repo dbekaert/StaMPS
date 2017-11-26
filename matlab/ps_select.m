@@ -25,10 +25,10 @@ function []=ps_select(reest_flag,plot_flag)
 %   01/2013 AH: Set default threshold if not enough random pixels
 %   04/2015 DB: Give a warning to remove patch from patch list when no PS are left
 %   09/2015 DB: Store information on nr of PS left. Support auto procesing
-%   01/2016 DB: Replace save with stamps_save which checks for var size when
-%               saving 
+%   01/2016 DB: Replace save with stamps_save 
 %   02/2016 DB: Identified bug when patch size is smaller than filter size.
-%               For now drop this patch. This needs to be fixed better.stam
+%               For now drop this patch. This needs to be fixed better.
+%   08/2017 AH: Ensure coh_thresh not negative.
 %   ======================================================================
 logit;
 logit('Selecting stable-phase pixels...')
@@ -202,6 +202,7 @@ else
  end
 end
 
+coh_thresh(coh_thresh<0)=0; % to ensures pixels with coh=0 are rejected
 
 logit(sprintf('Initial gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A)))
 
@@ -409,6 +410,8 @@ if reest_flag~=1
             coh_thresh_coeffs=[];
         end
     end
+    
+    coh_thresh(coh_thresh<0)=0; % to ensures pixels with coh=0 are rejected
 
     logit(sprintf('Reestimation gamma threshold: %.3f at D_A=%.2f to %.3f at D_A=%.2f',min(coh_thresh),min(D_A),max(coh_thresh),max(D_A)))
 

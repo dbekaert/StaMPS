@@ -31,7 +31,7 @@ if strcmpi(patches_flag,'y')
             end
         end
     else
-        patchdir=dir('PATCH*');
+        patchdir=dir('PATCH_*');
     end
     if isempty(patchdir)
         patches_flag='n';

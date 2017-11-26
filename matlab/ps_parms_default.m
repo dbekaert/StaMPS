@@ -63,6 +63,10 @@ if ~isfield(parms,'quick_est_gamma_flag')
     parms.quick_est_gamma_flag='y';
 end
 
+if ~isfield(parms,'select_reest_gamma_flag')
+    parms.select_reest_gamma_flag='y';
+end
+
 if ~isfield(parms,'filter_grid_size')
     parms.filter_grid_size=50;
 end

@@ -47,6 +47,7 @@ function stamps(start_step,end_step,patches_flag,est_gamma_parm,patch_list_file,
 %   06/2017 DB: Catching when no PS are left from step 1, allow for re-run
 %               when parameters have changed.
 %   06/2017 DB: Option to continue from last know processing step
+%   08/2107 AH: Removed catch as proceeds also when error in Step 1
 %   =================================================================
 
 nfill=40;
@@ -56,9 +57,9 @@ msgstr=fillstr;
 
 fprintf(skipstr);
 logit(fillstr);
-msgstr(round(nfill)/2-12:round(nfill/2)+13)=' StaMPS/MTI Version 4.0b2 ';
+msgstr(round(nfill)/2-12:round(nfill/2)+13)=' StaMPS/MTI Version 4.0b3 ';
 logit(msgstr);
-msgstr(round(nfill)/2-12:round(nfill/2)+13)='  Beta version, Jan 2016  ';
+msgstr(round(nfill)/2-12:round(nfill/2)+13)='  Beta version, Aug 2017  ';
 logit(msgstr);
 logit(fillstr);
 fprintf(skipstr);
@@ -66,6 +67,7 @@ fprintf(skipstr);
 
 
 quick_est_gamma_flag=getparm('quick_est_gamma_flag');
+reest_gamma_flag=getparm('select_reest_gamma_flag');
 unwrap_method=getparm('unwrap_method');
 unwrap_prefilter_flag=getparm('unwrap_prefilter_flag');
 small_baseline_flag=getparm('small_baseline_flag');
@@ -214,8 +216,8 @@ if strcmpi(stamps_PART1_flag,'y')
         logit(['Directory is ',patchsplit{end}])
         fprintf(skipstr);
         if strcmpi(small_baseline_flag,'y')
-            try 
-                if strcmpi(insar_processor,'gamma')
+%             try 
+                if strcmpi(insar_processor,'gamma') | strcmpi(insar_processor,'snap')
                     sb_load_initial_gamma;
                 elseif strcmpi(insar_processor,'gsar')
                     sb_load_initial_gsar;
@@ -241,23 +243,23 @@ if strcmpi(stamps_PART1_flag,'y')
                 % reset as we are currently re-processing
                 stamps_step_no_ps(1:end)=0;
                 
-            catch
-
-               load('no_ps_info.mat');
-               % reset as we are currently re-processing
-               stamps_step_no_ps(1:end)=0;
-               fprintf('***No PS points left. Updating the stamps log for this****\n')
-               % update the flag indicating no PS left in step 1
-               stamps_step_no_ps(1)=1;
-               psver =1;
-               save('psver.mat','psver')
-                
-            end
+%             catch
+% 
+%                load('no_ps_info.mat');
+%                % reset as we are currently re-processing
+%                stamps_step_no_ps(1:end)=0;
+%                fprintf('***No PS points left. Updating the stamps log for this****\n')
+%                % update the flag indicating no PS left in step 1
+%                stamps_step_no_ps(1)=1;
+%                psver =1;
+%                save('psver.mat','psver')
+%                 
+%             end
             save('no_ps_info.mat','stamps_step_no_ps')
 
         else
-            try 
-                if strcmpi(insar_processor,'gamma')
+%             try 
+                if strcmpi(insar_processor,'gamma') | strcmpi(insar_processor,'snap')
                     ps_load_initial_gamma;
                 elseif strcmpi(insar_processor,'gsar')
                     ps_load_initial_gsar;
@@ -283,18 +285,18 @@ if strcmpi(stamps_PART1_flag,'y')
                 load('no_ps_info.mat');
                 % reset as we are currently re-processing
                 stamps_step_no_ps(1:end)=0;
-            catch
-                load('no_ps_info.mat');
-                % reset as we are currently re-processing
-                stamps_step_no_ps(1:end)=0;
-                fprintf('***No PS points left. Updating the stamps log for this****\n')
-                % update the flag indicating no PS left in step 1
-                stamps_step_no_ps(1)=1;
-                save('no_ps_info.mat','stamps_step_no_ps')
-                psver =1;
-                save('psver.mat','psver')
-
-            end
+%             catch
+%                 load('no_ps_info.mat');
+%                 % reset as we are currently re-processing
+%                 stamps_step_no_ps(1:end)=0;
+%                 fprintf('***No PS points left. Updating the stamps log for this****\n')
+%                 % update the flag indicating no PS left in step 1
+%                 stamps_step_no_ps(1)=1;
+%                 save('no_ps_info.mat','stamps_step_no_ps')
+%                 psver =1;
+%                 save('psver.mat','psver')
+% 
+%             end
             save('no_ps_info.mat','stamps_step_no_ps')
         end
         elseif start_step <=4
@@ -350,7 +352,7 @@ if strcmpi(stamps_PART1_flag,'y')
             
             % run step 3 when there are PS left in step 2
             if stamps_step_no_ps(2)==0
-                if strcmpi(quick_est_gamma_flag,'y')
+                if strcmpi(quick_est_gamma_flag,'y') & strcmpi(reest_gamma_flag,'y')
                     ps_select;
                 else
                     ps_select(1);

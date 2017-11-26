@@ -12,6 +12,7 @@ function []=uw_stat_costs(unwrap_method,variance,subset_ifg_index);
 %   02/2012 AH: Updated for 3D_NEW method
 %   03/2013 AH: Add variance option for 2D method
 %   08/2014 DB: Suppress external command window output
+%   08/2017 AH: Allow for methods that don't set predef_ix
 %   ======================================================================
 
 
@@ -38,9 +39,8 @@ if nargin<3
     subset_ifg_index=[1:size(uw.ph,2)];
 end
 
-if isempty(ut.predef_ix)
-    predef_flag='n';
-else
+predef_flag='n';
+if isfield(ut,'predef_ix') & ~isempty(ut.predef_ix)
     predef_flag='y';
 end
 
