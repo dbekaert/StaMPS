@@ -10,6 +10,7 @@ function []=sb_invert_aps(aps_flag)
 % 09/2015   DB  Add some extra options such as MODIS. 
 % 08/2017   DB  Using aps_save to store the variables
 % 10/2017   DB  Bug fix for error catching of missing master
+% 11/2017   DB  Adding merra, merra2, and gacos model
 
 logit;
 
@@ -124,7 +125,34 @@ if ~isempty(aps_flag)
         aps_save(apsname,ph_tropo_modis_recal)
     elseif aps_flag==20 % modis correction (not interpolated)
         ph_tropo_modis_no_interp_recal= aps_corr;
-        aps_save(apsname,ph_tropo_modis_no_interp_recal)       
+        aps_save(apsname,ph_tropo_modis_no_interp_recal)   
+        
+        
+        
+     elseif aps_flag==29 % MERRA correction
+        ph_tropo_merra = aps_corr;
+        aps_save(apsname,ph_tropo_merra)       
+    elseif aps_flag==31 % MERRA correction
+        ph_tropo_merra_hydro = aps_corr;
+        aps_save(apsname,ph_tropo_merra_hydro)       
+    elseif aps_flag==33 % MERRA correction
+        ph_tropo_merra_wet = aps_corr;
+        aps_save(apsname,ph_tropo_merra_wet)     
+        
+    elseif aps_flag==30 % MERRA-2 correction
+        ph_tropo_merra2 = aps_corr;
+        aps_save(apsname,ph_tropo_merra2)       
+    elseif aps_flag==32 % MERRA-2 correction
+        ph_tropo_merra2_hydro = aps_corr;
+        aps_save(apsname,ph_tropo_merra2_hydro)       
+    elseif aps_flag==34 % MERRA-2 correction
+        ph_tropo_merra2_wet = aps_corr;
+        aps_save(apsname,ph_tropo_merra2_wet)    
+        
+   elseif aps_flag==35 % GACOS correction
+        ph_tropo_gacos = aps_corr;
+        aps_save(apsname,ph_tropo_gacos)        
+        
     else
         error('Currently other options not supported.\nIf you are combining a combination of two different techniques, try the following:\n plot each technique for a SM correction\n')
     end
