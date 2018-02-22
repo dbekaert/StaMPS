@@ -8,6 +8,7 @@ function ps_gescatter(filename,data,step,opacity,climsmtx,lon_rg,lat_rg,stdev_cu
 %   ======================================================================
 %   10/2010 MA: Initial version
 %   01/2011 MA: define color limits
+%   06/2017 DB: Take random selection instead of fixed step-size to avoid patterns
 %   ======================================================================
 
 % TODO list
@@ -44,9 +45,10 @@ end
 step   % print increments of disseminated data
 
 disp('Loading lonlat matrix...')
-load ps2 lonlat
+load ps2 lonlat n_ps
 
-    
+  
+
 
 ix=lonlat(:,1)>=min(lon_rg)&lonlat(:,1)<=max(lon_rg)&lonlat(:,2)>=min(lat_rg)&lonlat(:,2)<=max(lat_rg);
 if stdev_cutoff<inf
@@ -59,7 +61,13 @@ if size(data,1)==1
     data=data.';
 end
 data=data(ix,:);
-step=1:step:size(lonlat,1);
+
+A = randperm(n_ps);
+step = sort(A(1:ceil(n_ps./step)));
+clear A
+
+
+%step=1:step:size(lonlat,1);
 
 %gescatter(filename,lonlat(step,1),lonlat(step,2),data(step,:),'size',5,'colormap','jet','opacity',opacity) 
 
