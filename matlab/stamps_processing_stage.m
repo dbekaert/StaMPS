@@ -15,6 +15,8 @@ function []= stamps_processing_stage(patch_list_file,stage_threshold)
 % optional a new patch_stage.list with those that still need to be run up to the stagethreshold level
 %
 % Bekaert David         -  June 2017
+% mofidications
+% DB    02/2018     Adding patch numbers to the plot
 
 if nargin<1 || isempty(patch_list_file)     % [DB] allow for own specified patch list file
     patch_list_file = 'patch.list';
@@ -50,12 +52,15 @@ end
 stages = zeros([length(patchdir) 1]);
 ll_mean = NaN([length(patchdir) 2]);
 counter = 1;
+patchID = [];
 for i=1:length(patchdir)
     if ~isempty(patchdir(i).name)
       cd(patchdir(i).name)
       patchsplit=strsplit(pwd,'/');
       patchdir_keep{counter}=patchsplit{end};
 
+      patchID = [patchID ; str2num(patchdir_keep{counter}(7:end))];
+      
       % stage 4
       if exist('weed1.mat','file')==2
            stages(i,1)=4;
@@ -91,6 +96,11 @@ end
 
 figure('name',['Processing ' datestr(clock,'yyyymmmdd-HHMM')]);
 scatter3(ll_mean(:,1),ll_mean(:,2),stages,15,stages,'filled');
+for k=1:length(patchID)
+    if floor(k/10)*10 ==k
+        text(ll_mean(k,1),ll_mean(k,2),num2str(patchID(k)))
+    end
+end
 view(0,90)
 axis equal
 axis tight
