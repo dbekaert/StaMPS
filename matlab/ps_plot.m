@@ -10,52 +10,63 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %    In the case of velocities, +ve values are towards the satellite.
 %
 %    an invalid VALUE_TYPE related to double removing of atmosphere:
-%    anything when removing master and estiamted tropospheric signals: 'ma'
+%    anything when removing master and estimated tropospheric signals: 'ma'
 %
 %    valid VALUE_TYPE's are:
-%    'hgt' for topography
-%    'w' for wrapped phase
-%    'w-a' for wrapped phase
-%    'w-d' for wrapped phase minus smoothed dem error
-%    'w-o' for wrapped phase minus orbital ramps
-%      also 'w-dm','w-do','w-dmo'
-%    'p' for spatially filtered wrapped phase 
-%    'u' for unwrapped phase
-%    'u-d' for unwrapped phase minus dem error  
-%    'u-m' for unwrapped phase minus and master AOE  
-%    'u-o' for unwrapped phase minus orbital ramps 
-%    'u-a' for unwrapped phase minus stratisfied topo-correlated atmosphere
-%          see flags below for type 'a_l', 'a_p', 'a_m' or 'a_e'.
-%      also 'u-dm','u-do','u-da','u-ao','u-dmo','u-dma','u-dms','u-dmao','u-dmos'
-%    'usb' for unwrapped phase of small baseline ifgs
+%%%% BASIC
+%    'hgt'  for topography
+%    'w'    for wrapped phase
+%    'p'    for spatially filtered wrapped phase 
+%    'u'    for unwrapped phase
+%    'usb'  for unwrapped phase of small baseline ifgs
+%    'rsb'  for residual between unwrapped phase of sb ifgs and inverted
+%    'd'    for spatially correlated DEM error (rad/m) estimated from SM or from SB depending on your processing
+%    'D'    for spatially correlated DEM error (rad/m) from SM inverted data when using SB
+%    'm'    for AOE phase due to master
+%    'o'    for orbital ramps 
+%    's'    for atmosphere and orbit error (AOE) phase due to slave (not compatible with 'a')
+%    'a'*   for stratisfied topo-correlated atmosphere using TRAIN dependency. 
+%    'asb'* for stratisfied topo-correlated atmosphere of small baselines using TRAIN dependency
+%    *'a' & 'asb' require an additional string to indicate which APS correction to be applied:
+%             -'a_linear'                                 = (mixed) Tropospheric aps correction using linear phase-topo correction
+%             -'a_powelaw'                                = (mixed) Tropospheric aps correction using powerlaw phase-topo relationship
+%             -'a_meris'                                  = (wet) tropospheric aps correction using MERIS data (wet)
+%             -'a_modis'                                  = (wet) tropospheric aps correction using MODIS data (wet)
+%             -'a_modisRecal'                             = (wet) tropospheric aps correction using MODIS recalibrated data
+%             -'a_erai','a_erai-wet','a_erai-hydro'       = (total, wet, hydro) tropospheric aps correction using ERA-I data
+%             -'a_wrf','a_wrf-wet','a_wrf-hydro'          = (total, wet, hydro) tropospheric aps correction using WRF model data
+%             -'a_merra','a_merra-wet','a_merra-hydro'    = (total, wet, hydro) tropospheric aps correction using MERRA model data
+%             -'a_merra2','a_merra2-wet','a_merra2-hydro' = (total, wet, hydro) tropospheric aps correction using MERRA-2 model data
+%             -'a_gacos'                                  = (total) tropospheric aps correction using GACOS data
+%             -'a_pk'                                     = spatial transfer coefficient K for interferograms or specific bands.
+%    'v'    for mean LOS velocity (MLV) in mm/yr estimated from SM or from SB depending on your processing
+%    'V'    for mean LOS velocity  of MLV (mm/yr) estimated from SM inverted data when using SB
+%    'vs'   for standard deviation of MLV (mm/yr) estimated from SM or from SB depending on your processing
+%    'Vs'   for standard deviation of MLV (mm/yr) estimated from SM inverted data when using SB
+%    'vdrop'for  MLV calculated from all but current ifg (mm/yr)
+
+%%%% CORRECTIONS to BASIC
+%    'w-a'  for wrapped phase corrected for atmopshere
+%    'w-d'  for wrapped phase minus smoothed dem error
+%    'w-o'  for wrapped phase minus orbital ramps
+%           also 'w-dm','w-do','w-dmo'
+%    'u-d'  for unwrapped phase minus dem error  
+%    'u-m'  for unwrapped phase minus and master AOE  
+%    'u-o'  for unwrapped phase minus orbital ramps 
+%    'u-a'  for unwrapped phase minus stratisfied topo-correlated atmosphere
+%           also 'u-dm','u-do','u-da','u-ao','u-dmo','u-dma','u-dms','u-dmao','u-dmos'
 %    'usb-d' 
 %    'usb-o' 
 %    'usb-a' 
-%      also 'usb-do' ,'usb-da','usb-dao'
-%    'rsb' residual between unwrapped phase of sb ifgs and inverted
-%    'a' for stratisfied topo-correlated atmosphere see flags below for
-%    type 'a_l', 'a_p', 'a_m', 'a_e' ('a_eh' for hydrostatic and 'a_ew' for wet), 'a_w' ('a_wh' for hydrostatic and 'a_ww' for wet).
-%    'a' with the additional flag of 'a_pk' to show the spatial transfer
-%          coefficient K for interferograms or specific bands.
-%    'asb' for stratisfied topo-correlated atmosphere of small baselines.
-%        see flags below for type 'a_l', 'a_p', 'a_m', 'a_e' and 'a_w'.
-%    'asb' with the additional flag of 'a_pk' to show the spatial transfer
-%          coefficient K for interferograms or specific bands.
-%    'd' for spatially correlated DEM error (rad/m)
-%    'm' for AOE phase due to master
-%    'o' for orbital ramps 
-%    's' for atmosphere and orbit error (AOE) phase due to slave
-%    'v' mean LOS velocity (MLV) in mm/yr
-%    'v-d' 
+%           also 'usb-do' ,'usb-da','usb-dao'
+%    'v-d'  for mean LOS velocity (MLV) in mm/yr minus smoothed dem error
 %    'v-o' 
 %    'v-a' 
-%      also 'v-do','v-da',v-dao' 
-%    'vs' standard deviation of MLV (mm/yr)
-%    'vs-d'
+%           also 'v-do','v-da',v-dao','v-s','v-so'and the capital V options
+%    'vs-d' for standard deviation of MLV (mm/yr) minus smoothed dem error
 %    'vs-o' 
 %    'vs-a' 
-%      also 'vs-do', 'vs-da', 'vs-dao' 
-%    'vdrop' MLV calculated from all but current ifg (mm/yr)
+%      also 'vs-do', 'vs-da', 'vs-dao' and the capital Vs options
 %    'vdrop-d' 
 %    'vdrop-o' 
 %      also 'vdrop-do' 
@@ -99,16 +110,11 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %    LAT_RG = latitude range - defaults to [] (whole image)
 %
 %    'ts'   = produce time series plot on user click over velocity plots.
-%             the position of this switch is not important.
+%             the position of this switch is not important. 
+%             Note needs to be SM (v-option) of SB inverted to SM
+%             time-series (V-option)
 %
-%    Topography correlated correlation options
-%    'a_l'  = topography correlated aps correction using linear correction
-%    'a_p'  = topography correlated aps correction using power law relationship
-%    'a_m'  = topography correlated aps correction using MERIS data
-%    'a_M'  = topography correlated aps correction using MODIS data
-%    'a_RM'  = topography correlated aps correction using MODIS recalibrated data
-%    'a_e'  = topography correlated aps correction using ERA-I data
-%    'a_w'  = topography correlated aps correction using WRF model data
+%
 %    'ifg i' = only for 'a_p' show the topopgraphy correlated aps correction
 %              for the ith interferogram for all spatial bands. Note that
 %              the definition of ifg_list changes the spatial bands for this option.
@@ -207,6 +213,10 @@ function [h_fig,lims,ifg_data_RMSE,h_axes_all]=ps_plot(value_type,varargin)
 %   03/2015 DB: Update and clean for relaese with TRAIN
 %   05/2015 DB: Fix to separate hgt from t options
 %   12/2016 DB: Update output syntax, remove warning ps_plot('V-Do')
+%   06/2016 DB: Fix in case the master is still included in SM inversion
+%   11/2017 DB: Updating the TRAIN plotting conventions and adding new options
+%               Only let ts option run through for option ('v') and ('V')
+%   11/2017 DB: make the s option work again
 %   ======================================================================
 
 stdargin = nargin ; 
@@ -251,9 +261,14 @@ end
 if stdargin < 9 | isempty(textcolor)
     if plot_flag==1 | plot_flag==2 |plot_flag==6
         textcolor=[0 0 0.004];
+        textcolor2=textcolor;
+
     else
         textcolor=[1 1 0.996];
+        textcolor2=[0 0 0.004];
     end
+else
+    textcolor2=textcolor;
 end
 
 if lims==0
@@ -454,7 +469,8 @@ else
     else
         unwrap_ifg_index=setdiff([1:ps.n_ifg],drop_ifg_index);
     end
-    if (value_type(1)=='u' | value_type(1)=='a' | value_type(1)=='i' | value_type(1)=='w') & isempty(ifg_list)
+    
+    if (value_type(1)=='u' | value_type(1)=='s' | value_type(1)=='a' | value_type(1)=='i' | value_type(1)=='w') & isempty(ifg_list)
         ifg_list=unwrap_ifg_index;
     end
     if ischar(value_type)~=1 & size(value_type,2)<length(ifg_list)
@@ -485,6 +501,7 @@ elseif strcmpi(group_type(1),'v')
         fprintf('Velocities calculated from small baseline interferograms\n')
     else
         group_type='v';
+        %TEMPsb_invert_uw;               % Added to make sure if the network is changed it is updated
         forced_sm_flag=1;
     end
 elseif strcmpi(group_type(1),'d')
@@ -496,9 +513,17 @@ elseif strcmpi(group_type(1),'d')
         forced_sm_flag=1;
     end
 end
-if strcmp(value_type(1),'u')
+
+% only allow TS option for 'v' and 'V' options
+if ts_flag==1 && ~(strcmp(group_type,'v') | strcmp(group_type,'vsb'))
+    fprintf('\n\n''ts'' option can only be called for:\n    -SM: ''v''-options\n    -SB to SM inverted: ''V''-options\n')
+    error('Incorrect value-type for ''ts'' option')
+end
+
+
+if strcmp(value_type(1),'u') || strcmp(value_type(1),'a')
    if length(value_type)>=3
-       if strcmp(value_type(1:3),'usb')
+       if strcmp(value_type(1:3),'usb') || strcmp(value_type(1:3),'asb')
            forced_sm_flag=0;
        else
            forced_sm_flag=1;
@@ -532,9 +557,11 @@ if aps_tide_iono_flag==1
         if isempty(strfind(value_type,'w')) 
             if (strcmpi(group_type,'vs'))==1 && use_small_baselines==0
                % this is small baselines velocity with SB aps correction
+               %TEMP
                sb_invert_aps(aps_flag);
             elseif (strcmpi(group_type,'vs'))~=1
                % this is small baselines velocity with SB aps correction
+               %TEMP
                sb_invert_aps(aps_flag);
             end
         end
@@ -1297,6 +1324,18 @@ switch(group_type)
         clear scn
         ref_ps=ps_setref;
         fig_name = 's';
+   case {'u-s'}
+        uw=load(phuwname);
+        scn=load(scnname);
+        ph_all=uw.ph_uw;
+        ph_all=uw.ph_uw - scn.ph_scn_slave;
+        ph_all(:,master_ix)=0;
+        clear uw scla
+        % subtract of oscilator drift in case of envisat
+        ph_all = ph_all-ph_unw_eni_osci;
+        
+        ref_ps=ps_setref;
+        fig_name = 'u-s';
     case {'m'}
         %scn=load(scnname);
         %ph_all=scn.ph_scn_master;
@@ -1330,7 +1369,7 @@ switch(group_type)
     case {'v'}
         uw=load(phuwname);
         ph_uw=uw.ph_uw;
-        % subtract of oscialtor drift in case of envisat
+        % subtract of oscilator drift in case of envisat
         ph_uw = ph_uw-ph_unw_eni_osci;
                 
         clear uw
@@ -1361,16 +1400,30 @@ switch(group_type)
             clear scla
             fig_name = 'v-do';
 
-            
-         case {'v-dos'}
+        case {'v-s'}
+             scn=load(scnname);
+             ph_uw=ph_uw - scn.ph_scn_slave;
+             clear scn
+             fig_name = 'v-s';
+             
+        case {'v-so'}
+             scn=load(scnname);
+             ph_uw=ph_uw - scn.ph_scn_slave;
+             clear scn
+             % deramping ifgs
+             [ph_uw] = ps_deramp(ps,ph_uw);
+
+             fig_name = 'v-so';
+
+         case {'v-dso'}
              scla=load(sclaname);
              scn=load(scnname);
              ph_uw=ph_uw - scla.ph_scla - scn.ph_scn_slave;
              clear scla scn
-             fig_name = 'v-dos';
              % deramping ifgs
              [ph_uw] = ps_deramp(ps,ph_uw);
-             
+             fig_name = 'v-dso';
+
         case {'v-a'}
             aps=load(apsname);
             [aps_corr,fig_name_tca] = ps_plot_tca(aps,aps_flag);
@@ -1465,6 +1518,14 @@ switch(group_type)
             fig_name = 'vdrop-do';
             % deramping ifgs
             [ph_uw] = ps_deramp(ps,ph_uw);
+        case {'vdrop-dos'}
+             scla=load(sclaname);
+             scn=load(scnname);
+             ph_uw=ph_uw - scla.ph_scla - scn.ph_scn_slave;
+             clear scla scn
+             fig_name = 'vdrop-dos';
+             % deramping ifgs
+             [ph_uw] = ps_deramp(ps,ph_uw);
 
         case {'vdrop-dao'}
             scla=load(sclaname);
@@ -1478,6 +1539,8 @@ switch(group_type)
         otherwise
             error('unknown value type')
         end
+        
+        
 
         if ts_flag==1 % master AOE doesn't effect v plot, but better for ts plot
             if exist([sclaname '.mat'],'file')==2
@@ -1496,15 +1559,19 @@ switch(group_type)
         ph_all=zeros(n_ps,1);
         ref_ps=ps_setref;
         
-        if unwrap_ifg_index(1)~=ps.master_ix & unwrap_ifg_index(end)~=ps.master_ix
-            unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix); % need to include it if not ifgs either side of master
-        end
+%AH2CHECK 
+% % % %         if unwrap_ifg_index(1)~=ps.master_ix & unwrap_ifg_index(end)~=ps.master_ix
+% % % %             unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix); % need to include it if not ifgs either side of master
+% % % %         end
+        %%%% change to always remove the master, not sure why to keep
+        %%%% master in for first/last acquisition as the covariance matrix would
+        %%%% be having a zeros row and column at master_ix
+        unwrap_ifg_index=setdiff(unwrap_ifg_index,ps.master_ix);
+        
         if ~isempty(ifg_list)
             unwrap_ifg_index=intersect(unwrap_ifg_index,ifg_list);
             ifg_list=[];
         end
-        
-        
         ph_uw=ph_uw(:,unwrap_ifg_index);
         day=day(unwrap_ifg_index,:);
         
@@ -1544,7 +1611,7 @@ switch(group_type)
                 m=lscov(G([1:i-1,i+1:end],:),double(ph_uw(:,[1:i-1,i+1:n]))',sm_cov([1:i-1,i+1:end],[1:i-1,i+1:end]));
                 ph_all(:,i)=-m(2,:)'*365.25/4/pi*lambda*1000; 
             end
-        else 
+        else     
             m=lscov(G,double(ph_uw'),sm_cov);
             ph_all=-m(2,:)'*365.25/4/pi*lambda*1000; % m(1,:) is master APS + mean deviation from model
         end
@@ -1647,9 +1714,7 @@ switch(group_type)
             
             clear scla aps aps_corr
         case('v-o')
-            scla=load(sclasbname);
             ph_uw=ph_uw;
-            clear scla
             fig_name = 'v-o';
             % deramping ifgs
             [ph_uw] = ps_deramp(ps,ph_uw);
@@ -1660,8 +1725,6 @@ switch(group_type)
             ph_uw = ps_deramp(ps,ph_uw);
             clear scla
             fig_name = 'v-do';
-
-            
         case {'vdrop'}
             fig_name = 'vdrop';
         case {'vdrop-d'}
@@ -1697,6 +1760,7 @@ switch(group_type)
         otherwise
             error('unknown value type')
         end
+        
         
         if ~isempty(ifg_list)
             unwrap_ifg_index_sb=intersect(unwrap_ifg_index_sb,ifg_list);
@@ -1878,6 +1942,8 @@ if isreal(ph_all)
     else
         ref_ifg=master_ix;
     end
+    
+    
     if ref_ps~=0
         ref_ph=(ph_disp(ref_ps,:));
         mean_ph=zeros(1,size(ph_disp,2));
@@ -1930,9 +1996,9 @@ if plot_flag==-1
     h_axes_all=[];
     savename=['ps_plot_',value_type]
     try
-       save(savename,'ph_disp','ifg_list')
+       stamps_save(savename,ph_disp,ifg_list)
     catch
-       save(['~/',savename],'ph_disp','ifg_list')
+       stamps_save(['~/',savename],ph_disp,ifg_list)
        fprintf('Warning: Read access only, values in home directory instead\n')
     end
 else
@@ -2050,7 +2116,6 @@ else
     else
        ext_data = []; 
     end
-    
     ps_plot_ifg(ph_disp(:,i_im),plot_flag,lims,lon_rg,lat_rg,ext_data);
     %plot_phase(ph_tc(:,i)*conj(ph_tc(ref_ix,i)));
     box on
@@ -2066,10 +2131,14 @@ else
     else
         y_t=(0.5*h_t)/h_y*(ylim(2)-ylim(1))+ylim(1);
     end
-    %xlabel([num2str((day(i)/365.25),3),'yr, ',num2str(round(bperp(i))),'m'])
     
-        if textsize~=0 & size(day,1)==size(ph_all,2) & aps_band_flag==0 && strcmpi(small_baseline_flag,'n')
+    %xlabel([num2str((day(i)/365.25),3),'yr, ',num2str(round(bperp(i))),'m'])
+        if textsize~=0 & size(day,1)==size(ph_all,2) & aps_band_flag==0 && (strcmpi(small_baseline_flag,'n') | strcmpi(value_type(1),'s'))
             % text for SM ifgs
+            t=text(x_t,y_t,[datestr(day(i),'dd mmm yyyy')]);
+            set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
+        elseif textsize~=0 & size(day,1)==size(ph_all,2) & aps_band_flag==0 && forced_sm_flag==1
+            % text for SM ifgs when inverting from SBAS
             t=text(x_t,y_t,[datestr(day(i),'dd mmm yyyy')]);
             set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
         elseif textsize~=0 & ps.n_ifg==size(ph_all,2) & aps_band_flag==0 && strcmpi(small_baseline_flag,'y')
@@ -2081,8 +2150,6 @@ else
             t=text(x_t,y_t,[num2str(round((bands(i,1)/100))*100/1000) ' - ' num2str(round((bands(i,2)/100))*100/1000) ' km']);
             set(t,'fontweight','bold','color',textcolor,'fontsize',abs(textsize))
         end
-    
-    
     if cbar_flag==0 & (i==ref_ifg | (isempty(intersect(ref_ifg,ifg_list)) & i==ifg_list(1))) 
         if n_ifg_plot>1
             
@@ -2104,14 +2171,15 @@ else
             limorder=ceil(-log10(diff(lims)))+2;
             plotlims=round(lims*10^limorder)/10^limorder;
         end
+        
         if n_ifg_plot>1
-                set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
+                set(h,'xtick',[xlim(2)-64,xlim(2)],'Xticklabel',plotlims,'xcolor','k','ycolor',textcolor2,'fontweight','bold','color',textcolor2,'FontSize',abs(textsize))
                 h=xlabel(h,units);
                 pos=get(h,'position');
                 pos(2)=pos(2)/2.2;
                 set(h,'position',pos,'FontSize',abs(textsize));
         else
-                set(h,'ytick',[ylim(2)-64,ylim(2)],'yticklabel',plotlims,'xcolor',textcolor,'ycolor',textcolor,'fontweight','bold','color',textcolor,'FontSize',abs(textsize))
+                set(h,'ytick',[ylim(2)-64,ylim(2)],'yticklabel',plotlims,'xcolor','k','ycolor',textcolor2,'fontweight','bold','color',textcolor2,'FontSize',abs(textsize))
                 set(get(h,'ylabel'),'String',units,'FontSize',abs(textsize))  
 
         end
