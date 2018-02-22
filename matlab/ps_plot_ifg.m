@@ -13,6 +13,8 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %              4, mean amplitude image
 %              5, mean amplitude image, brightness showing through PS
 %              6, white background, xy axis (rotated lon/lat)
+%              7, black background, xy axis (rotated lon/lat)
+%
 %
 %    COL_RG is the color map limits (defaults to use maximum range)  
 %    LON_RG is the longitude range (defaults to use maximum range)            
@@ -43,6 +45,7 @@ function [ph_lims]=ps_plot_ifg(in_ph,bg_flag,col_rg,lon_rg,lat_rg,ext_data)
 %   02/2016 DB: Bug fix for BW background, which made PS pixels as large as the image width. 
 %   01/2017 DB: Bug fix in case there is nan for BW background
 %   01/2017 DB: Add the hardcoded option to do some filtering
+%   03/2017 DB: for lonlat option when you use lon, lat range allow it to fix the axis as well
 %   ======================================================================
 
 plot_pixel_m=getparm('plot_scatterer_size');
@@ -462,8 +465,21 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     %plot_pixel_size=1;
     %plot_pixel_size=round(plot_pixel_m/plot_posting);
 
-    x=[min(lonlat(:,1))-2*x_posting:x_posting:max(lonlat(:,1))+2*x_posting];
-    y=[min(lonlat(:,2))-2*y_posting:y_posting:max(lonlat(:,2))+2*y_posting];
+    
+    
+    
+    % include the lon range in case user wants a larger area
+    if ~isempty(lon_rg)
+        x=[min(lon_rg)-2*x_posting:x_posting:max(lon_rg)+2*x_posting];
+    else
+        x=[min(lonlat(:,1))-2*x_posting:x_posting:max(lonlat(:,1))+2*x_posting];
+    end
+    % include the lon range in case user wants a larger area
+    if ~isempty(lat_rg)
+        y=[min(lat_rg)-2*y_posting:y_posting:max(lat_rg)+2*y_posting];
+    else
+        y=[min(lonlat(:,2))-2*y_posting:y_posting:max(lonlat(:,2))+2*y_posting];
+    end
     
     [X,Y]=meshgrid(x,y);
     if bg_flag==0
@@ -535,6 +551,8 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
             R2 = nanmedfilt2(R, [3 3]);
             R2(isnan(R)) = 0;
             R = R2;
+            
+            
         elseif strcmpi(filter_type,'mean')
             f = @(A)mean(A(~isnan(A)));
             R2 = nlfilter(R, [3 3], f);
@@ -555,7 +573,7 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     set(gca,'plotboxaspectratio',aspect_ratio)
     image(x,y,R)
     axis tight
-    if ref_radius<inf
+    if ref_radius<inf & ref_radius~=-inf
         p=plot(ref_centre(1),ref_centre(2),'k*');
         set(p,'markersize',10,'linewidth',1)
     end
@@ -563,7 +581,7 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
    
     
 
-elseif bg_flag==6     % xy axes
+elseif bg_flag==6 | bg_flag==7     % xy axes
     
     x_posting=plot_pixel_m;
     y_posting=plot_pixel_m;
@@ -573,7 +591,11 @@ elseif bg_flag==6     % xy axes
     y=[min(ps.xy(:,3))-2*y_posting:y_posting:max(ps.xy(:,3))+2*y_posting];
     
     [X,Y]=meshgrid(x,y);
-    c=[[1 1 1];c]; % white background
+    if bg_flag==7
+        c=[[0 0 0];c]; % black background
+    else
+        c=[[1 1 1];c]; % white background
+    end
     
     demx=round((ps.xy(:,2)-x(1))/x_posting)+1;
     demy=round((ps.xy(:,3)-y(1))/y_posting)+1;
