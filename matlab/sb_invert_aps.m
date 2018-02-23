@@ -11,6 +11,7 @@ function []=sb_invert_aps(aps_flag)
 % 08/2017   DB  Using aps_save to store the variables
 % 10/2017   DB  Bug fix for error catching of missing master
 % 11/2017   DB  Adding merra, merra2, and gacos model
+% 02/2018   DB  Adding in the NARR model
 
 logit;
 
@@ -152,7 +153,15 @@ if ~isempty(aps_flag)
    elseif aps_flag==35 % GACOS correction
         ph_tropo_gacos = aps_corr;
         aps_save(apsname,ph_tropo_gacos)        
-        
+   elseif aps_flag==36 % NARR correction
+        ph_tropo_narr = aps_corr;
+        aps_save(apsname,ph_tropo_narr)   
+   elseif aps_flag==37 % NARR correction hydro
+        ph_tropo_narr_hydro = aps_corr;
+        aps_save(apsname,ph_tropo_narr_hydro)   
+   elseif aps_flag==38 % NARR correction wet
+        ph_tropo_narr_wet = aps_corr;
+        aps_save(apsname,ph_tropo_narr_wet)           
     else
         error('Currently other options not supported.\nIf you are combining a combination of two different techniques, try the following:\n plot each technique for a SM correction\n')
     end
