@@ -515,7 +515,7 @@ elseif strcmpi(group_type(1),'d')
 end
 
 % only allow TS option for 'v' and 'V' options
-if ts_flag==1 && ~(strcmp(group_type,'v') | strcmp(group_type,'vsb'))
+if ts_flag==1 && ~(strcmp(group_type,'v'))
     fprintf('\n\n''ts'' option can only be called for:\n    -SM: ''v''-options\n    -SB to SM inverted: ''V''-options\n')
     error('Incorrect value-type for ''ts'' option')
 end
