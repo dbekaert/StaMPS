@@ -11,6 +11,7 @@
 // 03/2009 MA  Fix for gcc 4.3.x
 // 12/2012 LIG Speed up processing by reading blocks
 // 12/2012 DB  Merge with developers version (SVN)
+// 02/2018 DB  Read 10 lines at the time to handle larger temporal datasets
 // ==============================================
 
 #include <iostream>  
@@ -264,7 +265,7 @@ try {
   ofstream daoutfile(daoutname,ios::out);
   ofstream meanoutfile(meanoutname,ios::out);
  
-  int LineInBuffer = 100;
+  int LineInBuffer = 10;
 
 //  complex<float>* buffer = new complex<float>[num_files*width*100]; // used to store 100 lines for all amp files
   char* buffer = new char[num_files*linebytes*LineInBuffer]; // used to store 100 lines of all amp files
@@ -391,7 +392,7 @@ try {
            }//j++
      } // endif y>az_start-1
       
-      LineInBuffer = (az_end-y)>100 ? 100 : az_end - y; //get buffer length for next
+      LineInBuffer = (az_end-y)>10 ? 10 : az_end - y; //get buffer length for next
 
      for ( int i=0; i<num_files; i++)           // read in next line from each amp file
      {
