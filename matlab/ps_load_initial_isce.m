@@ -314,7 +314,6 @@ if length(bperpdir)>0
         end
         bperp_mat(:,i)=bp0_ps;
     end
-    bperp_mat=bperp_mat(:,ifgday_ix(:,2))-bperp_mat(:,ifgday_ix(:,1));
 else
     bperp_mat=repmat(single(bperp)',n_ps,1);
 end
