@@ -287,7 +287,9 @@ if isempty(bperpdir)
     updir=1;
 end
 if length(bperpdir)>0
-    bperp_mat=zeros(n_ps,n_image,'single');
+    % make a set of baseline excluding the master
+    bperp_mat=zeros(n_ps,n_image-1,'single');
+    counter =1;
     for i=setdiff([1:n_image],master_ix);
         bperp_fname=['..' filesep 'baselineGRID_' datestr(day(i),'yyyymmdd')];
         if updir==1
@@ -312,10 +314,11 @@ if length(bperpdir)>0
             bp0_ps=griddata_version_control(gridX,gridY,bperp_grid',ij(:,3),ij(:,2),'linear',matlab_version);               % [DB] fix matlab2012 version and older
             
         end
-        bperp_mat(:,i)=bp0_ps;
+        bperp_mat(:,counter)=bp0_ps;
+        counter = counter+1;
     end
 else
-    bperp_mat=repmat(single(bperp)',n_ps,1);
+    bperp_mat=repmat(single(bperp([1:master_ix-1,master_ix+1:end]))',n_ps,1);
 end
 bpsavename=['bp',num2str(psver)];
 stamps_save(bpsavename,bperp_mat);
