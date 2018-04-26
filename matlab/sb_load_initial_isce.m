@@ -108,7 +108,7 @@ end
 lambda=load(lambdaname);
 setparm('lambda',lambda,1);
 
-%% Radar coordiantes
+%% Radar coordinates
 ij=load(ijname);
 n_ps=size(ij,1);
 

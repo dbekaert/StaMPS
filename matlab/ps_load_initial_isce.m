@@ -24,7 +24,7 @@ function []=ps_load_initial_isce(data_inc)
 
 
 %NB IFGS assumed in ascending date order
-fprintf('Loading data into matlab...')
+fprintf('Loading data into matlab...\n')
 
 phname=['pscands.1.ph'];            % for each PS candidate, a float complex value for each ifg
 ijname=['pscands.1.ij'];            % ID# Azimuth# Range# 1 line per PS candidate
@@ -42,6 +42,8 @@ widthname=['width.txt'];            % width of interferograms
 lenname=['len.txt'];                % length of interferograms
 
 psver=1;
+incsavename=['inc',num2str(psver)];
+lasavename=['la',num2str(psver)];
 
 % Get matlab version as function arguments change with the matlab version
 matlab_version = version('-release');           % [DB] getting the matlab version
@@ -70,6 +72,8 @@ master_day=datenum(year,month,monthday);
 master_ix=sum(slave_day<master_day)+1;
 day=[slave_day(1:master_ix-1);master_day;slave_day(master_ix:end)]; % insert master day
 
+
+%% bperp one value per slave
 if ~exist(bperpname,'file')
     bperpname= ['../',bperpname];
 end
@@ -79,7 +83,7 @@ bperp=[bperp(1:master_ix-1);0;bperp(master_ix:end)]; % insert master-master bper
 n_ifg=size(bperp,1);
 n_image=n_ifg;
 
- 
+%% heading 
 if ~exist(headingname,'file')
     headingname= ['../',headingname];
 end
@@ -89,12 +93,16 @@ if isempty(heading)
 end
 setparm('heading',heading,1);
 
+%% wavelength
 if ~exist(lambdaname,'file')
     lambdaname= ['../',lambdaname];
 end
 lambda=load(lambdaname);
 setparm('lambda',lambda,1);
 
+%% Radar coordinates
+ij=load(ijname);
+n_ps=size(ij,1);
 
 if ~exist(calname,'file')
     calname= ['../',calname];
@@ -125,9 +133,6 @@ else
     calconst=ones(n_ifg-1,1);
 end
 
-ij=load(ijname);
-n_ps=size(ij,1);
-
 fid=fopen(phname,'r');
 ph=zeros(n_ps,n_ifg-1,'single');
 byte_count=n_ps*2;
@@ -143,6 +148,8 @@ nonzero_ix=zero_ph<=1;       % if more than 1 phase is zero, drop node
 ph=ph./repmat(calconst',n_ps,1);  % scale amplitudes
 ph=[ph(:,1:master_ix-1),ones(n_ps,1),ph(:,master_ix:end)]; % insert zero phase master-master ifg
 
+
+%% LON LAT
 fid=fopen(llname,'r');
 lonlat=fread(fid,[2,inf],'float');
 lonlat=lonlat';
@@ -185,8 +192,6 @@ ij(:,1)=1:n_ps;
 lonlat=lonlat(sort_ix,:);
 
 savename=['ps',num2str(psver)];
-
-% save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','n_ifg','n_image','n_ps','sort_ix','ll0','calconst','master_ix','day_ix');
 stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,n_ifg,n_image,n_ps,sort_ix,ll0,calconst,master_ix,day_ix);
 save psver psver
 
@@ -198,7 +203,6 @@ if exist(daname,'file')
   D_A=load(daname);
   D_A=D_A(sort_ix);
   dasavename=['da',num2str(psver)];
-%  save(dasavename,'D_A');
   stamps_save(dasavename,D_A);
 end
 
@@ -210,7 +214,6 @@ if exist(hgtname,'file')
     hgt=hgt(sort_ix);
     fclose(fid);
     hgtsavename=['hgt',num2str(psver)];
-    % save(hgtsavename,'hgt');
     stamps_save(hgtsavename,hgt);
 end
 
@@ -274,7 +277,6 @@ else
         clear data_la
      end
 end
-
 
 
 
