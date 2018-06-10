@@ -1,4 +1,4 @@
-\begin{thebibliography}{10}
+\begin{thebibliography}{14}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 
 \bibitem[{{\it Ar{\i}kan et~al.\/}(2010){\it Ar{\i}kan, Hooper, and
@@ -52,11 +52,34 @@ Hooper, A.~J., Persistent scatterer radar interferometry for crustal
   deformation studies and modeling of volcanic deformation, Ph.D. thesis,
   Stanford University, 2006.
 
+\bibitem[{{\it Kampes et~al.\/}(2003){\it Kampes, Hanssen, and
+  Perski\/}}]{Kampes2003}
+Kampes, B., R.~Hanssen, and Z.~Perski, {Radar interferometry with public domain
+  tools}, {\it {Proceedings Fringe 2003}\/}, p.~6, 2003.
+
+\bibitem[{{\it Rosen et~al.\/}(2004){\it Rosen, Henley, Peltzer, and
+  Simons\/}}]{Rosen2004}
+Rosen, P., S.~Henley, G.~Peltzer, and M.~Simons, {Updated Repeat Orbit
+  Interferometry Package Released}, {\it Eos Trans. AGU\/}, {\it 85\/}, 47 --
+  47, 2004.
+
+\bibitem[{{\it Rosen et~al.\/}(2012){\it Rosen, Gurrola, Sacco, and
+  Zebker\/}}]{rosen2012}
+Rosen, P.~A., E.~Gurrola, G.~F. Sacco, and H.~Zebker, The insar scientific
+  computing environment, in {\it Synthetic Aperture Radar, 2012. EUSAR. 9th
+  European Conference on\/}, pp. 730--733, VDE, 2012.
+
 \bibitem[{{\it Sousa et~al.\/}(2011){\it Sousa, Hooper, Hanssen, Bastos, and
   Ruiz\/}}]{Sousa2011}
 Sousa, J.~J., A.~Hooper, R.~Hanssen, L.~Bastos, and A.~Ruiz, Persistent
   scatterer insar: A comparison of methodologies based on a model of temporal
   deformation vs. spatial correlation selection criteria, {\it Remote Sensing
   of Environment\/}, {\it 115\/}, 2652--2663, 2011.
+
+\bibitem[{{\it Werner et~al.\/}(2000){\it Werner, Wegm{\"u}ller, Strozzi, and
+  Wiesmann\/}}]{Werner2000}
+Werner, C., U.~Wegm{\"u}ller, T.~Strozzi, and A.~Wiesmann, Gamma sar and
+  interferometric processing software, in {\it Proceedings of the ers-envisat
+  symposium, gothenburg, sweden\/}, vol. 1620, p. 1620, 2000.
 
 \end{thebibliography}

@@ -212,6 +212,15 @@
 % enable Times now - so that all class options can see the correct font families
 \normalfont\selectfont
 
+
+\usepackage{titlesec}
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+
 %============================================
 \begin{document}
 \setlength{\parskip}{8pt}
@@ -264,9 +273,9 @@
 
 %\begin{flushright}
 \begin{center}
-{\sffamily\textbf{Andy Hooper, David Bekaert, Karsten Spaans, Ekbal Hussain}}\\
+{\sffamily\textbf{Andy Hooper and David Bekaert}}\\
 \vspace{4mm}
-{\sffamily\textbf{1th June, 2015}}
+{\sffamily\textbf{5th June, 2018}}
 %\end{flushright}
 \end{center}
 
@@ -326,53 +335,50 @@
 
 \chapter{Introduction}
 
-StaMPS/MTI is made available for non-commercial applications only and can be downloaded from \url{http://homepages.see.leeds.ac.uk/~earahoo/stamps/}\\
+StaMPS/MTI is made available for non-commercial applications only. Releases can be downloaded from \url{http://homepages.see.leeds.ac.uk/~earahoo/stamps/} and github at \url{https://github.com/dbekaert/stamps}. The github webpage also allows to download the developers version which will be the most recent and un-released version.  \\
 
-When using this software please reference \cite{HooperA2012}: \\
-Hooper A; Bekaert D; Spaans K; Arikan M (2012) \textit{Recent advances in SAR interferometry time series analysis for measuring crustal deformation}, Tectonophysics, 514-517, pp.1-13. doi: 10.1016/j.tecto.2011.10.013\\
+When using this software please reference \cite{HooperA2012}:
+\begin{center}
+\textit{Hooper A; Bekaert D; Spaans K; Arikan M (2012), Recent advances in SAR interferometry time series analysis for measuring crustal deformation, Tectonophysics, 514-517, pp.1-13. doi: 10.1016/j.tecto.2011.10.013\\}
+\end{center}
+
+In addition, cite dependencies used such as ROI\_PAC \citep{Rosen2004}, DORIS \citep{Kampes2003}, GAMMA \citep{Werner2000}, ISCE \citep{rosen2012}, and or TRAIN \citep[e.g.][]{Bekaert2015,Bekaert2015a}.
+
 
 StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland, Delft University of Technology, and the University of Leeds. There are also contributions from users of the package based at other institutions.
 
 This manual provides a guide to running StaMPS/MTI, but does not  explain all the processing. For some details on the inner workings, see \citet{HooperA2010b,HooperA2008,HooperA2007a,HooperA2004,HooperA2006}.
- %Hooper and Zebker (2007) and Hooper, Ph.D Thesis. 
  
  A user group is also maintained at \url{http://groups.google.com/group/mainsar}. If you have a query, check the discussion threads there and, if not resolved, submit your question to the group.
 
 
 
+\section{Processing}
+Throughout this manual, commands to be entered on the command line are in \cs{blue}
+and entries that are specific to the data set being processed and require modification are in \cc{red}. The presence of $>>$ before a command indicates that the command is a matlab script.\\
 
-There are two pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1/2, TerraSAR-X and COSMO-SkyMed data, if starting with SLCs.
+There are two pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. Different processors can be used together with StaMPS such as ROI\_PAC and DORIS, GAMMA, and ISCE. Further details are provided below on the support of each software.
 
+\subsection{ROI\_PAC and DORIS}
+ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1/2, TerraSAR-X and COSMO-SkyMed data, if starting with SLCs. Both  ROI\_PAC and Doris processing are non-standard and various shell scripts, matlab scripts and programs are included in this package to produce interferograms that are PS/MTI friendly.
 
+\subsection{GAMMA}
+PS/MTI processing can be done for all sensors as supported by GAMMA software. 
 
-
-
- Both  ROI\_PAC and Doris processing are non-standard and various shell scripts, matlab scripts and programs are included in this package to produce interferograms that are PS/MTI friendly.
-
-
-
-
-
- The PS/MTI processing itself includes C++ programs and matlab scripts  to identify coherent pixels, and to extract the deformation signal for these pixels. Typing \cs{help} followed by the name of the matlab script  provides a brief description of the processing.
-
-
+\subsection{ISCE}
+StaMPS is compatible with the outputs generated though the ISCE stack processor. Note that no shell scripts are included within the StaMPS distribution itself to generate ISCE interferograms. Users should refer to the contrib folder of the ISCE software for generating a stack compatible with StaMPS. 
 
 
-
- Throughout this manual, commands to be entered on the command line are in \cs{blue}
-and entries that are specific to the data set being processed and require modification are in \cc{red}. The presence of $>>$ before a command indicates that the command is a matlab script.
+\subsection{StaMPS PS/MTI}
+The PS/MTI processing itself includes C++ programs and matlab scripts  to identify coherent pixels, and to extract the deformation signal for these pixels. Typing \cs{help} followed by the name of the matlab script  provides a brief description of the processing.
 
 
 
 \chapter{Installation}
 
-
-%StaMPS is designed to run under the tcsh shell (you can usually invoke this by typing \cs{tcsh} from whatever shell you are within). Alternatively adapt {\tt StaMPS\_CONFIG} for your favourite shell.
-
-
  Install StaMPS/MTI: \\
- \cs{ tar -xvf StaMPS\_v3.3.tar}\\
- cd StaMPS\_v3.3/src\\
+ \cs{ tar -xvf StaMPS\_v3.4.tar}\\
+ cd StaMPS\_v3.4/src\\
  make\\
  make install
 
@@ -381,18 +387,36 @@ Edit {\tt StaMPS\_CONFIG.tcsh} or {\tt StaMPS\_CONFIG.bash} (depending on which 
  \cs{source StaMPS\_CONFIG.}\cc{xxxx}
  \\
   This must be done whenever a new terminal is opened. You might want to add this line to your {\tt.cshrc} or {\tt.bashrc} file so that this is done automatically.
+  
 
-\section{Data display}
-%A program called dismph (to display complex data)  is included in the package but not compiled by default. It uses X11 Open Motif. This is installed as standard under many unix/linux operating systems, and can be installed on OS X systems from:  \url{http://fink.sourceforge.net/}.
- %Copy {\tt include/Xm} to {\tt /usr/X11R6/include} and {\tt libXm.a} to {\tt /usr/X11R6/lib}.
-% To compile dismph, run\\
- %\cs{make dismph}.
+\section{Required packages}
+ \subsection{Snaphu}
+ The optimisation routines of snaphu are used by the 3-D unwrapping code and can be downloaded from:\\
+  \url{http://www.stanford.edu/group/radar/softwareandlinks/sw/snaphu/}.
+
+\section{Optional packages}
+\subsection{Triangle}
+The Triangle program is used for Delaunay triangulation. It is only required in case users want to run stamps beyons step 7. It can be found at:\\
+  \url{http://www.cs.cmu.edu/~quake/triangle.html}.  
+  
+ 
+\subsection{TRAIN}
+The Toolbox for Reducing Atmospheric InSAR Noise (TRAIN) can be used to estimate tropospheric delays (see \citep{Bekaert2015,Bekaert2015a}). Train corrections are applied on the fly while plotting the results. Released versions can be downloaded from:\\
+\url{http://www.davidbekaert.com/#links} \\
+the developpers version from github at:
+\url{http://github.com/dbekaert/TRAIN} \\
+The help forum can be accessed at:\\
+\url{http://groups.google.com/group/TRAIN_support}
+  
+\section{InSAR processor packages}
+ Depending on the InSAR procesor being used, you will need different dependencies.
+ 
+\subsection{ROI\_PAC and DORIS}
+\subsubsection{Data display}
  In previous versions a program called dismph was included for displaying SLCs and interferograms, but this is no longer the case. Recommended instead is xv (\url{http://www.trilon.com/xv}) or OpenEV (\url{http://fwtools.maptools.org/}).
 
-
-\section{ROI\_PAC}
-Details on installing and running ROI\_PAC (if needed) can be found at:
-\\ \url{http://roipac.org/ROI_PAC}.
+\subsubsection{ROI\_PAC}
+The ROI\_PAC website (\url{http://roipac.org/ROI_PAC}) is no longer active. Details on installing and running ROI\_PAC (if needed) can be found on legacy webpages and forums.\\
 
 For ERS, ROI\_PAC requires the program getorb which must be installed in the {\tt ROI\_PAC/INT\_BIN} directory and can be downloaded from:\\ 
 \url{http://www.deos.tudelft.nl/ers/precorbs/tools/getorb_pack.shtml}.
@@ -407,27 +431,24 @@ Alternatively, use the ESA DORIS (the tracking system on Envisat, not to be conf
 Envisat instrument calibration files (INS) can be downloaded from:\\
 \url{http://earth.eo.esa.int/services/auxiliary_data/asar/current}
 
-\section{Doris}
+\subsubsection{Doris}
  Details on installing Doris can be found at:\\
   \url{http://doris.tudelft.nl} .
-
-
-
-\section{Triangle}
- The Triangle program is used for Delaunay triangulation and can be found at:\\
-  \url{http://www.cs.cmu.edu/~quake/triangle.html}.
  
- \section{Snaphu}
- The optimisation routines of snaphu are used by the 3-D unwrapping code and can be downloaded from:\\
-  \url{http://www.stanford.edu/group/radar/softwareandlinks/sw/snaphu/}.
 
-\section{TRAIN}
-The Toolbox for Reducing Atmospheric InSAR Noise (TRAIN) can be used to estimate tropospheric delays (see \citep{Bekaert2015,Bekaert2015a}). It can be downloaded from:\\
-\url{http://www.davidbekaert.com/#links}. \\
-The help forum can be accessed at:\\
-\url{http://groups.google.com/group/TRAIN_support}
+ \subsection{Gamma}
+ Gamma is a commercial software. See Gamma website for details on lisence and installation at:\\
+   \url{ http://www.gamma-rs.ch/} .
+
  
-\chapter{Create SLCs (using ROI\_PAC)}
+ \subsection{ISCE}
+Details on lisence and installation of ISCE can be found at WinSAR:\\ 
+ \url{https://winsar.unavco.org/software/isce} . 
+
+
+\chapter{Pre-processing with ROI\_PAC and DORIS} 
+\label{ch:roipac_doris_IFG}
+\section{Create SLCs from Raw (using ROI\_PAC)}
 
 Currently support is provided for raw data from ERS, Envisat and ALOS satellites.
 
@@ -569,11 +590,10 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
  It may become apparent later that one or more scenes are offset from the master by so much that the focused image does not include the entire cropped master image. In which case copy {\tt roi.proc} from the SLC directory to the relevant \cc{yyyymmdd} directory, rename it {\tt \cc{yyyymmdd}.proc} and edit it so that the the part processed includes the cropped master image. Edit {\tt make\_slcs.list} to leave only scenes that need recreating and run \cs{make\_slcs\_}\cc{XXXX}. 
 
 
-\chapter{Pre-processing SLCs (Level 1 product) }
+\section{Reading/cropping SLCs  from Level 1 products}
 
-{\em If you created SLCs with ROI\_PAC using raw data, skip Section: \ref{sec:slcread}.}
+{\em If you created SLCs with ROI\_PAC using raw data, skip this section.}
 
-\section{\label{sec:slcread}Reading and Cropping}
 Currently, scripts exist for (reading and cropping single look complex (SLC) products from ERS, Envisat, RADARSAT-1/2, TerraSAR-X and COSMO-SkyMed satellites.
 
 In your processing directory, for example, under /d2/iceland\_volcanoes/\\
@@ -630,7 +650,7 @@ and update the crop area. {\tt first\_l} and {\tt last\_l} are the first and las
 % Mahmut
 \section{\label{sec:ovs} Oversampling SLC data (Optional)}
 
-After focusing your RAW data or reading/cropping your SLCs, optionally, you can oversample your dataset using Doris.
+After focusing your RAW data or reading/cropping your SLCs, optionally, you can oversample your dataset using Doris. If no oversampling needs to be applied ship this section and proceed to section \ref{sec:ifgs}.
 
 In your processing directory, for example, under /d2/iceland\_volcanoes/\\
  \cs{cd SLC}\\
@@ -653,7 +673,7 @@ Then re-run \cs{step\_master\_ovs} and \cs{make\_ovs} to create a new oversample
  For a single master approach, oversampling shows significant improvement in PS density especially in the rural areas
 (see \cite{Sousa2011} and \citet{Arikan2010}).
 
-\chapter{\label{sec:ifgs} Create IFGs (using DORIS)}
+\section{\label{sec:ifgs} Create IFGs (using DORIS)}
 
 
  In the same directory where SLC and INSAR\_\cc{master\_date} reside:\\
@@ -722,7 +742,7 @@ with the following line (substituting the correct heading, to the nearest degree
  %\cs{vi slcs.list}
  %and remove \cc{master\_date}\\
  
- \section{Bulk Processing}
+ \subsection{Bulk Processing}
  
  In the INSAR\_\cc{master\_date} directory:
  
@@ -804,7 +824,7 @@ Geocoded coordinates are needed in subsequent PS processing. To calculate the la
 
 
 
-\section{\label{sec:calcdem}Manual DEM offset correction}
+\subsection{\label{sec:calcdem}Manual DEM offset correction}
 
 This step need only be run if {\tt step\_master\_timing} failed. It should be run after {\tt make\_coarse} and before {\tt make\_dems}.
 %
@@ -846,7 +866,7 @@ Once happy with the fit, update the values for M\_RG\_T\_ERROR   and M\_AZ\_T\_E
 
 
 
-\section{Re-running Steps}
+\subsection{Re-running Steps}
 
 
  \cs{make\_orbits }
@@ -882,7 +902,7 @@ resamples the slave image.\\
  
 
 
-\section{Possible reasons for Doris SIGERV error}
+\subsection{Possible reasons for Doris SIGERV error}
 
 
 \begin{itemize}
@@ -905,7 +925,7 @@ resamples the slave image.\\
 
 
 
-\section{Disk Space}
+\subsection{Disk Space}
 
 
 Many intermediate files are produced and disk space requirements are therefore large (approximately 12.5 GB per image, if the whole image area is processed). Once step 1 of {\tt stamps} matlab script has been run, the following may be run in {\tt INSAR\_}\cc{master\_date} to free up space (only easily recreatable files are deleted):
@@ -922,10 +942,23 @@ To recreate the files deleted by this script, run \cs{make\_resample} in the {\t
 \cs{make\_clean\_raw} (if you created SLCs using ROI\_PAC). To recreate files deleted by this script, run \cs{make\_slcs\_}\cc{XXXX} in the {\tt SLC} directory.
 
 
-\chapter{PS Processing}
-First, create single master interferograms by following Chapter~\ref{sec:ifgs}.
+\chapter{Pre-processing with ISCE}
+\label{ch:isce_IFG}
+Note that no shell scripts are included within the StaMPS distribution itself to generate ISCE interferograms. Users should refer to the contrib folder of the ISCE software for generating a stack compatible with StaMPS. 
 
-In the {\tt INSAR\_}\cc{master\_date} directory run\\
+Two steps are needed: 
+\begin{enumerate}
+\item Generate a coregistered stack using the ISCE stack processor. This can be done using the codes included in the "contrib\/stack" folder within the ISCE software. ISCE supports a stack generation for Sentinel-1(supports SLC only), i.e. "contrib\/stack\/topsStack", and one for stripmap sensors (supports raw and SLC), i.e. "contrib\/stack\/stripmapStack". 
+\item After succesfull generation of a coregistered SLC stack, use the stack to StaMPS routines provided in the ISCE contrib folder, i.e. "contrib\/timeseriesPrep\/stack2stamps", to  produce interferograms that are PS/MTI friendly.
+\end{enumerate}
+
+\chapter{Pre-processing with Gamma}  
+\label{ch:gamma_IFG}
+
+\chapter{PS Processing}
+First, create single master interferograms by following the pre-processing Chapter of your preferred InSAR processor, i.e. chapter ~\ref{ch:roipac_doris_IFG} for ROI\_PAC/DORIS,  chapter ~\ref{ch:isce_IFG} for ISCE or chapter ~\ref{ch:gamma_IFG} for Gamma. 
+In the {\tt INSAR\_}\cc{master\_date} directory run
+ \cs{mt\_prep}  for ROI\_PAC/DORIS,  \cs{mt\_prep\_gamma} for Gamma, and  \cs{mt\_prep\_isce} for ISCE. For example:  \\
  \cs{mt\_prep} \cc{0.4 3 2 50 200} where
  
  %\begin{list}{}
@@ -979,6 +1012,20 @@ The parameters that control the processing are set to default values which you c
 You can run  $>>$\cs{stamps\_mc\_header(\cc{start\_step},\cc{end\_step})} just like conventional $>>$\cs{stamps(\cc{start\_step},\cc{end\_step})} to increase the processing speed of the first 5 steps of StaMPS. You can specify the number of cores to be used using $>>$\cs{setparm(`n\_cores',\cc{XX})}, where \cc{XX} are the number of cores to be used. Note that increasing the number of cores above the machine capability will not speed up the processing. The patchlist will be split into \cc{XX} components, for which an individual matlab job will be launched in the background. The command line output for each matlab job is contained int he corresponding log\_stamps\_split\_\cc{XX} file. It is recommended to regulary check the output to catch errors.
 \end{small}
 
+ \vspace{0.5mm}
+\end{minipage}
+}
+\end{center}
+ 
+ 
+ 
+\begin{center}
+\colorbox{notegray}{
+\begin{minipage}{0.95\linewidth}
+\begin{small}
+\textbf{Re-start processing from last succesfull step}. \\ 
+You can run $>>$\cs{stamps(0,\cc{end\_step})} or  $>>$\cs{stamps\_mc\_header(0,\cc{end\_step})} with the start-step set to 0. In this case StaMPS will check which is the last completed step for each patch prior to starting the next step.
+\end{small}
  \vspace{0.5mm}
 \end{minipage}
 }
@@ -1091,7 +1138,7 @@ Processing is controlled by the following parameters:
  \footnotesize
 \begin{tabular}[ht!]{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
-{\tt unwrap\_method} &	 {\tt `3D'} &  Unwrapping method. \textbf{****MORE options need to be included and explained, ref to a paper?****} \\
+{\tt unwrap\_method} &	 {\tt `3D'} &  Unwrapping method. \\
 {\tt unwrap\_prefilter\_flag} &  {\tt `y'} & Prefilter phase before unwrapping to reduce noise. Other option (not generally recommended) {\tt `n'}.\\
 {\tt unwrap\_patch\_phase} &  {\tt `n'} & Use the patch phase from Step 3 as prefiltered phase. If set to {\tt `n'} (recommended), PS phase is filtered using a Goldstein adaptive phase filter.\\
 {\tt unwrap\_grid\_size} & 200 & Resampling grid spacing. If {\tt unwrap\_prefilter\_flag} is set to {\tt `y'}, phase is resampled to a grid with this spacing.\\
@@ -1240,9 +1287,9 @@ try increasing {\tt unwrap\_grid\_size} to 200 m or more. This will \textbf{redu
 
 
 \chapter{Small Baseline Processing}
-First, create single master interferograms by following Chapter~\ref{sec:ifgs}.
+First, create single master interferograms by following the pre-processing chapter of the InSAR processor applied, i.e. chapter ~\ref{ch:roipac_doris_IFG} for ROI\_PAC/DORIS, chapter ~\ref{ch:isce_IFG} for ISCE, or chapter ~\ref{ch:gamma_IFG} for Gamma. Note, the steps below are for DORIS and Gamma. The processing steps for ISCE up to the \cs{mt\_prep\_isce} are differnt and detailed in chapter ~\ref{ch:isce_IFG}.
 
-If PS processing has not been run, in the {\tt INSAR\_}\cc{master\_date} directory load baseline info into matlab workspaces with:\\
+For Gamma and DORIS, if PS processing has not been run, in the {\tt INSAR\_}\cc{master\_date} directory load baseline info into matlab workspaces with:\\
  \cs{mt\_extract\_info}\\
  \cs{matlab}\\
  $>>$\cs{ps\_load\_info}
@@ -1262,7 +1309,11 @@ If the Doppler centroid is high, Doris may fail when filtering in azimuth. You c
 
  The script  \cs{make\_small\_baselines} will create a new subdirectory called {\tt SMALL\_BASELINES} within the {\tt INSAR\_}\cc{master\_date} directory, containing a subdirectory for each small baseline interferogram.
  
- Within the {\tt SMALL\_BASELINES} directory run\\
+ 
+ 
+ 
+ Within the {\tt SMALL\_BASELINES} directory run  
+ \cs{mt\_prep}  for ROI\_PAC/DORIS,  \cs{mt\_prep\_gamma} for Gamma, and  \cs{mt\_prep\_isce} for ISCE. For example:\\
 \cs{mt\_prep} \cc{0.6 3 2 50 200} where
  
 
@@ -1318,7 +1369,7 @@ Step 6 includes extra processing after phase-unwrapping to retrieve the phase wi
 \footnotesize
 \begin{tabular}{p{4.5cm}p{1.8cm}p{8.5cm}}
 \textbf{Parameter Name} &	\textbf{Default} & \textbf{Description}\\
-{\tt unwrap\_method} &	 {\tt `3D'} &  Unwrapping method. \textbf{****MORE options need to be included and explained, ref to a paper?****} \\
+{\tt unwrap\_method} &	 {\tt `3D'} &  Unwrapping method.  \\
 {\tt unwrap\_prefilter\_flag} &  {\tt `y'} & Prefilter phase before unwrapping to reduce noise. Other option (not generally recommended) {\tt `n'}.\\
 {\tt unwrap\_patch\_phase} &  {\tt `n'} & Use the patch phase from Step 3 as prefiltered phase. If set to {\tt `n'} (recommended), PS phase is filtered using a Goldstein adaptive phase filter.\\
 {\tt unwrap\_grid\_size} & 200 & Resampling grid spacing. If {\tt unwrap\_prefilter\_flag} is set to {\tt `y'}, phase is resampled to a grid with this spacing.\\
@@ -1719,6 +1770,11 @@ to display the image in matlab instead of using {\tt disrg}
 \item Track patches with no PS, automatically skip remaining steps
 \item Stamps multi-core support up to step 5 at patch level.
 \item Include a maximum number of interations for step 2.
+\item Include support for ISCE stack processor outputs.
+\item Update the manual to support various InSAR processors (ISCE, gamma, DORIS)
+\item Update the section on software and indicate those that are required versus optional.
+\item Include information of the stamps step 0
+
 \end{itemize}
 
 
