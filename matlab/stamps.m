@@ -57,9 +57,9 @@ msgstr=fillstr;
 
 fprintf(skipstr);
 logit(fillstr);
-msgstr(round(nfill)/2-12:round(nfill/2)+13)=' StaMPS/MTI Version 4.0b3 ';
+msgstr(round(nfill)/2-12:round(nfill/2)+13)=' StaMPS/MTI Version 4.0b6 ';
 logit(msgstr);
-msgstr(round(nfill)/2-12:round(nfill/2)+13)='  Beta version, Aug 2017  ';
+msgstr(round(nfill)/2-12:round(nfill/2)+13)='  Beta version, Jun 2018  ';
 logit(msgstr);
 logit(fillstr);
 fprintf(skipstr);
