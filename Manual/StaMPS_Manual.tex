@@ -970,6 +970,19 @@ To recreate the files deleted by this script, run \cs{make\_resample} in the {\t
 
 \chapter{Pre-processing with SNAP}
 \label{ch:SNAP_IFG}
+Note that no shell scripts are included within the StaMPS distribution itself to generate SNAP interferograms. Users should refer to the snap2stamps software package for generating a stack compatible with StaMPS using the ESA SNAP software. 
+
+The following steps are needed: 
+\begin{enumerate}
+\item Sort the slave images in separated folders corresponding to their acquisition time. The current scripts can handle maximum of 2 slaves per acquisition day.
+\item Slave splitting (and slice assembling if needed) and anotated orbits replacement with Precise/Restituted Orbits. Current scripts allow to work with each subswath separately.
+\item Coregistration and interferogram generation done per slave and subswath. Here auxiliary files as DEMs and subset using a bounding box is performed.
+Both amplitude coregistered master-slave stack and interferogram with elevation and orthorectified latitude and longitude coordinates are saved as output.
+\item StaMPS export is done providing for each pair coregistered stack and interferogram generated StaMPS compatible products.
+\item StaMPS matlab preparation routine can be now run to get StaMPS friendly dataset structure.
+\end{enumerate}
+
+The corresponding python routines for running the aforementioned steps are provided in the github snap2stamps package available at \url{https://github.com/mdelgadoblasco/snap2stamps}
 
 \chapter{Pre-processing with ISCE}
 \label{ch:isce_IFG}
