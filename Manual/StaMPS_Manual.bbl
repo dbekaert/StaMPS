@@ -1,4 +1,4 @@
-\begin{thebibliography}{14}
+\begin{thebibliography}{15}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 
 \bibitem[{{\it Ar{\i}kan et~al.\/}(2010){\it Ar{\i}kan, Hooper, and
@@ -18,6 +18,13 @@ Bekaert, D., A.~Hooper, and T.~Wright, {A spatially-variable power-law
 Bekaert, D., R.~Walters, T.~Wright, A.~Hooper, and D.~Parker, Statistical
   comparison of insar tropospheric correction techniques, {\it Remote Sensing
   of Environment\/}, {\it 170\/}, 40 -- 47, 2015{\natexlab{b}}.
+
+\bibitem[{{\it Foumelis et~al.\/}(2018){\it Foumelis, Blasco, Desnos, Engdahl,
+  Fernandez, L.~Veci, and Wong\/}}]{Foumelis2018}
+Foumelis, M., J.~M.~D. Blasco, Y.-L. Desnos, M.~Engdahl, D.~Fernandez, J.~L.
+  L.~Veci, and C.~Wong, Esa snap - stamps integrated processing for sentinel-1
+  persistent scatterer interferometry, {\it IEEE Int. Geosci and Remote Sensing
+  Symposium. IGARSS 2018\/}, 2018.
 
 \bibitem[{{\it Hooper\/}(2008)}]{HooperA2008}
 Hooper, A., A multi-temporal {InSAR} method incorporating both persistent
