@@ -1318,7 +1318,7 @@ try increasing {\tt unwrap\_grid\_size} to 200 m or more. This will \textbf{redu
 
 
 \chapter{Small Baseline Processing}
-First, create single master interferograms by following the pre-processing chapter of the InSAR processor applied, i.e. chapter ~\ref{ch:roipac_doris_IFG} for ROI\_PAC/DORIS, chapter ~\ref{ch:isce_IFG} for ISCE or chapter ~\ref{ch:gamma_IFG} for Gamma. Note, the steps below are for DORIS and Gamma. The processing steps for ISCE up to the \cs{mt\_prep\_isce} are differnt and detailed in chapter ~\ref{ch:isce_IFG}.
+First, create single master interferograms by following the pre-processing chapter of the InSAR processor applied, i.e. chapter ~\ref{ch:roipac_doris_IFG} for ROI\_PAC/DORIS, chapter ~\ref{ch:isce_IFG} for ISCE or chapter ~\ref{ch:gamma_IFG} for Gamma. Note, the steps below are for DORIS and Gamma. The processing steps for ISCE up to the \cs{mt\_prep\_isce} are different and detailed in chapter ~\ref{ch:isce_IFG}. Note, SNAP currently does not support Small Basline processing with StaMPS.
 
 For Gamma and DORIS, if PS processing has not been run, in the {\tt INSAR\_}\cc{master\_date} directory load baseline info into matlab workspaces with:\\
  \cs{mt\_extract\_info}\\
