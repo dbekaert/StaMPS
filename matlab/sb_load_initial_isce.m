@@ -190,7 +190,7 @@ lonlat=lonlat(sort_ix,:);
 stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,ifgday,ifgday_ix,n_image,n_ifg,n_ps,sort_ix,ll0,master_ix,day_ix);
 phname=['ph',num2str(psver)];
 stamps_save(phname,ph);
-save psver psver ph xy lonlat
+%save psver psver ph xy lonlat
     
 if exist(daname,'file')
   D_A=load(daname);
@@ -264,7 +264,6 @@ else
         laname= ['..',filesep,laname];
         if ~exist(incname,'file')
             laname= ['..',filesep,laname];
-            clear laname
         end
      end
      % laod the data if it exists
