@@ -1,0 +1,67 @@
+\select@language {english}
+\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}
+\contentsline {section}{\numberline {1.1}Processing Overview}{2}{section.1.1}
+\contentsline {subsection}{\numberline {1.1.1}Pre-processing}{2}{subsection.1.1.1}
+\contentsline {subsection}{\numberline {1.1.2}StaMPS PS/MTI}{2}{subsection.1.1.2}
+\contentsline {chapter}{\numberline {2}Installation}{3}{chapter.2}
+\contentsline {section}{\numberline {2.1}Configuration}{3}{section.2.1}
+\contentsline {section}{\numberline {2.2}Required packages}{3}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}Snaphu}{3}{subsection.2.2.1}
+\contentsline {section}{\numberline {2.3}Optional packages}{4}{section.2.3}
+\contentsline {subsection}{\numberline {2.3.1}Triangle}{4}{subsection.2.3.1}
+\contentsline {subsection}{\numberline {2.3.2}TRAIN}{4}{subsection.2.3.2}
+\contentsline {section}{\numberline {2.4}InSAR processor packages}{4}{section.2.4}
+\contentsline {subsection}{\numberline {2.4.1}ISCE}{4}{subsection.2.4.1}
+\contentsline {subsection}{\numberline {2.4.2}SNAP}{4}{subsection.2.4.2}
+\contentsline {subsection}{\numberline {2.4.3}Gamma}{4}{subsection.2.4.3}
+\contentsline {subsection}{\numberline {2.4.4}ROI\_PAC}{5}{subsection.2.4.4}
+\contentsline {subsubsection}{\numberline {2.4.4.1}Data display}{5}{subsubsection.2.4.4.1}
+\contentsline {subsection}{\numberline {2.4.5}Doris}{5}{subsection.2.4.5}
+\contentsline {chapter}{\numberline {3}Pre-processing }{6}{chapter.3}
+\contentsline {section}{\numberline {3.1}Pre-processing with ISCE}{6}{section.3.1}
+\contentsline {section}{\numberline {3.2}Pre-processing with SNAP}{6}{section.3.2}
+\contentsline {section}{\numberline {3.3}Pre-processing with Gamma}{7}{section.3.3}
+\contentsline {subsection}{\numberline {3.3.1}PS processing}{7}{subsection.3.3.1}
+\contentsline {section}{\numberline {3.4}Small Baseline Processing}{8}{section.3.4}
+\contentsline {section}{\numberline {3.5}Pre-processing with ROI\_PAC and DORIS}{8}{section.3.5}
+\contentsline {subsection}{\numberline {3.5.1}Create SLCs from Raw (using ROI\_PAC)}{8}{subsection.3.5.1}
+\contentsline {subsection}{\numberline {3.5.2}Reading/cropping SLCs from Level 1 products}{10}{subsection.3.5.2}
+\contentsline {subsubsection}{\numberline {3.5.2.1} Option 1: Specify by latitude and longitude}{11}{subsubsection.3.5.2.1}
+\contentsline {subsubsection}{\numberline {3.5.2.2}Option 2: Specify by line/pixel number}{11}{subsubsection.3.5.2.2}
+\contentsline {subsection}{\numberline {3.5.3} Oversampling SLC data (Optional)}{12}{subsection.3.5.3}
+\contentsline {subsection}{\numberline {3.5.4} Create IFGs (using DORIS)}{12}{subsection.3.5.4}
+\contentsline {subsubsection}{\numberline {3.5.4.1}Bulk Processing}{13}{subsubsection.3.5.4.1}
+\contentsline {subsubsection}{\numberline {3.5.4.2}Manual DEM offset correction}{15}{subsubsection.3.5.4.2}
+\contentsline {subsubsection}{\numberline {3.5.4.3}Re-running Steps}{16}{subsubsection.3.5.4.3}
+\contentsline {subsubsection}{\numberline {3.5.4.4}Possible reasons for Doris SIGERV error}{16}{subsubsection.3.5.4.4}
+\contentsline {subsubsection}{\numberline {3.5.4.5}Disk Space}{16}{subsubsection.3.5.4.5}
+\contentsline {chapter}{\numberline {4}PS Processing}{18}{chapter.4}
+\contentsline {section}{\numberline {4.1}Step 1: Load data}{19}{section.4.1}
+\contentsline {section}{\numberline {4.2}Step 2: Estimate phase noise}{19}{section.4.2}
+\contentsline {section}{\numberline {4.3}Step 3: PS selection}{20}{section.4.3}
+\contentsline {section}{\numberline {4.4}Step 4: PS weeding}{20}{section.4.4}
+\contentsline {section}{\numberline {4.5}Step 5: Phase correction}{21}{section.4.5}
+\contentsline {section}{\numberline {4.6}Step 6: Phase unwrapping}{22}{section.4.6}
+\contentsline {section}{\numberline {4.7}Step 7: Estimate spatially-correlated look angle error}{23}{section.4.7}
+\contentsline {section}{\numberline {4.8}Step 8: Atmospheric filtering}{24}{section.4.8}
+\contentsline {chapter}{\numberline {5}Small Baseline Processing}{25}{chapter.5}
+\contentsline {section}{\numberline {5.1}Step 1-5}{26}{section.5.1}
+\contentsline {section}{\numberline {5.2}Step 6: Phase unwrapping}{27}{section.5.2}
+\contentsline {section}{\numberline {5.3}Step 7: Estimate spatially-correlated look angle error}{28}{section.5.3}
+\contentsline {chapter}{\numberline {6}Combined MTI Processing}{30}{chapter.6}
+\contentsline {chapter}{\numberline {7}Plotting}{31}{chapter.7}
+\contentsline {chapter}{\numberline {8}Change History}{33}{chapter.8}
+\contentsline {section}{\numberline {8.1}Version 1.0 }{33}{section.8.1}
+\contentsline {subsection}{\numberline {8.1.1}Version 1.1}{33}{subsection.8.1.1}
+\contentsline {section}{\numberline {8.2}Version 2.0}{33}{section.8.2}
+\contentsline {subsection}{\numberline {8.2.1}Version 2.0.1}{34}{subsection.8.2.1}
+\contentsline {subsection}{\numberline {8.2.2}Version 2.0.2}{34}{subsection.8.2.2}
+\contentsline {subsection}{\numberline {8.2.3}Version 2.0.3}{34}{subsection.8.2.3}
+\contentsline {section}{\numberline {8.3}Version 2.1}{34}{section.8.3}
+\contentsline {section}{\numberline {8.4}Version 2.2}{35}{section.8.4}
+\contentsline {section}{\numberline {8.5}Version 3.0}{35}{section.8.5}
+\contentsline {section}{\numberline {8.6}Version 3.1}{35}{section.8.6}
+\contentsline {section}{\numberline {8.7}Version 3.2}{36}{section.8.7}
+\contentsline {section}{\numberline {8.8}Version 3.3}{37}{section.8.8}
+\contentsline {section}{\numberline {8.9}Version 3.4}{37}{section.8.9}
+\contentsline {section}{\numberline {8.10}Version 4.0}{38}{section.8.10}
