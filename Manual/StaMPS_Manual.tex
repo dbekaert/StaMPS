@@ -25,14 +25,13 @@
 \usepackage{booktabs} 
 \usepackage{lscape}
 \usepackage{rotating}
-\usepackage[dvips]{epsfig}
+%\usepackage[dvips]{epsfig}
 
 \usepackage{psfrag}
 \usepackage[english]{babel}
 
 \usepackage{graphicx} 
 \usepackage{graphics}
-\usepackage[dvips]{epsfig}
 %\usepackage{longtable}
 \usepackage{latexsym}
 %\usepackage{xspace}
@@ -41,11 +40,11 @@
 %\usepackage{color}
 \bibliographystyle{agu}
 \usepackage{natbib}
-\usepackage[dvips, bookmarks, backref,pdfpagelabels,colorlinks=false, linkcolor=blue, urlbordercolor={0 0 1},citebordercolor={1 0 0},pdftitle={StaMPS/MTI Manual}, pdfauthor={Andy Hooper }, pdfkeywords={PS, PSI, MT-InSAR, StaMPS}]{hyperref}
+\usepackage[bookmarks, backref,pdfpagelabels,colorlinks=false, linkcolor=blue, urlbordercolor={0 0 1},citebordercolor={1 0 0},pdftitle={StaMPS/MTI Manual}, pdfauthor={Andy Hooper }, pdfkeywords={PS, PSI, MT-InSAR, StaMPS}]{hyperref}
 %\usepackage{url}
 \usepackage[usenames]{color}
-\newcommand{\cs}[1]{{\texttt{\color{RoyalBlue}#1}}}
-\newcommand{\cc}[1]{{\texttt{\color{Red}#1}}}
+\newcommand{\cs}[1]{{\texttt{\color{blue}#1}}}
+\newcommand{\cc}[1]{{\texttt{\color{red}#1}}}
 \usepackage[left=3cm,top=3cm,bottom=2cm,right=2.5cm]{geometry}
 \emergencystretch=100pt
 
@@ -260,7 +259,7 @@
    StaMPS/MTI  Manual\\
      }}}}
      \vspace{5mm}
-     {\sffamily\Large{\textbf{Version 3.4}}}
+     {\sffamily\Large{\textbf{Version 4.0}}}
 \vspace{5mm}
 
 
@@ -273,9 +272,9 @@
 
 %\begin{flushright}
 \begin{center}
-{\sffamily\textbf{Andy Hooper and David Bekaert}}\\
+{\sffamily\textbf{Andy Hooper, David Bekaert, Karsten Spaans and Ekbal Hussain}}\\
 \vspace{4mm}
-{\sffamily\textbf{5th June, 2018}}
+{\sffamily\textbf{30th June, 2018}}
 %\end{flushright}
 \end{center}
 
@@ -291,7 +290,7 @@
         \begin{flushright}
           {\sffamily
           \textbf{School of Earth and Environment}\\\textbf{University of Leeds}\\
-          LS2-9JT Leeds\\
+          LS2 9JT Leeds\\
           United Kingdom}
         \end{flushright}
       \end{minipage}
@@ -335,14 +334,15 @@
 
 \chapter{Introduction}
 
-StaMPS/MTI is made available for non-commercial applications only. Releases can be downloaded from \url{http://homepages.see.leeds.ac.uk/~earahoo/stamps/} and github at \url{https://github.com/dbekaert/stamps}. The github webpage also allows to download the developers version which will be the most recent and un-released version.  \\
+StaMPS/MTI can be downloaded from \url{http://homepages.see.leeds.ac.uk/~earahoo/stamps/} and github at \url{https://github.com/dbekaert/stamps}. The github webpage also allows to download the developers version which will be the most recent and un-released version.  \\
 
 When using this software please reference \cite{HooperA2012}:
-\begin{center}
-\textit{Hooper A; Bekaert D; Spaans K; Arikan M (2012), Recent advances in SAR interferometry time series analysis for measuring crustal deformation, Tectonophysics, 514-517, pp.1-13. doi: 10.1016/j.tecto.2011.10.013\\}
-\end{center}
 
-In addition, cite dependencies used such as ROI\_PAC \citep{Rosen2004}, DORIS \citep{Kampes2003}, GAMMA \citep{Werner2000}, ISCE \citep{rosen2012}, and or TRAIN \citep[e.g.][]{Bekaert2015,Bekaert2015a}.
+%\begin{center}
+\textit{Hooper A; Bekaert D; Spaans K; Arikan M (2012), Recent advances in SAR interferometry time series analysis for measuring crustal deformation, Tectonophysics, 514-517, pp.1-13. doi: 10.1016/j.tecto.2011.10.013}
+%\end{center}
+
+In addition, cite dependencies used such as ISCE \citep{rosen2012}, SNAP \citep{Foumelis2018}, GAMMA \citep{Werner2000}, TRAIN \citep[e.g.][]{Bekaert2015,Bekaert2015a}. ROI\_PAC \citep{Rosen2004},  or DORIS \citep{Kampes2003}
 
 
 StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland, Delft University of Technology, and the University of Leeds. There are also contributions from users of the package based at other institutions.
@@ -353,34 +353,25 @@ This manual provides a guide to running StaMPS/MTI, but does not  explain all th
 
 
 
-\section{Processing}
+\section{Processing Overview}
 Throughout this manual, commands to be entered on the command line are in \cs{blue}
 and entries that are specific to the data set being processed and require modification are in \cc{red}. The presence of $>>$ before a command indicates that the command is a matlab script.\\
 
-There are two pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. Different processors can be used together with StaMPS such as ROI\_PAC and DORIS, GAMMA, and ISCE. Further details are provided below on the support of each software.
+\subsection{Pre-processing}
+There are two potential pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. Various processors can be used to achieve the pre-processing including ISCE, SNAP, GAMMA, and ISCE, ROI\_PAC and DORIS. Further details are provided in Chapter~\ref{ch:preproc} for each software.
 
-\subsection{ROI\_PAC and DORIS}
-ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1/2, TerraSAR-X and COSMO-SkyMed data, if starting with SLCs. Both  ROI\_PAC and Doris processing are non-standard and various shell scripts, matlab scripts and programs are included in this package to produce interferograms that are PS/MTI friendly.
 
-\subsection{GAMMA}
-PS/MTI processing can be done for all sensors as supported by GAMMA software. 
 
-\subsection{ISCE}
-StaMPS is compatible with the outputs generated though the ISCE stack processor. Note that no shell scripts are included within the StaMPS distribution itself to generate ISCE interferograms. Users should refer to the contrib folder of the ISCE software for generating a stack compatible with StaMPS. 
-
-\subsection{SNAP}
-StaMPS is also compatible with the output generated by the ESA SentiNel Application Platform (SNAP) after the version 6.0 (SNAP can be downloaded from 
-\url{http://step.esa.int/main/download/} ). 
-
-SNAP allows the user to define a series of xml files which contain user defined processing workflow by using its Graph Builder. These files can be used to run SNAP processing in batch mode by using the GPT command (Graph Processing Tool). 
-
-You can download from \url{https://github.com/mdelgadoblasco/snap2stamps} a set of graphs together with python wrappers which allow you to automatise the interferogram processing chain for single master interferograms compatible with StaMPS PSI.
-
-Information about the provided functionalities and their instructions can be found in the user manual provided within the github package which already plans newer releases increasing functionality and compatibility maintenance of SNAP-StaMPS chain.
-
-Demonstration about the ESA SNAP and StaMPS compatibility for PSI analysis has been already shown in EGU2018 and IGARSS 2018 with the work done under the title: "ESA SNAP – STAMPS INTEGRATED PROCESSING FOR SENTINEL-1 PERSISTENT SCATTERER INTERFEROMETRY" with Michael Foumelis and Jose Manuel Delgado Blasco among the authors.
-
-When using this software package please reference \cite{Foumelis2018}
+%
+%\subsection{SNAP}
+%
+%
+%\subsection{GAMMA}
+%PS/MTI processing can be done for all sensors as supported by GAMMA software. 
+%
+%
+%\subsection{ROI\_PAC and DORIS}
+%ROI\_PAC is used for the focusing and Doris for interferogram formation. If starting with SLC images, rather than raw data, the focusing step is skipped and the images are imported directly into Doris. Currently, support is provided for processing ERS, Envisat and ALOS data, if starting with raw data, and for  ERS, Envisat, RADARSAT-1/2, TerraSAR-X and COSMO-SkyMed data, if starting with SLCs. Both  ROI\_PAC and Doris processing are non-standard and various shell scripts, matlab scripts and programs are included in this package to produce interferograms that are PS/MTI friendly.
 
 \subsection{StaMPS PS/MTI}
 The PS/MTI processing itself includes C++ programs and matlab scripts  to identify coherent pixels, and to extract the deformation signal for these pixels. Typing \cs{help} followed by the name of the matlab script  provides a brief description of the processing.
@@ -390,8 +381,8 @@ The PS/MTI processing itself includes C++ programs and matlab scripts  to identi
 \chapter{Installation}
 
  Install StaMPS/MTI: \\
- \cs{ tar -xvf StaMPS\_v3.4.tar}\\
- cd StaMPS\_v3.4/src\\
+ \cs{ tar -xvf StaMPS\_v4.0b6.tar}\\
+ cd StaMPS\_v4.0b6/src\\
  make\\
  make install
 
@@ -409,7 +400,7 @@ Edit {\tt StaMPS\_CONFIG.tcsh} or {\tt StaMPS\_CONFIG.bash} (depending on which 
 
 \section{Optional packages}
 \subsection{Triangle}
-The Triangle program is used for Delaunay triangulation. It is only required in case users want to run stamps beyons step 7. It can be found at:\\
+The Triangle program is used for Delaunay triangulation. It is  no longer required for StaMPS Steps 1 to 7 (Chapter~\ref{ch:psproc}) but is required if users want to run Step 8. It can be found at:\\
   \url{http://www.cs.cmu.edu/~quake/triangle.html}.  
   
  
@@ -424,11 +415,21 @@ The help forum can be accessed at:\\
 \section{InSAR processor packages}
  Depending on the InSAR procesor being used, you will need different dependencies.
  
-\subsection{ROI\_PAC and DORIS}
-\subsubsection{Data display}
- In previous versions a program called dismph was included for displaying SLCs and interferograms, but this is no longer the case. Recommended instead is xv (\url{http://www.trilon.com/xv}) or OpenEV (\url{http://fwtools.maptools.org/}).
+  \subsection{ISCE}
+Details on lisence and installation of ISCE can be found at WinSAR:\\ 
+ \url{https://winsar.unavco.org/software/isce} . 
 
-\subsubsection{ROI\_PAC}
+\subsection{SNAP}
+Details on installation and usage of the ESA SentiNel Application Platform (SNAP) can be found at \url{http://step.esa.int/main/download/} while the additional software package for the interferometric stack computation can be found at: \url{https://github.com/mdelgadoblasco/snap2stamps/}
+
+ \subsection{Gamma}
+ Gamma is a commercial software. See Gamma website for details on lisence and installation at:\\
+   \url{ http://www.gamma-rs.ch/} .
+   
+
+
+
+\subsection{ROI\_PAC}
 The ROI\_PAC website (\url{http://roipac.org/ROI_PAC}) is no longer active. Details on installing and running ROI\_PAC (if needed) can be found on legacy webpages and forums.\\
 
 For ERS, ROI\_PAC requires the program getorb which must be installed in the {\tt ROI\_PAC/INT\_BIN} directory and can be downloaded from:\\ 
@@ -444,28 +445,110 @@ Alternatively, use the ESA DORIS (the tracking system on Envisat, not to be conf
 Envisat instrument calibration files (INS) can be downloaded from:\\
 \url{http://earth.eo.esa.int/services/auxiliary_data/asar/current}
 
-\subsubsection{Doris}
+\subsubsection{Data display}
+ In previous versions a program called dismph was included for displaying SLCs and interferograms, but this is no longer the case. Recommended instead is xv (\url{http://www.trilon.com/xv}) or OpenEV (\url{http://fwtools.maptools.org/}).
+ 
+\subsection{Doris}
  Details on installing Doris can be found at:\\
   \url{http://doris.tudelft.nl} .
  
 
- \subsection{Gamma}
- Gamma is a commercial software. See Gamma website for details on lisence and installation at:\\
-   \url{ http://www.gamma-rs.ch/} .
+
 
  
- \subsection{ISCE}
-Details on lisence and installation of ISCE can be found at WinSAR:\\ 
- \url{https://winsar.unavco.org/software/isce} . 
 
-\subsection{SNAP}
-Details on installation and usage of the ESA SentiNel Application Platform (SNAP) can be found at \url{http://step.esa.int/main/download/} while the additional software package for the interferometric stack computation can be found at: \url{https://github.com/mdelgadoblasco/snap2stamps/}
+\chapter{Pre-processing }
+\label{ch:preproc}
 
-\chapter{Pre-processing with ROI\_PAC and DORIS} 
+\section{Pre-processing with ISCE}
+\label{ch:isce_IFG}
+
+
+
+
+Note that no shell scripts are included within the StaMPS distribution itself to generate ISCE interferograms. Users should refer to the contrib folder of the ISCE software for generating a stack compatible with StaMPS. 
+
+Two steps are needed: 
+\begin{enumerate}
+\item Generate a coregistered stack using the ISCE stack processor. This can be done using the codes included in the "contrib\/stack" folder within the ISCE software. ISCE supports a stack generation for Sentinel-1(supports SLC only), i.e. "contrib\/stack\/topsStack", and one for stripmap sensors (supports raw and SLC), i.e. "contrib\/stack\/stripmapStack". 
+\item After succesfull generation of a coregistered SLC stack, use the stack to StaMPS routines provided in the ISCE contrib folder, i.e. "contrib\/timeseriesPrep\/stack2stamps", to  produce interferograms that are PS/MTI friendly.
+\end{enumerate}
+
+\section{Pre-processing with SNAP}
+\label{ch:SNAP_IFG}
+
+StaMPS is compatible with the output generated by the ESA SentiNel Application Platform (SNAP) after the version 6.0 
+
+SNAP allows the user to define a series of xml files which contain user defined processing workflow by using its Graph Builder. These files can be used to run SNAP processing in batch mode by using the GPT command (Graph Processing Tool). 
+
+snap2stamps contains a set of graphs, together with python wrappers that allow you to automatise the interferogram processing chain for single master interferograms compatible with StaMPS PSI.
+
+Information about the provided functionalities and their instructions can be found in the user manual provided within snap2stamps, which already plans newer releases increasing functionality and compatibility maintenance of SNAP-StaMPS chain.
+
+
+When using this software package please reference \cite{Foumelis2018}
+
+
+
+
+The following steps are needed and provided by snap2stamps: 
+\begin{enumerate}
+\item Sort the slave images in separated folders corresponding to their acquisition time.
+\item Slave splitting (and slice assembling if needed) and anotated orbits replacement with Precise/Restituted Orbits.
+\item Coregistration and interferogram generation done per slave and subswath. Here auxiliary files as DEMs and subset using a bounding box is performed.
+Both amplitude coregistered master-slave stack and interferogram with elevation and orthorectified latitude and longitude coordinates are saved as output.
+\item StaMPS export is done providing for each pair coregistered stack and interferogram generated StaMPS compatible products.
+
+\end{enumerate}
+
+
+
+
+
+\section{Pre-processing with Gamma}  
+\label{ch:gamma_IFG}
+A specific directory structure needs to be created within a processing directory (which itself can have any name) using exactly the naming standards below, which is different for PS and small baseline processing.
+
+
+\subsection{PS processing}
+A series of interferograms all with the same master need to be formed. The following files are needed:
+\begin{itemize}
+\item  {\tt ./rslc/}\cc{yyyymmdd}{\tt .rslc}\\ a resampled SLC for every slave and unresampled slc for the master
+\item   {\tt ./rslc/}\cc{yyyymmdd}{\tt .slc.par}\\ the SLC parameter file for the master
+\item   {\tt ./diff0/}\cc{yyyymmdd}{\tt.diff}\\ an interferogram for every slave image
+\item   {\tt ./diff0/}\cc{yyyymmdd}{\tt.base} \\ a base file for every interferogram
+\item  {\tt ./geo}/\cc{yyyymmdd}{\tt \_dem.rdc} \\ the DEM in master radar coordinates
+\item  {\tt ./geo}/\cc{yyyymmdd}{\tt.lon}\\ the longitude of every pixel in the master SLC
+\item  {\tt ./geo}/\cc{yyyymmdd}{\tt.lat}\\ the latitude of every pixel in the master SLC
+  %geo/*.diff\_par the parameter file 
+    %dem/*\_seg.par
+\end{itemize}
+
+\section{Small Baseline Processing}
+A connected network of interferograms should be formed from SLCs that are all coregistered with a single image (super-master). The following files are needed:
+\begin{itemize}
+\item  {\tt ./SMALL\_BASELINES/}\cc{yyyymmdd\_yyyymmdd/yyyymmdd}{\tt .rslc}\\
+a resampled SLC for the master image in every interferogram
+\item  {\tt ./SMALL\_BASELINES/}\cc{yyyymmdd\_yyyymmdd/yyyymmdd}{\tt .rslc}\\
+a resampled SLC for the slave image in every interferogram
+\item  {\tt ./SMALL\_BASELINES/}\cc{yyyymmdd\_yyyymmdd/yyyymmdd}{\tt .rslc.par}\\
+the SLC parameter file for the super-master
+\item  {\tt ./SMALL\_BASELINES/}\cc{yyyymmdd\_yyyymmdd/yyyymmdd\_yyyymmdd}{\tt .diff}\\
+the interferograms
+\item  {\tt ./SMALL\_BASELINES/}\cc{yyyymmdd\_yyyymmdd/yyyymmdd\_yyyymmdd}{\tt .base}\\
+a base file for every interferogram
+\item  {\tt ./geo}/\cc{yyyymmdd}{\tt \_dem.rdc} \\ the DEM in super-master radar coordinates
+\item  {\tt ./geo}/\cc{yyyymmdd}{\tt.lon}\\ the longitude of every pixel in the super-master SLC
+\item  {\tt ./geo}/\cc{yyyymmdd}{\tt.lat}\\ the latitude of every pixel in the super-master SLC
+%   geo/*diff\_par
+  % dem/*\_seg.par
+\end{itemize}
+
+\section{Pre-processing with ROI\_PAC and DORIS} 
 \label{ch:roipac_doris_IFG}
-\section{Create SLCs from Raw (using ROI\_PAC)}
+\subsection{Create SLCs from Raw (using ROI\_PAC)}
 
-Currently support is provided for raw data from ERS, Envisat and ALOS satellites.
+Support is provided for raw data from ERS, Envisat  and ALOS satellites only.
 
 
 
@@ -562,9 +645,9 @@ Edit {\tt../roi.proc} and change the following:\\
 %\begin{list}{}{}
 % {\tt before\_z\_ext = {\color{Red}-12500} -}(first az line minus 2500) N.B., include the minus sign\\
 %{\tt number\_of\_patches = {\color{Red}3}} ((last line - first line + 2500)/3000 rounded up)\\
-{\tt ymin = {\color{Red}14000}} (first azimuth line minus 1000)\\
-{\tt ymax = {\color{Red}21000}} (last azimuth line plus 1000). You will also need to uncomment this line\\
-{\tt mean\_pixel\_rng = {\color{Red}2900}} (range pixel of middle of region of interest)
+{\tt ymin = {\color{red}14000}} (first azimuth line minus 1000)\\
+{\tt ymax = {\color{red}21000}} (last azimuth line plus 1000). You will also need to uncomment this line\\
+{\tt mean\_pixel\_rng = {\color{red}2900}} (range pixel of middle of region of interest)
 %\end{list}
 
 
@@ -605,7 +688,7 @@ and update the crop area: {\tt first\_l} and {\tt last\_l} are the first and las
  It may become apparent later that one or more scenes are offset from the master by so much that the focused image does not include the entire cropped master image. In which case copy {\tt roi.proc} from the SLC directory to the relevant \cc{yyyymmdd} directory, rename it {\tt \cc{yyyymmdd}.proc} and edit it so that the the part processed includes the cropped master image. Edit {\tt make\_slcs.list} to leave only scenes that need recreating and run \cs{make\_slcs\_}\cc{XXXX}. 
 
 
-\section{Reading/cropping SLCs  from Level 1 products}
+\subsection{Reading/cropping SLCs  from Level 1 products}
 
 {\em If you created SLCs with ROI\_PAC using raw data, skip this section.}
 
@@ -631,7 +714,7 @@ Choose a master based on minimising perpendicular, Doppler and temporal baseline
 
  If your system does not have eog, an alternative image viewer which support Sun raster files will work as well.
  
-\subsection{\label{sec:slcread1} Option 1: Specify by latitude and longitude}
+\subsubsection{\label{sec:slcread1} Option 1: Specify by latitude and longitude}
 edit {\tt master\_crop\_geo.in} in the SLC directory, and specify your area of interest.  
 
 \cs{cd} \cc{master\_date}\\
@@ -639,7 +722,7 @@ edit {\tt master\_crop\_geo.in} in the SLC directory, and specify your area of i
 cd ..\\
 make\_read\_geo}
  
-\subsection{\label{sec:slcread2}Option 2: Specify by line/pixel number}
+\subsubsection{\label{sec:slcread2}Option 2: Specify by line/pixel number}
 Choose area of interest and note first/last azimuth line and first/last range pixel. You should try to pick an area that is included in all the slave images too, which may not be the case if you choose an area too close to the image edge. Multiply the line numbers by the number of azimuth looks and the pixel numbers by the number of range looks to get numbers referenced to the SLC. 
 %Generally you should be at least 1000 lines in azimuth and 40 pixels in range from the edges, but even this may not be enough. 
 
@@ -663,7 +746,7 @@ and update the crop area. {\tt first\_l} and {\tt last\_l} are the first and las
 
 % OVERSAMPLING
 % Mahmut
-\section{\label{sec:ovs} Oversampling SLC data (Optional)}
+\subsection{\label{sec:ovs} Oversampling SLC data (Optional)}
 
 After focusing your RAW data or reading/cropping your SLCs, optionally, you can oversample your dataset using Doris. If no oversampling needs to be applied ship this section and proceed to section \ref{sec:ifgs}.
 
@@ -688,7 +771,7 @@ Then re-run \cs{step\_master\_ovs} and \cs{make\_ovs} to create a new oversample
  For a single master approach, oversampling shows significant improvement in PS density especially in the rural areas
 (see \cite{Sousa2011} and \citet{Arikan2010}).
 
-\section{\label{sec:ifgs} Create IFGs (using DORIS)}
+\subsection{\label{sec:ifgs} Create IFGs (using DORIS)}
 
 
  In the same directory where SLC and INSAR\_\cc{master\_date} reside:\\
@@ -757,7 +840,7 @@ with the following line (substituting the correct heading, to the nearest degree
  %\cs{vi slcs.list}
  %and remove \cc{master\_date}\\
  
- \subsection{Bulk Processing}
+ \subsubsection{Bulk Processing}
  
  In the INSAR\_\cc{master\_date} directory:
  
@@ -839,7 +922,7 @@ Geocoded coordinates are needed in subsequent PS processing. To calculate the la
 
 
 
-\subsection{\label{sec:calcdem}Manual DEM offset correction}
+\subsubsection{\label{sec:calcdem}Manual DEM offset correction}
 
 This step need only be run if {\tt step\_master\_timing} failed. It should be run after {\tt make\_coarse} and before {\tt make\_dems}.
 %
@@ -881,7 +964,7 @@ Once happy with the fit, update the values for M\_RG\_T\_ERROR   and M\_AZ\_T\_E
 
 
 
-\subsection{Re-running Steps}
+\subsubsection{Re-running Steps}
 
 
  \cs{make\_orbits }
@@ -917,7 +1000,7 @@ resamples the slave image.\\
  
 
 
-\subsection{Possible reasons for Doris SIGERV error}
+\subsubsection{Possible reasons for Doris SIGERV error}
 
 
 \begin{itemize}
@@ -940,7 +1023,7 @@ resamples the slave image.\\
 
 
 
-\subsection{Disk Space}
+\subsubsection{Disk Space}
 
 
 Many intermediate files are produced and disk space requirements are therefore large (approximately 12.5 GB per image, if the whole image area is processed). Once step 1 of {\tt stamps} matlab script has been run, the following may be run in {\tt INSAR\_}\cc{master\_date} to free up space (only easily recreatable files are deleted):
@@ -957,39 +1040,13 @@ To recreate the files deleted by this script, run \cs{make\_resample} in the {\t
 \cs{make\_clean\_raw} (if you created SLCs using ROI\_PAC). To recreate files deleted by this script, run \cs{make\_slcs\_}\cc{XXXX} in the {\tt SLC} directory.
  
 
-\chapter{Pre-processing with SNAP}
-\label{ch:SNAP_IFG}
-Note that no shell scripts are included within the StaMPS distribution itself to generate SNAP interferograms. Users should refer to the snap2stamps software package for generating a stack compatible with StaMPS using the ESA SNAP software. 
-
-The following steps are needed: 
-\begin{enumerate}
-\item Sort the slave images in separated folders corresponding to their acquisition time.
-\item Slave splitting (and slice assembling if needed) and anotated orbits replacement with Precise/Restituted Orbits.
-\item Coregistration and interferogram generation done per slave and subswath. Here auxiliary files as DEMs and subset using a bounding box is performed.
-Both amplitude coregistered master-slave stack and interferogram with elevation and orthorectified latitude and longitude coordinates are saved as output.
-\item StaMPS export is done providing for each pair coregistered stack and interferogram generated StaMPS compatible products.
-\item StaMPS matlab preparation routine can be now run to get StaMPS friendly dataset structure.
-\end{enumerate}
-
-The corresponding python routines for running the aforementioned steps are provided in the github snap2stamps package available at \url{https://github.com/mdelgadoblasco/snap2stamps}
-
-\chapter{Pre-processing with ISCE}
-\label{ch:isce_IFG}
-Note that no shell scripts are included within the StaMPS distribution itself to generate ISCE interferograms. Users should refer to the contrib folder of the ISCE software for generating a stack compatible with StaMPS. 
-
-Two steps are needed: 
-\begin{enumerate}
-\item Generate a coregistered stack using the ISCE stack processor. This can be done using the codes included in the "contrib\/stack" folder within the ISCE software. ISCE supports a stack generation for Sentinel-1(supports SLC only), i.e. "contrib\/stack\/topsStack", and one for stripmap sensors (supports raw and SLC), i.e. "contrib\/stack\/stripmapStack". 
-\item After succesfull generation of a coregistered SLC stack, use the stack to StaMPS routines provided in the ISCE contrib folder, i.e. "contrib\/timeseriesPrep\/stack2stamps", to  produce interferograms that are PS/MTI friendly.
-\end{enumerate}
-
-\chapter{Pre-processing with Gamma}  
-\label{ch:gamma_IFG}
 
 \chapter{PS Processing}
-First, create single master interferograms by following the pre-processing Chapter of your preferred InSAR processor, i.e. chapter ~\ref{ch:roipac_doris_IFG} for ROI\_PAC/DORIS,  chapter ~\ref{ch:SNAP_IFG} for SNAP,  chapter ~\ref{ch:isce_IFG} for ISCE or chapter ~\ref{ch:gamma_IFG} for Gamma. 
+\label{ch:psproc}
+First, create single master interferograms by following the pre-processing Section of your preferred InSAR processor in Chapter~\ref{ch:preproc} .
+
 In the {\tt INSAR\_}\cc{master\_date} directory run
- \cs{mt\_prep}  for ROI\_PAC/DORIS,  \cs{mt\_prep\_gamma} for Gamma,   \cs{mt\_prep\_isce} for ISCE, and \cs{mt\_prep\_snap} for SNAP. For example:  \\
+ \cs{mt\_prep\_isce} for ISCE,  \cs{mt\_prep\_snap} for SNAP, \cs{mt\_prep\_gamma} for GAMMA or \cs{mt\_prep}  for DORIS   . For example:  \\
  \cs{mt\_prep} \cc{0.4 3 2 50 200} where
  
  %\begin{list}{}
@@ -1295,7 +1352,7 @@ try increasing {\tt unwrap\_grid\_size} to 200 m or more. This will \textbf{redu
 \end{center}
 
 
-
+\section{Step 8: Atmospheric filtering}
 
 
 %\section{PS processing Tips}
@@ -1808,6 +1865,10 @@ to display the image in matlab instead of using {\tt disrg}
 
 \end{itemize}
 
+\section{Version 4.0}
+\begin{itemize}
+\item Many, but not yet listed
+\end{itemize}
 
 \bibliography{allref}
 
