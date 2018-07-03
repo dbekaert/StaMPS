@@ -1,0 +1,232 @@
+#!/bin/csh -f
+
+# Interface between Snap and StaMPS
+#
+# Andy Hooper, August 2017
+#
+# ===========================================================================
+# Expected directory structure:
+# PS:
+#   rslc/*.rslc
+#   rslc/*.rslc.par
+#   diff0/*.diff
+#   diff0/*.base
+#   geo/*dem.rdc
+#   geo/*diff_par
+#   geo/YYYYMMDD.lon (master)
+#   geo/YYYYMMDD.lat (master)
+#   dem/*_seg.par
+#
+# SB:
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/YYYYMMDD.rslc (master)
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/YYYYMMDD.rslc (slave)
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.rslc.par
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.diff
+#   SMALL_BASELINES/YYYYMMDD_YYYYMMDD/*.base
+#   geo/*dem.rdc
+#   geo/*diff_par
+#   geo/YYYYMMDD.lon (master)
+#   geo/YYYYMMDD.lat (master)
+#   dem/*_seg.par
+#   
+# ===========================================================================
+# ===========================================================================
+
+### Initial welcome
+set PRG = `basename "$0"`
+set AUT = "Andy Hooper, August 2017"
+echo "$PRG $AUT"
+echo " "
+set nonomatch
+
+if ($#argv < 2) then
+    echo "usage: mt_prep_snap yyyymmdd datadir da_thresh [rg_patches az_patches rg_overlap az_overlap maskfile]"
+    echo "    yyyymmdd                 = master date"
+    echo "    datadir                  = data directory (with expected structure)"
+    echo "    da_thresh                = (delta) amplitude dispersion threshold"
+    echo "                                typical values: 0.4 for PS, 0.6 for SB"
+    echo "    rg_patches (default 1)   = number of patches in range"
+    echo "    az_patches (default 1)   = number of patches in azimuth"
+    echo "    rg_overlap (default 50)  = overlapping pixels between patches in range"
+    echo "    az_overlap (default 50) = overlapping pixels between patches in azimuth"
+    echo "    maskfile (optional) char file, same dimensions as slcs, 0 to include, 1 otherwise"
+    echo ""
+    exit(4)
+endif
+
+set master = $argv[1]
+set datadir = $argv[2]
+
+
+if ($#argv > 3) then
+    set prg = $argv[4]
+else 
+    set prg = 1
+endif
+
+if ($#argv > 4) then
+    set paz = $argv[5]
+else 
+    set paz = 1
+endif
+
+if ($#argv > 5) then
+    set overlap_rg = $argv[6]
+else 
+    set overlap_rg = 50
+endif
+
+if ($#argv > 6) then
+    set overlap_az = $argv[7]
+else 
+    set overlap_az = 50
+endif
+
+if ($#argv > 7) then
+    set maskfile = $argv[8]
+    if (! -e $maskfile) then
+       echo $maskfile " does not exist, exiting"
+       exit 2
+    endif
+else 
+    set maskfile = ""
+endif
+
+
+set WORKDIR = $cwd
+set dirname = `echo $WORKDIR | gawk 'BEGIN {FS = "/"}{print $(NF)}'`
+
+
+if ( -e $datadir/SMALL_BASELINES ) then
+    echo "Small Baseline Processing"
+    echo " "
+    set SB_FLAG=1
+    set RSC = `\ls $datadir/SMALL_BASELINES/*/$master.*slc.par | gawk 'END {print $1}'`
+echo $RSC
+else
+    set SB_FLAG=0
+    set RSC = $datadir/*slc/$master.*slc.par
+endif
+
+if ($#argv > 2) then
+    set da_thresh = $argv[3]
+else 
+    if ($SB_FLAG == 1) then
+        set da_thresh = 0.6
+    else
+        set da_thresh = 0.4
+    endif
+endif
+echo "Amplitude Dispersion Threshold:" $da_thresh
+echo "Processing" $prg "patch(es) in range and" $paz "in azimuth"
+echo " "
+
+set length   = `gawk '/azimuth_lines/ {print $2}'     < $RSC`
+set width    = `gawk '/range_samples/ {print $2}'     < $RSC`
+
+echo "snap" > processor.txt
+if ($SB_FLAG == 1) then
+    matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/sb_parms_initial.m > sb_parms_initial.log
+else
+    matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/ps_parms_initial.m > ps_parms_initial.log
+endif
+
+echo $width > $WORKDIR/width.txt
+echo $length > $WORKDIR/len.txt
+echo $RSC > $WORKDIR/rsc.txt
+
+# Calibrate amplitudes
+\rm -f $WORKDIR/calamp.in >& /dev/null
+if ($SB_FLAG == 1) then
+    \ls $datadir/SMALL_BASELINES/*/*.*slc >> $WORKDIR/calamp.in
+    set selfile = $WORKDIR/selsbc.in
+else
+    \ls $datadir/*slc/*.*slc >> $WORKDIR/calamp.in
+    set selfile = $WORKDIR/selpsc.in
+endif
+calamp calamp.in $width $WORKDIR/calamp.out f 1 $maskfile
+
+# Set up patches
+echo $da_thresh > $selfile
+echo $width >> $selfile
+cat $WORKDIR/calamp.out >> $selfile
+
+@ width_p = $width / $prg
+echo $width_p
+@ length_p = $length / $paz
+echo $length_p
+set irg = 0
+set iaz = 0
+set ip = 0
+\rm -rf PATCH_* >& /dev/null
+\rm -rf patch.list
+while ($irg < $prg)
+    @ irg = $irg + 1
+    while ($iaz < $paz)
+        @ iaz = $iaz + 1
+        @ ip = $ip + 1
+        @ start_rg1 = $width_p * ($irg - 1) + 1
+        @ start_rg = $start_rg1 - $overlap_rg
+        if ($start_rg < 1) then
+            set start_rg = 1
+        endif
+        @ end_rg1 = $width_p * $irg
+        @ end_rg = $end_rg1 + $overlap_rg
+        if ($end_rg > $width) then
+            @ end_rg = $width
+        endif
+        @ start_az1 = $length_p * ($iaz - 1) + 1
+        @ start_az = $start_az1 - $overlap_az
+        if ($start_az < 1) then
+            set start_az = 1
+        endif
+        @ end_az1 = $length_p * $iaz
+        @ end_az = $end_az1 + $overlap_az
+
+        if ($end_az > $length) then
+            @ end_az = $length
+        endif
+
+        if (! -e PATCH_$ip) then
+            mkdir PATCH_$ip
+        endif
+
+        echo PATCH_$ip >> patch.list
+
+        cd PATCH_$ip
+        echo $start_rg > patch.in
+        echo $end_rg >> patch.in
+        echo $start_az >> patch.in
+        echo $end_az >> patch.in
+        echo $start_rg1 > patch_noover.in
+        echo $end_rg1 >> patch_noover.in
+        echo $start_az1 >> patch_noover.in
+        echo $end_az1 >> patch_noover.in
+        cd ..
+    end
+    set iaz = 0
+end
+
+
+echo $width > pscphase.in
+if ($SB_FLAG == 1) then
+    \ls $datadir/SMALL_BASELINES/*/*.diff >> pscphase.in
+else
+    \ls $datadir/diff0/*.diff >> pscphase.in
+endif
+
+
+echo $width > pscdem.in
+\ls $datadir/geo/*dem.rdc >> pscdem.in
+#\ls -d PATCH_* > patch.list
+
+\ls $datadir/geo/*.lon >& /dev/null
+if ( $status == 0 ) then
+  echo $width > psclonlat.in
+  \ls -1 $datadir/geo/*.lon | head -1 >> psclonlat.in
+  \ls -1 $datadir/geo/*.lat |head -1 >> psclonlat.in
+  mt_extract_cands 1 1 1 1 f 1 $maskfile
+else
+    echo "lon file does not exist"
+    exit 3
+endif
