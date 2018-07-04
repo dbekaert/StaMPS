@@ -259,7 +259,7 @@
    StaMPS/MTI  Manual\\
      }}}}
      \vspace{5mm}
-     {\sffamily\Large{\textbf{Version 4.0}}}
+     {\sffamily\Large{\textbf{Version 4.0b}}}
 \vspace{5mm}
 
 
@@ -358,7 +358,7 @@ Throughout this manual, commands to be entered on the command line are in \cs{bl
 and entries that are specific to the data set being processed and require modification are in \cc{red}. The presence of $>>$ before a command indicates that the command is a matlab script.\\
 
 \subsection{Pre-processing}
-There are two potential pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. Various processors can be used to achieve the pre-processing including ISCE, SNAP, GAMMA, and ISCE, ROI\_PAC and DORIS. Further details are provided in Chapter~\ref{ch:preproc} for each software.
+There are two potential pre-processing steps before getting to the PS/MTI processing proper. The first is to focus the raw data (if required), and the second is to form interferograms from single-look complex (SLC) images. Various processors can be used to achieve the pre-processing including ISCE, SNAP, GAMMA, and ROI\_PAC and DORIS. Further details are provided in Chapter~\ref{ch:preproc} for each software.
 
 
 
@@ -381,8 +381,8 @@ The PS/MTI processing itself includes C++ programs and matlab scripts  to identi
 \chapter{Installation}
 
  Install StaMPS/MTI: \\
- \cs{ tar -xvf StaMPS\_v4.0b6.tar}\\
- cd StaMPS\_v4.0b6/src\\
+ \cs{ tar -xvf StaMPS\_v4.0b.tar}\\
+ cd StaMPS\_v4.0b/src\\
  make\\
  make install
 
@@ -524,7 +524,7 @@ A series of interferograms all with the same master need to be formed. The follo
     %dem/*\_seg.par
 \end{itemize}
 
-\section{Small Baseline Processing}
+\subsection{Small Baseline Processing}
 A connected network of interferograms should be formed from SLCs that are all coregistered with a single image (super-master). The following files are needed:
 \begin{itemize}
 \item  {\tt ./SMALL\_BASELINES/}\cc{yyyymmdd\_yyyymmdd/yyyymmdd}{\tt .rslc}\\
@@ -1839,7 +1839,7 @@ to display the image in matlab instead of using {\tt disrg}
 \end{itemize}
 
 
-\section{Version 3.4}
+\section{Version 4.0}
 \begin{itemize}
 \item Update the manual with extra tips and current websites.
 \item Expand the manual with new unwrapping methods, tropospheric corections (TRAIN),  new scripts.
@@ -1865,10 +1865,6 @@ to display the image in matlab instead of using {\tt disrg}
 
 \end{itemize}
 
-\section{Version 4.0}
-\begin{itemize}
-\item Many, but not yet listed
-\end{itemize}
 
 \bibliography{allref}
 
