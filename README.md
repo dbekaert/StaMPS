@@ -6,8 +6,8 @@ The original version was developed at Stanford University but subsequent develop
 
 The package incorporates persistent scatterer and small baseline methods plus an option to combine both approaches.
 
-Andy Hooper
-COMET
-School of Earth and Environment
-University of Leeds
-Leeds LS2 9JT
+Andy Hooper,
+COMET,
+School of Earth and Environment,
+University of Leeds,
+Leeds, LS2 9JT
