@@ -26,6 +26,7 @@ Community contributions are welcommed.
 - Mahmut Arikan 
 - Anneleen Oyen 
 - Miguel Caro Cuenca
+- Jose Manuel Delgadoblasco
 - other commmunity members
 
 ## Contact details
