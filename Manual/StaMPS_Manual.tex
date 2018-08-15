@@ -259,7 +259,7 @@
    StaMPS/MTI  Manual\\
      }}}}
      \vspace{5mm}
-     {\sffamily\Large{\textbf{Version 4.0b}}}
+     {\sffamily\Large{\textbf{Version 4.1b}}}
 \vspace{5mm}
 
 
@@ -272,9 +272,9 @@
 
 %\begin{flushright}
 \begin{center}
-{\sffamily\textbf{Andy Hooper, David Bekaert, Karsten Spaans and Ekbal Hussain}}\\
+{\sffamily\textbf{Andy Hooper, David Bekaert, Ekbal Hussain, and Karsten Spaans}}\\
 \vspace{4mm}
-{\sffamily\textbf{30th June, 2018}}
+{\sffamily\textbf{15th August, 2018}}
 %\end{flushright}
 \end{center}
 
@@ -345,13 +345,29 @@ When using this software please reference \cite{HooperA2012}:
 In addition, cite dependencies used such as ISCE \citep{rosen2012}, SNAP \citep{Foumelis2018}, GAMMA \citep{Werner2000}, TRAIN \citep[e.g.][]{Bekaert2015,Bekaert2015a}. ROI\_PAC \citep{Rosen2004},  or DORIS \citep{Kampes2003}
 
 
-StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland, Delft University of Technology, and the University of Leeds. There are also contributions from users of the package based at other institutions.
+StaMPS (Stanford Method for Persistent Scatterers)  is a software package that implements an InSAR persistent scatterer (PS) method developed to work even in terrains devoid of man-made structures and/or undergoing non-steady deformation. StaMPS/MTI (Multi-Temporal InSAR) is an extended version of StaMPS that also includes a small baseline method and a combined multi-temporal InSAR method. 
 
 This manual provides a guide to running StaMPS/MTI, but does not  explain all the processing. For some details on the inner workings, see \citet{HooperA2010b,HooperA2008,HooperA2007a,HooperA2004,HooperA2006}.
  
  A user group is also maintained at \url{http://groups.google.com/group/mainsar}. If you have a query, check the discussion threads there and, if not resolved, submit your question to the group.
 
+\section{Development History}
+The original development of StaMPS was undertaken at Stanford University, but subsequent development of StaMPS and StaMPS/MTI has taken place at the University of Iceland, Delft University of Technology, and the University of Leeds. There are also contributions from users of the package based at other institutions.
 
+\subsection{Contributors}
+Contributions are tracked in Github for registered Github users.
+\begin{itemize}
+\item Andy Hooper (Lead developer)
+\item David Bekaert
+\item Karsten Spaans
+\item Ekbal Hussain
+\item Mahmut Arikan
+\item Anneleen Oyen
+\item Miguel Caro Cuenca
+\item Jose Manuel Delgadoblasco
+\item other commmunity members
+\end{itemize}
+   
 
 \section{Processing Overview}
 Throughout this manual, commands to be entered on the command line are in \cs{blue}
@@ -381,8 +397,8 @@ The PS/MTI processing itself includes C++ programs and matlab scripts  to identi
 \chapter{Installation}
 
  Install StaMPS/MTI: \\
- \cs{ tar -xvf StaMPS\_v4.0b.tar}\\
- cd StaMPS\_v4.0b/src\\
+ \cs{ tar -xvf StaMPS\_v4.1b.tar}\\
+ cd StaMPS\_v4.1b/src\\
  make\\
  make install
 
@@ -1843,6 +1859,12 @@ to display the image in matlab instead of using {\tt disrg}
 \begin{itemize}
 \item Update the manual with extra tips and current websites.
 \item Expand the manual with new unwrapping methods, tropospheric corections (TRAIN),  new scripts.
+\item Untracked changes to support StaMPS at courses, tutorials, and workshops
+\end{itemize}
+
+\section{Version 4.1}
+\begin{itemize}
+\item Update the manual with extra tips and current websites.
 \item Include plotting and processing compatibility with TRAIN.
 \item New unwrapping methods
 \item Script to manually correct unwrapping errors for SB.
@@ -1862,7 +1884,6 @@ to display the image in matlab instead of using {\tt disrg}
 \item Update the manual to support various InSAR processors (ISCE, gamma, DORIS, SNAP)
 \item Update the section on software and indicate those that are required versus optional.
 \item Include information of the stamps step 0
-
 \end{itemize}
 
 

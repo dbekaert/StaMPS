@@ -1,4 +1,4 @@
-\begin{thebibliography}{15}
+\begin{thebibliography}{16}
 \expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
 
 \bibitem[{{\it Ar{\i}kan et~al.\/}(2010){\it Ar{\i}kan, Hooper, and
@@ -58,6 +58,10 @@ Hooper, A., D.~Bekaert, K.~Spaans, and M.~Arikan, Recent advances in sar
 Hooper, A.~J., Persistent scatterer radar interferometry for crustal
   deformation studies and modeling of volcanic deformation, Ph.D. thesis,
   Stanford University, 2006.
+
+\bibitem[{{\it J.~M. Delgado~Blasco\/}(2018)}]{Delgado2018}
+J.~M. Delgado~Blasco, M.~F., Automated snap sentinel-1 dinsar processing for
+  stamps psi with open souce tools, 2018.
 
 \bibitem[{{\it Kampes et~al.\/}(2003){\it Kampes, Hanssen, and
   Perski\/}}]{Kampes2003}

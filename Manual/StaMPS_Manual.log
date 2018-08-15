@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=latex 2015.5.24)  4 JUL 2018 09:06
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015) (preloaded format=pdflatex 2015.5.24)  14 AUG 2018 21:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -143,10 +143,18 @@ Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
 (/usr/local/texlive/2015/texmf-dist/tex/latex/latexconfig/graphics.cfg
 File: graphics.cfg 2010/04/23 v1.9 graphics configuration of TeX Live
 )
-Package graphics Info: Driver file: dvips.def on input line 94.
+Package graphics Info: Driver file: pdftex.def on input line 94.
 
-(/usr/local/texlive/2015/texmf-dist/tex/latex/graphics/dvips.def
-File: dvips.def 2014/10/14 v3.0j Driver-dependent file (DPC,SPQR)
+(/usr/local/texlive/2015/texmf-dist/tex/latex/pdftex-def/pdftex.def
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+
+(/usr/local/texlive/2015/texmf-dist/tex/generic/oberdiek/infwarerr.sty
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
+)
+(/usr/local/texlive/2015/texmf-dist/tex/generic/oberdiek/ltxcmds.sty
+Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count108
 ))
 (/usr/local/texlive/2015/texmf-dist/tex/latex/tools/tabularx.sty
 Package: tabularx 2014/10/28 v2.10 `tabularx' package (DPC)
@@ -164,7 +172,7 @@ Package: array 2014/10/28 v2.4c Tabular extension package (FMi)
 \TX@old@col=\dimen121
 \TX@target=\dimen122
 \TX@delta=\dimen123
-\TX@cols=\count108
+\TX@cols=\count109
 \TX@ftn=\toks22
 )
 (/usr/local/texlive/2015/texmf-dist/tex/latex/booktabs/booktabs.sty
@@ -179,12 +187,12 @@ Package: booktabs 2005/04/14 v1.61803 publication quality tables
 \cmidrulesep=\dimen131
 \cmidrulekern=\dimen132
 \defaultaddspace=\dimen133
-\@cmidla=\count109
-\@cmidlb=\count110
+\@cmidla=\count110
+\@cmidlb=\count111
 \@aboverulesep=\dimen134
 \@belowrulesep=\dimen135
-\@thisruleclass=\count111
-\@lastruleclass=\count112
+\@thisruleclass=\count112
+\@lastruleclass=\count113
 \@thisrulewidth=\dimen136
 )
 (/usr/local/texlive/2015/texmf-dist/tex/latex/graphics/lscape.sty
@@ -201,7 +209,7 @@ Package: graphicx 2014/10/28 v1.0g Enhanced LaTeX Graphics (DPC,SPQR)
 (/usr/local/texlive/2015/texmf-dist/tex/latex/base/ifthen.sty
 Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
 )
-\c@r@tfl@t=\count113
+\c@r@tfl@t=\count114
 \rotFPtop=\skip48
 \rotFPbot=\skip49
 \rot@float@box=\box30
@@ -209,8 +217,8 @@ Package: ifthen 2014/09/29 v1.1c Standard LaTeX ifthen package (DPC)
 )
 (/usr/local/texlive/2015/texmf-dist/tex/latex/psfrag/psfrag.sty
 Package: psfrag 1998/04/11 v3.04 PSfrag (MCG)
-\pfg@pcount=\count114
-\pfg@scount=\count115
+\pfg@pcount=\count115
+\pfg@scount=\count116
 \pfg@temp=\write3
 )
 (/usr/local/texlive/2015/texmf-dist/tex/generic/babel/babel.sty
@@ -221,7 +229,7 @@ Language: english 2012/08/20 v3.3p English support from the babel system
 
 (/usr/local/texlive/2015/texmf-dist/tex/generic/babel/babel.def
 File: babel.def 2014/09/25 3.9l Babel common definitions
-\babel@savecnt=\count116
+\babel@savecnt=\count117
 \U@D=\dimen139
 )
 \l@canadian = a dialect from \language\l@american 
@@ -239,7 +247,7 @@ Package: natbib 2010/09/13 8.31b (PWD, AO)
 \bibhang=\skip50
 \bibsep=\skip51
 LaTeX Info: Redefining \cite on input line 694.
-\c@NAT@ctr=\count117
+\c@NAT@ctr=\count118
 )
 (/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/hyperref.sty
 Package: hyperref 2012/11/06 v6.83m Hypertext links for LaTeX
@@ -251,15 +259,15 @@ Package: hobsub-hyperref 2012/05/28 v1.13 Bundle oberdiek, subset hyperref (HO)
 (/usr/local/texlive/2015/texmf-dist/tex/generic/oberdiek/hobsub-generic.sty
 Package: hobsub-generic 2012/05/28 v1.13 Bundle oberdiek, subset generic (HO)
 Package: hobsub 2012/05/28 v1.13 Construct package bundles (HO)
-Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
-Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
+Package hobsub Info: Skipping package `infwarerr' (already loaded).
+Package hobsub Info: Skipping package `ltxcmds' (already loaded).
 Package: ifluatex 2010/03/01 v1.3 Provides the ifluatex switch (HO)
 Package ifluatex Info: LuaTeX not detected.
 Package: ifvtex 2010/03/01 v1.5 Detect VTeX and its facilities (HO)
 Package ifvtex Info: VTeX not detected.
 Package: intcalc 2007/09/27 v1.1 Expandable calculations with integers (HO)
 Package: ifpdf 2011/01/30 v2.3 Provides the ifpdf switch (HO)
-Package ifpdf Info: pdfTeX in PDF mode is not detected.
+Package ifpdf Info: pdfTeX in PDF mode is detected.
 Package: etexcmds 2011/02/16 v1.5 Avoid name clashes with e-TeX commands (HO)
 Package etexcmds Info: Could not find \expanded.
 (etexcmds)             That can mean that you are not using pdfTeX 1.50 or
@@ -272,7 +280,7 @@ Package: pdftexcmds 2011/11/29 v0.20 Utility functions of pdfTeX for LuaTeX (HO
 Package pdftexcmds Info: LuaTeX not detected.
 Package pdftexcmds Info: \pdf@primitive is available.
 Package pdftexcmds Info: \pdf@ifprimitive is available.
-Package pdftexcmds Info: \pdfdraftmode is ignored in DVI mode.
+Package pdftexcmds Info: \pdfdraftmode found.
 Package: pdfescape 2011/11/25 v1.13 Implements pdfTeX's escape features (HO)
 Package: bigintcalc 2012/04/08 v1.3 Expandable calculations on big integers (HO
 )
@@ -299,13 +307,13 @@ Package: auxhook 2011/03/04 v1.3 Hooks for auxiliary files (HO)
 Package: kvoptions 2011/06/30 v3.11 Key value format for package options (HO)
 )
 \@linkdim=\dimen140
-\Hy@linkcounter=\count118
-\Hy@pagecounter=\count119
+\Hy@linkcounter=\count119
+\Hy@pagecounter=\count120
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/pd1enc.def
 File: pd1enc.def 2012/11/06 v6.83m Hyperref: PDFDocEncoding definition (HO)
 )
-\Hy@SavedSpaceFactor=\count120
+\Hy@SavedSpaceFactor=\count121
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/latexconfig/hyperref.cfg
 File: hyperref.cfg 2002/06/06 v1.2 hyperref configuration of TeXLive
@@ -329,7 +337,7 @@ Package: rerunfilecheck 2011/04/15 v1.7 Rerun checks for auxiliary files (HO)
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 82.
 ))
-\c@Hy@tempcnt=\count121
+\c@Hy@tempcnt=\count122
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/url/url.sty
 \Urlmuskip=\muskip11
@@ -337,7 +345,7 @@ Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 5041.
 \XeTeXLinkMargin=\dimen141
-\Fld@menulength=\count122
+\Fld@menulength=\count123
 \Field@Width=\dimen142
 \Fld@charsize=\dimen143
 Package hyperref Info: Hyper figures OFF on input line 6295.
@@ -349,38 +357,27 @@ Package hyperref Info: Link coloring with OCG OFF on input line 6320.
 Package hyperref Info: PDF/A mode OFF on input line 6325.
 LaTeX Info: Redefining \ref on input line 6365.
 LaTeX Info: Redefining \pageref on input line 6369.
-\Hy@abspage=\count123
-\c@Item=\count124
-\c@Hfootnote=\count125
+\Hy@abspage=\count124
+\c@Item=\count125
+\c@Hfootnote=\count126
 )
 
-Package hyperref Message: Driver (default): hdvips.
+Package hyperref Message: Driver (autodetected): hpdftex.
 
-(/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/hdvips.def
-File: hdvips.def 2012/11/06 v6.83m Hyperref driver for dvips
-
-(/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/pdfmark.def
-File: pdfmark.def 2012/11/06 v6.83m Hyperref definitions for pdfmark specials
-\pdf@docset=\toks24
-\pdf@box=\box31
-\pdf@toks=\toks25
-\pdf@defaulttoks=\toks26
-\HyField@AnnotCount=\count126
+(/usr/local/texlive/2015/texmf-dist/tex/latex/hyperref/hpdftex.def
+File: hpdftex.def 2012/11/06 v6.83m Hyperref driver for pdfTeX
 \Fld@listcount=\count127
 \c@bookmark@seq@number=\count128
 \Hy@SectionHShift=\skip52
-))
+)
 (/usr/local/texlive/2015/texmf-dist/tex/latex/graphics/color.sty
 Package: color 2014/10/28 v1.1a Standard LaTeX Color (DPC)
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/latexconfig/color.cfg
 File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
 )
-Package color Info: Driver file: dvips.def on input line 142.
-
-(/usr/local/texlive/2015/texmf-dist/tex/latex/graphics/dvipsnam.def
-File: dvipsnam.def 2014/10/14 v3.0j Driver-dependent file (DPC,SPQR)
-))
+Package color Info: Driver file: pdftex.def on input line 142.
+)
 (/usr/local/texlive/2015/texmf-dist/tex/latex/geometry/geometry.sty
 Package: geometry 2010/09/12 v5.6 Page Geometry
 \Gm@cnth=\count129
@@ -394,7 +391,7 @@ Package: geometry 2010/09/12 v5.6 Page Geometry
 \Gm@layoutheight=\dimen149
 \Gm@layouthoffset=\dimen150
 \Gm@layoutvoffset=\dimen151
-\Gm@dimlist=\toks27
+\Gm@dimlist=\toks24
 )
 \MY=\skip53
 LaTeX Font Info:    Try loading font information for OT1+phv on input line 212.
@@ -408,12 +405,12 @@ LaTeX Font Info:    Font shape `OT1/phv/m/n' will be
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/titlesec/titlesec.sty
 Package: titlesec 2011/12/15 v2.10.0 Sectioning titles
-\ttl@box=\box32
+\ttl@box=\box31
 \beforetitleunit=\skip54
 \aftertitleunit=\skip55
 \ttl@plus=\dimen152
 \ttl@minus=\dimen153
-\ttl@toksa=\toks28
+\ttl@toksa=\toks25
 \titlewidth=\dimen154
 \titlewidthlast=\dimen155
 \titlewidthfirst=\dimen156
@@ -436,6 +433,35 @@ LaTeX Font Info:    ... okay on input line 224.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 224.
 LaTeX Font Info:    ... okay on input line 224.
 \c@lstlisting=\count132
+
+(/usr/local/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count133
+\scratchdimen=\dimen157
+\scratchbox=\box32
+\nofMPsegments=\count134
+\nofMParguments=\count135
+\everyMPshowfont=\toks26
+\MPscratchCnt=\count136
+\MPscratchDim=\dimen158
+\MPnumerator=\count137
+\makeMPintoPDFobject=\count138
+\everyMPtoPDFconversion=\toks27
+) (/usr/local/texlive/2015/texmf-dist/tex/latex/oberdiek/epstopdf-base.sty
+Package: epstopdf-base 2010/02/09 v2.5 Base part for package epstopdf
+
+(/usr/local/texlive/2015/texmf-dist/tex/latex/oberdiek/grfext.sty
+Package: grfext 2010/08/19 v1.1 Manage graphics extensions (HO)
+)
+Package grfext Info: Graphics extension search list:
+(grfext)             [.png,.pdf,.jpg,.mps,.jpeg,.jbig2,.jb2,.PNG,.PDF,.JPG,.JPE
+G,.JBIG2,.JB2,.eps]
+(grfext)             \AppendGraphicsExtensions on input line 452.
+
+(/usr/local/texlive/2015/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
 \AtBeginShipoutBox=\box33
 Package backref Info: ** backref set up for natbib ** on input line 224.
 Package hyperref Info: Link coloring OFF on input line 224.
@@ -446,7 +472,7 @@ Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
 (/usr/local/texlive/2015/texmf-dist/tex/generic/oberdiek/gettitlestring.sty
 Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
-\c@section@level=\count133
+\c@section@level=\count139
 )
 LaTeX Info: Redefining \ref on input line 224.
 LaTeX Info: Redefining \pageref on input line 224.
@@ -458,9 +484,9 @@ LaTeX Info: Redefining \nameref on input line 224.
 
 
 *geometry* driver: auto-detecting
-*geometry* detected driver: dvips
+*geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
-* driver: dvips
+* driver: pdftex
 * paper: <default>
 * layout: <same size as paper>
 * layoutoffset:(h,v)=(0.0pt,0.0pt)
@@ -516,22 +542,59 @@ LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <14.4> not available
 (Font)              Font shape `OT1/phv/b/n' tried instead on input line 262.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
 (Font)              scaled to size 13.67995pt on input line 262.
-File: ./figs/title3.eps Graphic file (type eps)
+Package epstopdf Info: Source file: <./figs/title3.eps>
+(epstopdf)                    date: 2017-11-29 08:45:18
+(epstopdf)                    size: 2875878 bytes
+(epstopdf)             Output file: <./figs/title3-eps-converted-to.pdf>
+(epstopdf)                    date: 2018-07-04 08:51:50
+(epstopdf)                    size: 1377723 bytes
+(epstopdf)             Command: <repstopdf --outfile=./figs/title3-eps-converte
+d-to.pdf ./figs/title3.eps>
+(epstopdf)             \includegraphics on input line 269.
+Package epstopdf Info: Output file is already uptodate.
 
-<./figs/title3.eps>
+<./figs/title3-eps-converted-to.pdf, id=277, 332.24126pt x 266.9975pt>
+File: ./figs/title3-eps-converted-to.pdf Graphic file (type pdf)
+
+<use ./figs/title3-eps-converted-to.pdf>
+Package pdftex.def Info: ./figs/title3-eps-converted-to.pdf used on input line 
+269.
+(pdftex.def)             Requested size: 389.13692pt x 312.74023pt.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <10.95> not available
 (Font)              Font shape `OT1/phv/b/n' tried instead on input line 275.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
 (Font)              scaled to size 10.40245pt on input line 275.
-File: ./figs/Leeds_University_logo.eps Graphic file (type eps)
- <./figs/Leeds_University_logo.eps>
+Package epstopdf Info: Source file: <./figs/Leeds_University_logo.eps>
+(epstopdf)                    date: 2017-11-29 08:45:18
+(epstopdf)                    size: 12757 bytes
+(epstopdf)             Output file: <./figs/Leeds_University_logo-eps-converted
+-to.pdf>
+(epstopdf)                    date: 2018-07-04 08:51:50
+(epstopdf)                    size: 6687 bytes
+(epstopdf)             Command: <repstopdf --outfile=./figs/Leeds_University_lo
+go-eps-converted-to.pdf ./figs/Leeds_University_logo.eps>
+(epstopdf)             \includegraphics on input line 287.
+Package epstopdf Info: Output file is already uptodate.
+
+<./figs/Leeds_University_logo-eps-converted-to.pdf, id=278, 281.05pt x 81.30376
+pt>
+File: ./figs/Leeds_University_logo-eps-converted-to.pdf Graphic file (type pdf)
+
+ <use ./figs/Leeds_University_logo-eps-converted-to.pdf>
+Package pdftex.def Info: ./figs/Leeds_University_logo-eps-converted-to.pdf used
+ on input line 287.
+(pdftex.def)             Requested size: 137.34285pt x 39.73125pt.
+
 Overfull \hbox (3.2664pt too wide) in paragraph at lines 286--297
 [][] [] 
  []
 
 [1
+Non-PDF special ignored!
 
-] (./StaMPS_Manual.toc
+{/usr/local/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./figs/
+title3-eps-converted-to.pdf> <./figs/Leeds_University_logo-eps-converted-to.pdf
+>] (./StaMPS_Manual.toc
 LaTeX Font Info:    Try loading font information for U+msa on input line 3.
 
 (/usr/local/texlive/2015/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -567,11 +630,6 @@ LaTeX Font Info:    Try loading font information for OT1+pcr on input line 337.
 (/usr/local/texlive/2015/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-Overfull \hbox (39.18492pt too wide) in paragraph at lines 337--338
-\OT1/phv/m/n/10.95 StaMPS/MTI can be down-loaded from [][][][]
- []
-
-
 Underfull \hbox (badness 10000) in paragraph at lines 337--338
 
  []
@@ -581,67 +639,52 @@ LaTeX Font Info:    Font shape `OT1/phv/m/it' in size <10.95> not available
 LaTeX Font Info:    Font shape `OT1/phv/m/sl' will be
 (Font)              scaled to size 10.40245pt on input line 339.
 
-Underfull \hbox (badness 10000) in paragraph at lines 357--359
-
- []
-
-
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [1
+pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
+been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.356 
+       [1
 
 ]
 LaTeX Font Info:    Font shape `OT1/phv/m/n' will be
-(Font)              scaled to size 11.39996pt on input line 360.
+(Font)              scaled to size 11.39996pt on input line 357.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <12> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 360.
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 357.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
-(Font)              scaled to size 11.39996pt on input line 360.
-
-[2]
-Chapter 2.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [3
-
-]
-Underfull \hbox (badness 7397) in paragraph at lines 423--424
-\OT1/phv/m/n/10.95 Details on in-stal-la-tion and us-age of the ESA Sen-tiNel A
-p-pli-ca-tion Plat-form (SNAP)
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 423--424
-\OT1/phv/m/n/10.95 can be found at [][][][] while the ad-di-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 423--424
-\OT1/phv/m/n/10.95 tional soft-ware pack-age for the in-ter-fer-o-met-ric stack
- com-pu-ta-tion can be found at:
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 433--434
-
- []
-
-[4] [5]
-Chapter 3.
-[6
-
-]
-LaTeX Font Info:    Try loading font information for OMS+phv on input line 516.
+(Font)              scaled to size 11.39996pt on input line 357.
+LaTeX Font Info:    Try loading font information for OMS+phv on input line 360.
 
  (/usr/local/texlive/2015/texmf-dist/tex/latex/psnfss/omsphv.fd
 File: omsphv.fd 
 )
 LaTeX Font Info:    Font shape `OMS/phv/m/n' in size <10.95> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 516.
- [7]
-[8]
-Underfull \hbox (badness 5519) in paragraph at lines 579--580
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 360.
+
+Underfull \hbox (badness 10000) in paragraph at lines 373--375
+
+ []
+
+[2] [3]
+Chapter 2.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [4
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 449--450
+
+ []
+
+[5] [6]
+Chapter 3.
+[7
+
+] [8] [9]
+Underfull \hbox (badness 5519) in paragraph at lines 595--596
 \OT1/phv/m/n/10.95 Al-ter-na-tively, one can en-ter []\OT1/pcr/m/n/10.95 grep B
 perp */coreg.out[] \OT1/phv/m/n/10.95 in the \OT1/pcr/m/n/10.95 INSAR[][]master
 []date[]
@@ -650,15 +693,15 @@ perp */coreg.out[] \OT1/phv/m/n/10.95 in the \OT1/pcr/m/n/10.95 INSAR[][]master
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [9]
+ [10]
 LaTeX Font Info:    Font shape `OT1/phv/m/n' will be
-(Font)              scaled to size 9.49997pt on input line 633.
+(Font)              scaled to size 9.49997pt on input line 649.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <10> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 633.
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 649.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
-(Font)              scaled to size 9.49997pt on input line 633.
+(Font)              scaled to size 9.49997pt on input line 649.
 
-Underfull \hbox (badness 10000) in paragraph at lines 657--664
+Underfull \hbox (badness 10000) in paragraph at lines 673--680
 [][]\OT1/pcr/m/n/10.95 step[]slc[]alos[]\OT1/phv/m/n/10.95 , []\OT1/pcr/m/n/10.
 95 step[]slc[]ers[]\OT1/phv/m/n/10.95 , []\OT1/pcr/m/n/10.95 step[]slc[]ers[]en
 vi[]\OT1/phv/m/n/10.95 , []\OT1/pcr/m/n/10.95 step[]slc[]envi[]vor[]\OT1/phv/m/
@@ -666,118 +709,110 @@ n/10.95 ,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 680--682
+Underfull \hbox (badness 10000) in paragraph at lines 696--698
 [][]\OT1/pcr/m/n/10.95 make[]slcs[]alos[]\OT1/phv/m/n/10.95 , []\OT1/pcr/m/n/10
 .95 make[]slcs[]ers[]\OT1/phv/m/n/10.95 , []\OT1/pcr/m/n/10.95 make[]slcs[]ers[
 ]envi[]\OT1/phv/m/n/10.95 , []\OT1/pcr/m/n/10.95 make[]slcs[]envi[]vor[]\OT1/ph
 v/m/n/10.95 ,
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 701--702
-
- []
-
-[10]
-Underfull \hbox (badness 4429) in paragraph at lines 704--705
-[]\OT1/phv/m/n/10.95 Choose a mas-ter based on min-imis-ing per-pen-dic-u-lar, 
-Doppler and tem-po-ral base-lines
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 741--746
+[11]
+Underfull \hbox (badness 10000) in paragraph at lines 717--718
 
  []
 
-[11] [12]
-Underfull \hbox (badness 4316) in paragraph at lines 861--861
+
+Underfull \hbox (badness 10000) in paragraph at lines 757--762
+
+ []
+
+[12] [13]
+Underfull \hbox (badness 4316) in paragraph at lines 877--877
 []\OT1/phv/b/n/10 Tip: []\OT1/pcr/m/n/10 show[]porbits[] \OT1/phv/m/n/10 will l
 et you ver-ify the re-sult of []\OT1/pcr/m/n/10 make[]orbits[] \OT1/phv/m/n/10 
 by in-di-cat-ing NUM-
  []
 
-[13]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [14]
+[14]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [15]
-Underfull \hbox (badness 10000) in paragraph at lines 976--978
+[16]
+Underfull \hbox (badness 10000) in paragraph at lines 992--994
 [][]\OT1/pcr/m/n/10.95 make[]dems, make[]resample and make[]ifgs[] \OT1/phv/m/n
 /10.95 pro-cess all slave di-rec-to-ries in
  []
 
 
-Underfull \hbox (badness 1590) in paragraph at lines 985--998
+Underfull \hbox (badness 1590) in paragraph at lines 1001--1014
 []\OT1/phv/m/n/10.95 The fol-low-ing in-di-vid-ual steps can be re-run in the i
 n-di-vid-ual []\OT1/pcr/m/n/10.95 yyyymmdd[] \OT1/phv/m/n/10.95 sub-di-rec-to-r
 ies of
  []
 
 
-Underfull \hbox (badness 2057) in paragraph at lines 1032--1034
+Underfull \hbox (badness 2057) in paragraph at lines 1048--1050
 [][]\OT1/pcr/m/n/10.95 make[]clean[]ifgs [] \OT1/phv/m/n/10.95 To recre-ate the
  files deleted by this script, run []\OT1/pcr/m/n/10.95 make[]ifgs[] \OT1/phv/m
 /n/10.95 in the
  []
 
-[16] [17]
+[17] [18]
 Chapter 4.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [18
+ [19
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 1105--1105
+Underfull \hbox (badness 10000) in paragraph at lines 1121--1121
 \OT1/phv/m/n/10 You can run $\OML/cmm/m/it/10 >>$[]\OT1/pcr/m/n/10 stamps[]mc[]
 header([]start[]step[],[]end[]step[])[] \OT1/phv/m/n/10 just like con-ven-tiona
 l
  []
 
 LaTeX Font Info:    Font shape `OT1/phv/m/n' will be
-(Font)              scaled to size 8.54997pt on input line 1131.
+(Font)              scaled to size 8.54997pt on input line 1147.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <9> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 1134.
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 1150.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
-(Font)              scaled to size 8.54997pt on input line 1134.
+(Font)              scaled to size 8.54997pt on input line 1150.
 LaTeX Font Info:    Font shape `OT1/phv/m/it' in size <9> not available
-(Font)              Font shape `OT1/phv/m/sl' tried instead on input line 1137.
+(Font)              Font shape `OT1/phv/m/sl' tried instead on input line 1153.
 
 LaTeX Font Info:    Font shape `OT1/phv/m/sl' will be
-(Font)              scaled to size 8.54997pt on input line 1137.
+(Font)              scaled to size 8.54997pt on input line 1153.
 
-Overfull \hbox (2.7849pt too wide) in paragraph at lines 1139--1139
+Overfull \hbox (2.7849pt too wide) in paragraph at lines 1155--1155
 []|\OT1/pcr/m/n/9 `P-square'| 
  []
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [19]
-Underfull \hbox (badness 10000) in paragraph at lines 1165--1166
+ [20]
+Underfull \hbox (badness 10000) in paragraph at lines 1181--1182
 []|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
  []
 
-[20]
-Underfull \hbox (badness 10000) in paragraph at lines 1182--1183
+[21]
+Underfull \hbox (badness 10000) in paragraph at lines 1198--1199
 []|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
  []
 
 
-Underfull \hbox (badness 1077) in paragraph at lines 1182--1183
+Underfull \hbox (badness 1077) in paragraph at lines 1198--1199
 \OML/cmm/m/it/9 >>$[]\OT1/pcr/m/n/9 ps[]info[]\OT1/phv/m/n/9 ) will not be in-c
 luded in the weed-ing cal-cu-la-
  []
 
-[21]
-Underfull \hbox (badness 10000) in paragraph at lines 1237--1238
+[22]
+Underfull \hbox (badness 10000) in paragraph at lines 1253--1254
 []|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
  []
 
 
-Underfull \hbox (badness 1418) in paragraph at lines 1248--1249
+Underfull \hbox (badness 1418) in paragraph at lines 1264--1265
 []\OT1/phv/m/n/10.95 (This sub-trac-tion of SCLA and mas-ter AOE has not how-ev
 er been im-ple-mented with the
  []
@@ -785,40 +820,40 @@ er been im-ple-mented with the
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [22]
-Underfull \hbox (badness 10000) in paragraph at lines 1280--1281
+ [23]
+Underfull \hbox (badness 10000) in paragraph at lines 1296--1297
 []|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1283--1284
+Underfull \hbox (badness 10000) in paragraph at lines 1299--1300
 []|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
- []
-
-[23]
-Underfull \hbox (badness 10000) in paragraph at lines 1327--1327
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1327--1327
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1327--1327
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1351--1351
-
  []
 
 [24]
+Underfull \hbox (badness 10000) in paragraph at lines 1343--1343
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1343--1343
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1343--1343
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1367--1367
+
+ []
+
+[25]
 Chapter 5.
 
-Underfull \hbox (badness 4479) in paragraph at lines 1391--1397
+Underfull \hbox (badness 4479) in paragraph at lines 1407--1413
 []\OT1/phv/m/n/10.95 To cre-ate the small base-line in-ter-fer-o-grams listed i
 n \OT1/pcr/m/n/10.95 small[]baselines.list \OT1/phv/m/n/10.95 in the
  []
@@ -826,15 +861,15 @@ n \OT1/pcr/m/n/10.95 small[]baselines.list \OT1/phv/m/n/10.95 in the
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [25
+ [26
 
 ]
-Overfull \hbox (0.62491pt too wide) in paragraph at lines 1437--1437
+Overfull \hbox (0.62491pt too wide) in paragraph at lines 1453--1453
 []|\OT1/pcr/m/n/9 `3D[]QUICK'| 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1451--1451
+Underfull \hbox (badness 10000) in paragraph at lines 1467--1467
 \OT1/phv/m/n/10 You can run $\OML/cmm/m/it/10 >>$[]\OT1/pcr/m/n/10 stamps[]mc[]
 header([]start[]step[],[]end[]step[])[] \OT1/phv/m/n/10 just like con-ven-tiona
 l
@@ -843,164 +878,181 @@ l
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [26]
-Underfull \hbox (badness 10000) in paragraph at lines 1455--1456
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 1468--1469
-[]|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
- []
-
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
  [27]
-Underfull \hbox (badness 2189) in paragraph at lines 1518--1519
-[]|\OT1/phv/m/n/9 SB In-ter-fer-o-grams listed here (by or-der num-ber given in
+Underfull \hbox (badness 10000) in paragraph at lines 1471--1472
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1519--1520
+Underfull \hbox (badness 10000) in paragraph at lines 1484--1485
 []|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
- []
-
-
-Underfull \hbox (badness 2189) in paragraph at lines 1522--1523
-[]|\OT1/phv/m/n/9 SB In-ter-fer-o-grams listed here (by or-der num-ber given in
-
  []
 
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [28]
-[29]
+Underfull \hbox (badness 2189) in paragraph at lines 1534--1535
+[]|\OT1/phv/m/n/9 SB In-ter-fer-o-grams listed here (by or-der num-ber given in
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1535--1536
+[]|\OT1/phv/m/n/9 Interferograms listed here (by or-der num-ber given in
+ []
+
+
+Underfull \hbox (badness 2189) in paragraph at lines 1538--1539
+[]|\OT1/phv/m/n/9 SB In-ter-fer-o-grams listed here (by or-der num-ber given in
+
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [29]
+[30]
 Chapter 6.
-[30
+[31
 
 ]
 Chapter 7.
 
-Underfull \hbox (badness 1748) in paragraph at lines 1595--1596
+Underfull \hbox (badness 1748) in paragraph at lines 1611--1612
 \OT1/phv/m/n/10.95 lim-its, ref-er-ence ifg, ifg list,
  []
 
 
-Underfull \hbox (badness 2134) in paragraph at lines 1595--1596
+Underfull \hbox (badness 2134) in paragraph at lines 1611--1612
 \OT1/phv/m/n/10.95 color, lon-gi-tude and lat-i-tude
  []
 
 
-Underfull \hbox (badness 1571) in paragraph at lines 1597--1598
+Underfull \hbox (badness 1571) in paragraph at lines 1613--1614
 \OT1/phv/m/n/10.95 lim-its, lon-gi-tude and lat-i-tude
  []
 
-[31
+[32
 
 ]
-Underfull \hbox (badness 2088) in paragraph at lines 1619--1626
+Underfull \hbox (badness 2088) in paragraph at lines 1635--1642
 $\OML/cmm/m/it/10.95 >>$[]\OT1/pcr/m/n/10.95 ps[]plot(`v-d',1,0,0,[[][]1:3,7:8[
 ][]],[][]`ts'[][])[] \OT1/phv/m/n/10.95 plots the mean LOS ve-loc-ity, cal-cu-l
 ated
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1619--1626
+Underfull \hbox (badness 10000) in paragraph at lines 1635--1642
 
  []
 
 
-Underfull \hbox (badness 1755) in paragraph at lines 1619--1626
+Underfull \hbox (badness 1755) in paragraph at lines 1635--1642
 \OT1/phv/m/n/10.95 Initially, mouse in-put is ac-ti-vated to se-lect a point on
  the ve-loc-ity plot which is de-fined
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1619--1626
+Underfull \hbox (badness 10000) in paragraph at lines 1635--1642
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1619--1626
+Underfull \hbox (badness 10000) in paragraph at lines 1635--1642
 []\OT1/pcr/m/n/10.95 ps[]plot('v-d',1,0,0,[], 0, 0, 0,[], [28.6 28.9], [41.2 41
 .27],'ts')[]
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1654--1654
+Underfull \hbox (badness 10000) in paragraph at lines 1670--1670
 
  []
 
-[32]
+[33]
 Chapter 8.
-[33
+[34
 
-] [34] [35]
-Underfull \hbox (badness 1997) in paragraph at lines 1796--1797
+] [35] [36]
+Underfull \hbox (badness 1997) in paragraph at lines 1812--1813
 []\OT1/phv/m/n/10.95 New op-tion (and new de-fault for small base-lines) to re-
 sam-ple to coarser sam-pling
  []
 
 
-Underfull \hbox (badness 2253) in paragraph at lines 1796--1797
+Underfull \hbox (badness 2253) in paragraph at lines 1812--1813
 \OT1/phv/m/n/10.95 dur-ing merg-ing of patches (us-ing pa-ram-e-ter \OT1/pcr/m/
 n/10.95 merge[]resample[]size \OT1/phv/m/n/10.95 and op-tion-ally
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1806--1807
+Underfull \hbox (badness 10000) in paragraph at lines 1822--1823
 []\OT1/phv/m/n/10.95 Parameter added to con-trol amount of Gold-stein fil-ter-i
 ng dur-ing un-wrap-ping
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1816--1817
+Underfull \hbox (badness 10000) in paragraph at lines 1832--1833
 []\OT1/pcr/m/n/10.95 recalc[]index \OT1/phv/m/n/10.95 and \OT1/pcr/m/n/10.95 sb
 []recalc[]index \OT1/phv/m/n/10.95 re-placed by \OT1/pcr/m/n/10.95 scla[]drop[]
 index \OT1/phv/m/n/10.95 and
  []
 
-[36]
-Underfull \hbox (badness 10000) in paragraph at lines 1822--1823
+[37]
+Underfull \hbox (badness 10000) in paragraph at lines 1838--1839
 []\OT1/phv/m/n/10.95 Plotting res-o-lu-tion changed to be con-trolled by \OT1/p
 cr/m/n/10.95 plot[]scatter[]size \OT1/phv/m/n/10.95 and
  []
 
-[37] (./StaMPS_Manual.bbl (./StaMPS_Manual.brf)
+[38] (./StaMPS_Manual.bbl (./StaMPS_Manual.brf)
 \tf@brf=\write6
 \openout6 = `StaMPS_Manual.brf'.
 
- [38]
+ [39]
 Missing character: There is no â in font phvro7t!
 Missing character: There is no € in font phvro7t!
 Missing character: There is no “ in font phvro7t!
- [39
+ [40
 
 ])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1878.
- [40]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1878.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1899.
+ [41]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1899.
 
 (./StaMPS_Manual.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 1878.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1878.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1899.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1899.
 
 Package rerunfilecheck Info: File `StaMPS_Manual.out' has not changed.
-(rerunfilecheck)             Checksum: C02328D630FDD6348AC1659E9B754130;4470.
+(rerunfilecheck)             Checksum: 4236D2A7F79FBA2D5772FF255C3DC77A;4661.
 Package rerunfilecheck Info: File `StaMPS_Manual.brf' has not changed.
-(rerunfilecheck)             Checksum: 46CEAFCFD7A4B0F3C7A94B82BF204CB5;1030.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1878.
+(rerunfilecheck)             Checksum: 085689B5FD361E205571CD9CBDE1C2A9;1132.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1899.
  ) 
 Here is how much of TeX's memory you used:
- 9304 strings out of 493090
- 133185 string characters out of 6134868
- 266179 words of memory out of 5000000
- 12635 multiletter control sequences out of 15000+600000
- 22898 words of font info for 73 fonts, out of 8000000 for 9000
+ 9771 strings out of 493089
+ 139491 string characters out of 6134842
+ 265032 words of memory out of 5000000
+ 12922 multiletter control sequences out of 15000+600000
+ 37370 words of font info for 88 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  33i,11n,58p,1200b,459s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/local/texlive/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/local/t
+exlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/local/te
+xlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/local/texl
+ive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi9.pfb></usr/local/texliv
+e/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local/texlive/
+2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb></usr/local/texlive/201
+5/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texlive/2015/t
+exmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive/2015/te
+xmf-dist/fonts/type1/urw/courier/ucrr8a.pfb></usr/local/texlive/2015/texmf-dist
+/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/
+type1/urw/helvetic/uhvr8a.pfb></usr/local/texlive/2015/texmf-dist/fonts/type1/u
+rw/helvetic/uhvro8a.pfb>
+Output written on StaMPS_Manual.pdf (44 pages, 1602896 bytes).
+PDF statistics:
+ 750 PDF objects out of 1000 (max. 8388607)
+ 683 compressed objects within 7 object streams
+ 136 named destinations out of 1000 (max. 500000)
+ 555 words of extra memory for PDF output out of 10000 (max. 10000000)
 
-Output written on StaMPS_Manual.dvi (43 pages, 244684 bytes).
