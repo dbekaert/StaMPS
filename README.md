@@ -13,7 +13,7 @@ See the **StaMPS** manual for installation details and dependencies.
 - DORIS + ROI_PAC
 
 ## Development
-The original version was developed at Stanford University but subsequent development has taken place mainly at the University of Iceland, Delft University of Technology and the University of Leeds.
+The original version was developed at Stanford University but subsequent development has taken place mainly at the University of Iceland, Delft University of Technology and the University of Leeds. In addition, there have been community contributions.
 
 ## Contributors
 - Andy Hooper (Lead)
@@ -24,7 +24,8 @@ The original version was developed at Stanford University but subsequent develop
 - Anneleen Oyen 
 - Miguel Caro Cuenca
 - Jose Manuel Delgadoblasco
-- *other commmunity members*\
+- *other commmunity members*
+https://github.com/dbekaert/stamps/graphs/contributors
 
 **Community contributions are welcommed.**
 
