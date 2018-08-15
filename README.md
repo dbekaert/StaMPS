@@ -19,7 +19,7 @@ The original version was developed at Stanford University but subsequent develop
 Community contributions are welcommed. 
 
 ## Code developpers:
-- Andy Hooper
+- Andy Hooper (Lead)
 - David Bekaert
 - Karsten Spaans 
 - Ekbal Hussain 
@@ -27,7 +27,7 @@ Community contributions are welcommed.
 - Anneleen Oyen 
 - Miguel Caro Cuenca
 - Jose Manuel Delgadoblasco
-- other commmunity members
+- *other commmunity members*
 
 ## Contact details
 *Andy Hooper\
