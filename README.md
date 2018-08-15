@@ -25,6 +25,7 @@ The original version was developed at Stanford University but subsequent develop
 - Miguel Caro Cuenca
 - Jose Manuel Delgadoblasco
 - *other commmunity members*
+
 https://github.com/dbekaert/stamps/graphs/contributors
 
 **Community contributions are welcommed.**
