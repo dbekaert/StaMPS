@@ -15,10 +15,7 @@ See the **StaMPS** manual for installation details and dependencies.
 ## Development
 The original version was developed at Stanford University but subsequent development has taken place mainly at the University of Iceland, Delft University of Technology and the University of Leeds.
 
-## Contributions
-Community contributions are welcommed. 
-
-## Code developpers:
+## Contributors
 - Andy Hooper (Lead)
 - David Bekaert
 - Karsten Spaans 
@@ -27,7 +24,9 @@ Community contributions are welcommed.
 - Anneleen Oyen 
 - Miguel Caro Cuenca
 - Jose Manuel Delgadoblasco
-- *other commmunity members*
+- *other commmunity members*\
+
+**Community contributions are welcommed.**
 
 ## Contact details
 *Andy Hooper\
