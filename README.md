@@ -28,7 +28,7 @@ The original version was developed at Stanford University but subsequent develop
 
 https://github.com/dbekaert/stamps/graphs/contributors
 
-**Community contributions are welcommed.**
+**Community contributions are welcomed.**
 
 ## Contact details
 *Andy Hooper\
