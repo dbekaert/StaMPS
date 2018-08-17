@@ -1,5 +1,5 @@
 // *********************************************************************
-// Select PS Candidates
+// Select SB Candidates
 // Input are SLC's
 // ---------------------------------------------------------------------
 // AUTHOR    : Andy Hooper
@@ -12,6 +12,7 @@
 // 12/2012 LIG Speed up processing by reading blocks
 // 12/2012 DB  Merge with developers version (SVN)
 // 02/2018 DB  Read 10 lines at the time to handle larger temporal datasets
+// 08/2018 GJF Prevent integer overflow for buffer size
 // ==============================================
 
 #include <iostream>  
@@ -39,6 +40,9 @@ using namespace std;
 using namespace std;     
 
 #include <climits>     
+using namespace std;     
+
+#include <cstdint>     
 using namespace std;     
 
 // =======================================================================
@@ -90,7 +94,7 @@ try {
  
   if (argc < 3)
   {	  
-     cout << "Usage: selpsc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt precision byteswap maskfile " << endl << endl;
+     cout << "Usage: selsbc parmfile patch.in pscands.1.ij pscands.1.da mean_amp.flt precision byteswap maskfile " << endl << endl;
      cout << "input parameters:" << endl;
      cout << "  parmfile (input) amplitude dispersion threshold" << endl;
      cout << "                   width of amplitude files (range bins)" << endl;
@@ -192,7 +196,7 @@ try {
   {
     parmfile >> ampfilename >> calib_factor[i];
     ampfile[i].open (ampfilename, ios::in|ios::binary);
-    cout << "opening " << ampfilename << "...\n";
+    cout << "opening " << ampfilename << " [file " << i << "]...\n";
 
     if (! ampfile[i].is_open())
     {	    
@@ -235,7 +239,7 @@ try {
       sizeofelement = sizeof(short);
   }else sizeofelement = sizeof(float);
 
-  const int linebytes = width*sizeofelement*2;  // bytes per line in amplitude files (SLCs)
+  const size_t linebytes = width*sizeofelement*2;  // bytes per line in amplitude files (SLCs)
 
 
   filebuf *pbuf;
@@ -266,12 +270,20 @@ try {
   ofstream meanoutfile(meanoutname,ios::out);
  
   int LineInBuffer = 10;
+  size_t BufferSize;
+//  size_t BufferSize;
+
+  cout << num_files << " files, " << linebytes << " line bytes, " << LineInBuffer << " lines in the buffer\n";
+
+  BufferSize = num_files*linebytes*LineInBuffer;
+  cout  << "Buffer size = " << BufferSize << " bytes \n";
 
 //  complex<float>* buffer = new complex<float>[num_files*width*100]; // used to store 100 lines for all amp files
-  char* buffer = new char[num_files*linebytes*LineInBuffer]; // used to store 100 lines of all amp files
+//  char* buffer = new char[BufferSize]; // used to store 100 lines of all amp files
+  char* buffer = new char[BufferSize]; // used to store 100 lines of all amp files
+
   complex<float>* bufferf = reinterpret_cast<complex<float>*>(buffer);
   complex<short>* buffers = reinterpret_cast<complex<short>*>(buffer);
-
 
   char* maskline = new char[width*LineInBuffer];
   for (int x=0; x<width*LineInBuffer; x++) // for each pixel in range
@@ -413,15 +425,15 @@ try {
       maskfile.close();
   }    
   }
-  catch( char * str ) {
+  catch( char * str ) {	
      cout << str << "\n";
      return(999);
   }   
-  catch( ... ) {
-    return(999);
-  }
+  //catch( ... ) {
+ //   return(999);
+ // }
 
-  return(0);
+  //return(0);
        
 };
 

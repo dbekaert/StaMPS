@@ -40,7 +40,7 @@ INSTALL_DIR =	../bin
 CC 	=	g++
 
 ### Compilation flags
-CFLAGS	=	-O3
+CFLAGS	=	-O3 -std=c++11
 
 
 ##################################################################
