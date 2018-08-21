@@ -198,31 +198,39 @@ lonlat=lonlat(sort_ix,:);
 bperp_mat=bperp_mat(sort_ix,:);
 
 
-savename=['ps',num2str(psver)];
+% removing Nan values if pressent in lonlat, phase
+ix_nan = (sum(isnan(lonlat),1)==1 | sum(isnan(ph),1))
+lonlat(ix_nan,:)=[];
+ij(ix_nan,:)=[]
+xy(ix_nan,:)=[];
+n_ps = size(lonlat,1);
+% update the first column
+ij(:,1)=[1:n_ps]';
+xy(:,1)=[1:n_ps]';
 
-% save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','n_ifg','n_image','n_ps','sort_ix','ll0','master_ix','mean_incidence','mean_range');
+savename=['ps',num2str(psver)];
 stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,n_ifg,n_image,n_ps,sort_ix,ll0,master_ix,mean_incidence,mean_range);
 
 save psver psver
 
 phsavename=['ph',num2str(psver)];
-%save(phsavename,'ph');
+ph(ix_nan,:)=[];
 stamps_save(phsavename,ph);
 
 bpsavename=['bp',num2str(psver)];
-% save(bpsavename,'bperp_mat');
+bperp_mat(ix_nan,:)=[];
 stamps_save(bpsavename,bperp_mat);
 
 lasavename=['la',num2str(psver)];
 la=inci(sort_ix); % store incidence not look angle for gamma
-% save(lasavename,'la');
+la(ix_nan,:)=[];
 stamps_save(lasavename,la);
 
 if exist(daname,'file')
   D_A=load(daname);
   D_A=D_A(sort_ix);
+  D_A(ix_nan,:)=[];
   dasavename=['da',num2str(psver)];
-%  save(dasavename,'D_A');
   stamps_save(dasavename,D_A);
 end
 
@@ -232,13 +240,9 @@ if exist(hgtname,'file')
     hgt=hgt';
     hgt=hgt(sort_ix);
     fclose(fid);
+    hgt(ix_nan,:)=[];
     hgtsavename=['hgt',num2str(psver)];
-%    save(hgtsavename,'hgt');
     stamps_save(hgtsavename,hgt);
 end
-
-
-
-%end % end-if
 
 logit(1);
