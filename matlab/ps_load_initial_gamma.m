@@ -199,9 +199,9 @@ bperp_mat=bperp_mat(sort_ix,:);
 
 
 % removing Nan values if pressent in lonlat, phase
-ix_nan = (sum(isnan(lonlat),2)>=1 | sum(isnan(ph),2)>=1)
+ix_nan = (sum(isnan(lonlat),2)>=1 | sum(isnan(ph),2)>=1);
 lonlat(ix_nan,:)=[];
-ij(ix_nan,:)=[]
+ij(ix_nan,:)=[];
 xy(ix_nan,:)=[];
 n_ps = size(lonlat,1);
 % update the first column
