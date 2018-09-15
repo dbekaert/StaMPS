@@ -303,11 +303,11 @@ if length(bperpdir)>0
             IND = sub2ind(size(bperp_grid),ij(:,3)+1,ij(:,2)+1);
             % storing the data
             bp0_ps=bperp_grid(IND);
-            if i==1
+            if counter==1
                 fprintf('yes \n')
             end
         else
-            if i==1            
+            if counter==1            
                 fprintf('no \n')
                 [gridX,gridY]=meshgrid(linspace(0,width,size(bperp_grid,1)),linspace(0,len,size(bperp_grid,2)));
             end
