@@ -45,8 +45,7 @@ end
 step   % print increments of disseminated data
 
 disp('Loading lonlat matrix...')
-load ps2 lonlat n_ps
-
+load ps2 lonlat
   
 
 
@@ -62,6 +61,7 @@ if size(data,1)==1
 end
 data=data(ix,:);
 
+n_ps = size(lonlat,1);
 A = randperm(n_ps);
 step = sort(A(1:ceil(n_ps./step)));
 clear A
