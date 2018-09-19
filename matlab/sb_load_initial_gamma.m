@@ -138,7 +138,7 @@ end
 
 ll0=(max(lonlat)+min(lonlat))/2;
 
-xy=llh2local(lonlat,ll0)'*1000;
+xy=llh2local(lonlat',ll0)'*1000;
 
 sort_x=sortrows(xy,1);
 sort_y=sortrows(xy,2);
