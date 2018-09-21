@@ -19,6 +19,10 @@ Bekaert, D., R.~Walters, T.~Wright, A.~Hooper, and D.~Parker, Statistical
   comparison of insar tropospheric correction techniques, {\it Remote Sensing
   of Environment\/}, {\it 170\/}, 40 -- 47, 2015{\natexlab{b}}.
 
+\bibitem[{{\it Delgado~Blasco et~al.\/}(2018)}]{Delgado2018}
+Delgado~Blasco, J.~M., Foumelis,M. Automated SNAP Sentinel-1 DInSAR processing for
+  StaMPS PSI with open souce tools, 2018.
+
 \bibitem[{{\it Foumelis et~al.\/}(2018){\it Foumelis, Delgado, Desnos, Engdahl,
   Fernandez, L.~Veci, and Wong\/}}]{Foumelis2018}
 Foumelis, M., J.~M. Delgado, Y.-L. Desnos, M.~Engdahl, D.~Fernandez, J.~L.
@@ -58,10 +62,6 @@ Hooper, A., D.~Bekaert, K.~Spaans, and M.~Arikan, Recent advances in sar
 Hooper, A.~J., Persistent scatterer radar interferometry for crustal
   deformation studies and modeling of volcanic deformation, Ph.D. thesis,
   Stanford University, 2006.
-
-\bibitem[{{\it J.~M. Delgado~Blasco\/}(2018)}]{Delgado2018}
-J.~M. Delgado~Blasco, M.~F., Automated snap sentinel-1 dinsar processing for
-  stamps psi with open souce tools, 2018.
 
 \bibitem[{{\it Kampes et~al.\/}(2003){\it Kampes, Hanssen, and
   Perski\/}}]{Kampes2003}
