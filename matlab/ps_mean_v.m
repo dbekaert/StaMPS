@@ -201,7 +201,7 @@ G=[ones(N,1),double(day)/365.25] ;
 
 % computing mean velocity
 mean_v=lscov(G,ph_uw,ifg_cov)';
-mean_v=mean_v(:,2);
+mean_v=-1*mean_v(:,2);
 
 
 % perform the bootstrapping

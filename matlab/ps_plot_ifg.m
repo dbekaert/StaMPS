@@ -484,8 +484,10 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     [X,Y]=meshgrid(x,y);
     if bg_flag==0
         c=[[0 0 0];c]; % black background
+        ccol='w*';
     else
         c=[[1 1 1];c]; % white background
+        ccol='k*';
     end
     
     demx=round((lonlat(:,1)-x(1))/x_posting)+1;
@@ -574,7 +576,7 @@ elseif bg_flag==0 | bg_flag==1    % lon/lat axes
     image(x,y,R)
     axis tight
     if ref_radius<inf & ref_radius~=-inf
-        p=plot(ref_centre(1),ref_centre(2),'k*');
+        p=plot(ref_centre(1),ref_centre(2),ccol);
         set(p,'markersize',10,'linewidth',1)
     end
     

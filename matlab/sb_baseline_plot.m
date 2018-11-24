@@ -53,6 +53,7 @@ end
 
 sb=load('small_baselines.list');
 n_ifg=size(sb,1);
+n_all=n_ifg;
 if small_baseline_flag=='y' & isempty(ix) & exist('./parms.mat','file')
     drop_ifg_index=getparm('drop_ifg_index');
     if ~isempty(drop_ifg_index)
@@ -80,6 +81,8 @@ day=str2num(datestr(ps.day,'yyyymmdd'));
 
 x=I(x);
 y=I(y);
+
+fprintf('\nUsing %d of %d interferograms (dropping %d)\n', n_ifg, n_all, size(drop_ifg_index, 2))
 
 h_fig=figure('name','Baseline plot','position',[ 440   170   821   628]);
 for i=1:length(x)
