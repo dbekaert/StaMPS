@@ -23,7 +23,7 @@ The original version was developed at Stanford University but subsequent develop
 - Mahmut Arikan 
 - Anneleen Oyen 
 - Miguel Caro Cuenca
-- Jose Manuel Delgadoblasco
+- Jose Manuel Delgado Blasco
 - *other commmunity members*
 
 https://github.com/dbekaert/stamps/graphs/contributors
