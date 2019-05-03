@@ -42,6 +42,7 @@ widthname=['width.txt'];            % width of interferograms
 lenname=['len.txt'];                % length of interferograms
 
 psver=1;
+incname=['inc_angle.raw'];
 incsavename=['inc',num2str(psver)];
 lasavename=['la',num2str(psver)];
 
