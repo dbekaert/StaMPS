@@ -14,6 +14,7 @@ function []=sb_load_initial_isce(data_inc)
 %               saving 
 %   09/2017 DB: make complet seperate isce version as to incorporate more changes.
 %   10/2017 DB: Adding baseline grid information 
+%   05/2019 DB: fix bug on inc computation for masterdate being first in date list
 %   ======================================================================
 
 %NB IFGS assumed in ascending date order
@@ -291,6 +292,7 @@ if isempty(bperpdir)
 end
 if length(bperpdir)>0
     bperp_mat=zeros(n_ps,n_image,'single');
+    count=1;
     for i=setdiff([1:n_image],master_ix);
         bperp_fname=['..' filesep 'baselineGRID_' datestr(day(i),'yyyymmdd')];
         if updir==1
@@ -304,11 +306,11 @@ if length(bperpdir)>0
             IND = sub2ind(size(bperp_grid),ij(:,3)+1,ij(:,2)+1);
             % storing the data
             bp0_ps=bperp_grid(IND);
-            if i==1
+            if count==1
                 fprintf('yes \n')
             end
         else
-            if i==1            
+            if count==1            
                 fprintf('no \n')
                 [gridX,gridY]=meshgrid(linspace(0,width,size(bperp_grid,1)),linspace(0,len,size(bperp_grid,2)));
             end
@@ -316,6 +318,7 @@ if length(bperpdir)>0
             
         end
         bperp_mat(:,i)=bp0_ps;
+        count = count+1;
     end
     bperp_mat=bperp_mat(:,ifgday_ix(:,2))-bperp_mat(:,ifgday_ix(:,1));
 else
