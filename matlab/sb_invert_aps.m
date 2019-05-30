@@ -161,8 +161,17 @@ if ~isempty(aps_flag)
         aps_save(apsname,ph_tropo_narr_hydro)   
    elseif aps_flag==38 % NARR correction wet
         ph_tropo_narr_wet = aps_corr;
-        aps_save(apsname,ph_tropo_narr_wet)           
-    else
+        aps_save(apsname,ph_tropo_narr_wet) 
+   elseif aps_flag==39 % ERA-5 correction
+        ph_tropo_era5 = aps_corr;
+        aps_save(apsname,ph_tropo_era5)       
+   elseif aps_flag==40 % ERA-5 correction
+        ph_tropo_era5_hydro = aps_corr;
+        aps_save(apsname,ph_tropo_era5_hydro)       
+   elseif aps_flag==41 % ERA-5 correction
+        ph_tropo_era5_wet = aps_corr;
+        aps_save(apsname,ph_tropo_era5_wet) 
+   else
         error('Currently other options not supported.\nIf you are combining a combination of two different techniques, try the following:\n plot each technique for a SM correction\n')
     end
 end
