@@ -273,13 +273,13 @@ elseif aps_flag==38 % NARR correction wet
     aps_corr = aps.ph_tropo_narr_wet;
     fig_name_tca = ' (NARR wet)'; 
 elseif aps_flag==39 % ERA-I & ERA5 correction
-    aps_corr = aps.ph_tropo_era;
+    aps_corr = aps.ph_tropo_era5;
     fig_name_tca = ' (era5)';
 elseif aps_flag==40 % ERA-I & ERA5 correction
-    aps_corr = aps.ph_tropo_era_hydro;
+    aps_corr = aps.ph_tropo_era5_hydro;
     fig_name_tca = ' (era hydro5)';
 elseif aps_flag==41 % ERA-I & ERA5 correction
-    aps_corr = aps.ph_tropo_era_wet;
+    aps_corr = aps.ph_tropo_era5_wet;
     fig_name_tca = ' (era wet5)';   
 else
     error('not a valid APS option')
