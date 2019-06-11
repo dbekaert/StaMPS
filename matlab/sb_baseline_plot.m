@@ -141,14 +141,17 @@ for i=1:length(x)
     text((ps.day(x(i))+ps.day(y(i)))/2,(ps.bperp(x(i))+ps.bperp(y(i)))/2,num2str(ix(i)),'fontsize',fontsize-7);
     set(l,'linewidth',2)
     %set(l.Edge,'ColorBinding','interpolated','ColorData',cm)
-    %drawnow
-    colormap(CM);
-    shading flat
-    view(2)
+    %drawnow i
 end
 
+if length(ix) ~= 1    
+colormap(CM);
 cb = colorbar;
 ylabel(cb,'Ifg std [deg]');
+else
+end
+shading flat
+view(2)
 p=plot(ps.day,ps.bperp,'ko');
 set(p,'markersize',6,'linewidth',2)
 hold off
