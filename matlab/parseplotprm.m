@@ -207,6 +207,18 @@ for k=1:Noptargin,
        % aps topo correlated NARR  
        aps_flag=38; 
        prmsrch=logical([prmsrch strcmp(varargin{k},'a_narr-w')]);        
+  elseif strcmp(varargin{k},'a_era5')==1 || strcmp(varargin{k},'a_e5')==1
+       % aps topo correlated ERA-I  correction
+       aps_flag=39;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_era5') ]);
+   elseif strcmp(varargin{k},'a_era5-h')==1 || strcmp(varargin{k},'a_e5h')==1
+       % aps hydrostatic ERA-I correction
+       aps_flag=40;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_era5-h') ]);
+   elseif strcmp(varargin{k},'a_era5-w')==1 ||  strcmp(varargin{k},'a_e5w')==1
+       % aps topo correlated ERA-I correction
+       aps_flag=41;
+       prmsrch=logical([prmsrch strcmp(varargin{k},'a_era5-w') ]);
 
   elseif strcmp(varargin{k},'i_as')==1
        % ionopsheric correlated atmopshere - azimuth shift method

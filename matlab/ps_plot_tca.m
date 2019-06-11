@@ -131,9 +131,16 @@ if ischar(aps_flag)
        aps_flag=37; % NARR hydro correction
    elseif strcmp(aps_flag,'a_narr-w')==1
        aps_flag=38; % NARR wet correction
+   elseif strcmp(aps_flag,'a_era5')==1 || strcmp(aps_flag,'a_e')==1
+       % aps topo correlated ERA-I  correction
+       aps_flag=39;
+   elseif strcmp(aps_flag,'a_era5-h')==1 || strcmp(aps_flag,'a_eh')==1
+       % aps hydrostatic ERA-I correction
+       aps_flag=40;
+   elseif strcmp(aps_flag,'a_era5-w')==1 || strcmp(aps_flag,'a_ew')==1
+       % aps topo correlated ERA-I correction
+       aps_flag=41;
    end
-   
-   
 end
 
 
@@ -148,13 +155,13 @@ elseif aps_flag==2 % powerlaw correlation
 elseif aps_flag==3 % meris correction
     aps_corr = aps.ph_tropo_meris;
     fig_name_tca = ' (meris)';
-elseif aps_flag==4 % ERA-I correction
+elseif aps_flag==4  % ERA-I & ERA5 correction
     aps_corr = aps.ph_tropo_era;
     fig_name_tca = ' (era)';
-elseif aps_flag==5 % ERA-I correction
+elseif aps_flag==5  % ERA-I & ERA5 correction
     aps_corr = aps.ph_tropo_era_hydro;
     fig_name_tca = ' (era hydro)';
-elseif aps_flag==6 % ERA-I correction
+elseif aps_flag==6  % ERA-I & ERA5 correction
     aps_corr = aps.ph_tropo_era_wet;
     fig_name_tca = ' (era wet)';
 elseif aps_flag==7 % WRF correction
@@ -265,7 +272,15 @@ elseif  aps_flag==37;  % NARR correction hydro
 elseif aps_flag==38 % NARR correction wet
     aps_corr = aps.ph_tropo_narr_wet;
     fig_name_tca = ' (NARR wet)'; 
-    
+elseif aps_flag==39 % ERA-I & ERA5 correction
+    aps_corr = aps.ph_tropo_era5;
+    fig_name_tca = ' (era5)';
+elseif aps_flag==40 % ERA-I & ERA5 correction
+    aps_corr = aps.ph_tropo_era5_hydro;
+    fig_name_tca = ' (era hydro5)';
+elseif aps_flag==41 % ERA-I & ERA5 correction
+    aps_corr = aps.ph_tropo_era5_wet;
+    fig_name_tca = ' (era wet5)';   
 else
     error('not a valid APS option')
 end
