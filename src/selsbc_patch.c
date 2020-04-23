@@ -48,7 +48,7 @@ using namespace std;
 // =======================================================================
 // Start of program 
 // =======================================================================
-int cshortswap( complex<short>* f )
+void cshortswap( complex<short>* f )
 {
   char* b = reinterpret_cast<char*>(f);
   complex<short> f2;
@@ -60,7 +60,7 @@ int cshortswap( complex<short>* f )
   f[0]=f2;
 }
 
-int cfloatswap( complex<float>* f )
+void cfloatswap( complex<float>* f )
 {
   char* b = reinterpret_cast<char*>(f);
   complex<float> f2;
@@ -75,7 +75,7 @@ int cfloatswap( complex<float>* f )
   b2[7] = b[4];
   f[0]=f2;
 }
-int longswap( int32_t* f )
+void longswap( int32_t* f )
 {
   char* b = reinterpret_cast<char*>(f);
   int32_t f2;
