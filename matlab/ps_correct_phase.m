@@ -41,12 +41,12 @@ master_ix=sum(ps.master_day>ps.day)+1;
 if strcmpi(small_baseline_flag,'y')
     %ph_rc=ph.*exp(-j*(repmat(K_ps,1,ps.n_ifg).*bp.bperp_mat));  % subtract range error 
     ph_rc=ph.*exp(-j*(repmat(K_ps,1,ps.n_ifg).*bp.bperp_mat));  % subtract range error 
-    save(rcname,'ph_rc'); 
+    stamps_save(rcname, ph_rc); 
 else    
     bperp_mat=[bp.bperp_mat(:,1:ps.master_ix-1),zeros(ps.n_ps,1,'single'),bp.bperp_mat(:,ps.master_ix:end)];
     ph_rc=ph.*exp(-j*(repmat(K_ps,1,ps.n_ifg).*bperp_mat+repmat(C_ps,1,ps.n_ifg)));  % subtract range error and master noise
     ph_reref=[single(pm.ph_patch(:,1:master_ix-1)),ones(ps.n_ps,1,'single'),single(pm.ph_patch(:,master_ix:end))];
-    save(rcname,'ph_rc','ph_reref'); 
+    stamps_save(rcname, ph_rc, ph_reref); 
 end
 
 %A=sparse([[1:n_edge]';[1:n_edge]'],[edges(:,2);edges(:,3)],[-ones(n_edge,1);ones(n_edge,1)]);

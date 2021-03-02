@@ -195,20 +195,17 @@ lonlat=lonlat(sort_ix,:);
 
 savename=['ps',num2str(psver)];
 
-% save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','n_ifg','n_image','n_ps','sort_ix','ll0','calconst','master_ix','day_ix');
-stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,n_ifg,n_image,n_ps,sort_ix,ll0,calconst,master_ix,day_ix);
-save psver psver
+save(savename, 'ij', 'lonlat', 'xy', 'bperp', 'day', 'master_day', 'master_ix', 'n_ifg', 'n_image', 'n_ps', 'sort_ix', 'll0', 'calconst', 'master_ix', 'day_ix');
+stamps_save('psver.mat', psver);
 
 phsavename=['ph',num2str(psver)];
-% save(phsavename,'ph');
-stamps_save(phsavename,ph);
+stamps_save(phsavename, ph);
 
 if exist(daname,'file')
   D_A=load(daname);
   D_A=D_A(sort_ix);
   dasavename=['da',num2str(psver)];
-%  save(dasavename,'D_A');
-  stamps_save(dasavename,D_A);
+  stamps_save(dasavename, D_A);
 end
 
 
@@ -219,8 +216,7 @@ if exist(hgtname,'file')
     hgt=hgt(sort_ix);
     fclose(fid);
     hgtsavename=['hgt',num2str(psver)];
-    % save(hgtsavename,'hgt');
-    stamps_save(hgtsavename,hgt);
+    stamps_save(hgtsavename, hgt);
 end
 
 if ~exist(widthname,'file')
@@ -248,8 +244,7 @@ if exist(laname,'file')
     la1000_ps=griddata_version_control(gridX,gridY,la1000,ij(:,3),ij(:,2),'linear',matlab_version);     % [DB] fix matlab2012 version and older  
     la=la0_ps+(la1000_ps-la0_ps).*hgt/1000;
     lasavename=['la',num2str(psver)];
-    % save(lasavename,'la');
-    stamps_save(lasavename,la);
+    stamps_save(lasavename, la);
 end
 
 updir=0;
@@ -280,8 +275,7 @@ if length(bperpdir)>0
 end
 
 bpsavename=['bp',num2str(psver)];
-% save(bpsavename,'bperp_mat');
-stamps_save(bpsavename,bperp_mat);
+stamps_save(bpsavename, bperp_mat);
 
 %end % end-if
 

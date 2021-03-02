@@ -318,8 +318,7 @@ while loop_end_sw==0
         loop_end_sw=1;
     end
     
-% save(pmname,'ph_patch','K_ps','C_ps','coh_ps','N_opt','ph_res','step_number','ph_grid','n_trial_wraps','grid_ij','grid_size','low_pass','i_loop','ph_weight','Nr','Nr_max_nz_ix','coh_bins','coh_ps_save','gamma_change_save') 
-stamps_save(pmname,ph_patch,K_ps,C_ps,coh_ps,N_opt,ph_res,step_number,ph_grid,n_trial_wraps,grid_ij,grid_size,low_pass,i_loop,ph_weight,Nr,Nr_max_nz_ix,coh_bins,coh_ps_save,gamma_change_save) 
+stamps_save(pmname, ph_patch, K_ps, C_ps, coh_ps, N_opt, ph_res, step_number, ph_grid, n_trial_wraps, grid_ij, grid_size, low_pass, i_loop, ph_weight, Nr, Nr_max_nz_ix, coh_bins, coh_ps_save, gamma_change_save); 
 
 end
 logit(1);

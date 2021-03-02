@@ -349,7 +349,7 @@ master_day=datenum(year,month,monthday);
 master_ix=sum(master_day>day)+1;
 n_image=size(day,1);
 psver=2;
-save psver psver
+stamps_save('psver.mat', psver);
 
 if ~exist(demradname,'file')
     demradname=['.',demradname];
@@ -432,7 +432,7 @@ if ~strcmpi(weed_zero_elevation,'n')
     ix=ix(nzix);
     n_ps=size(ph,1);
 end
-save('hgt2','hgt')
+stamps_save('hgt2.mat', hgt)
 
 
 
@@ -444,8 +444,8 @@ if single_master_flag~=0
 else
     ph_rc=ph;
 end
-save('rc2','ph_rc');
-save('pm2','coh_ps')
+stamps_save('rc2.mat', ph_rc);
+stamps_save('pm2.mat', coh_ps);
 
 
 
@@ -475,7 +475,7 @@ for i=setdiff([1:n_image],master_ix);
     bperp_mat(:,i)=bp0_ps;
 end
 bperp_mat=bperp_mat(:,ifgday_ix(:,2))-bperp_mat(:,ifgday_ix(:,1));
-save('bp2','bperp_mat')
+stamps_save('bp2.mat', bperp_mat);
 
 % constructing vector of Bperp for ps2.mat
 bperp=mean(bperp_mat)';

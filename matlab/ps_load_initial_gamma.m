@@ -211,7 +211,7 @@ xy(:,1)=[1:n_ps]';
 savename=['ps',num2str(psver)];
 stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,n_ifg,n_image,n_ps,sort_ix,ll0,master_ix,mean_incidence,mean_range);
 
-save psver psver
+stamps_save('psver.mat', psver);
 
 phsavename=['ph',num2str(psver)];
 ph(ix_nan,:)=[];

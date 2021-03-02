@@ -9,7 +9,7 @@ function [] = stamps_save(save_name,varargin)
 % INPUTS: 
 % save_name     String with the filename of the save datafile
 % varagin       Variables which need to be save. 
-%               Note these are the actual variabels and not their names.
+%               Note these are the actual variables and not their names.
 % 
 % EXAMPLE for saving the lonlat variable in results.mat:
 % >> stamps_save('results.mat',lonlat)
