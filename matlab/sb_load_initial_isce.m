@@ -326,7 +326,8 @@ else
 end
 bpsavename=['bp',num2str(psver)];
 stamps_save(bpsavename,bperp_mat);
-save psver psver
+stamps_save('psver.mat', psver);
+
 
 
 

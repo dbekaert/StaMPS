@@ -139,7 +139,7 @@ fid=fopen(demparmsname,'r');
     setparm('plot_dem_posting',round(max(posting)))
   end    
 
-  save(demsavename,'dem','x_offset', 'y_offset', 'x_posting', 'y_posting', 'dem_lon', 'dem_lat', 'dem_width', 'dem_length', 'dem_posting_lon','dem_posting_lat');
+  stamps_save(demsavename, dem, x_offset, y_offset, x_posting, y_posting, dem_lon, dem_lat, dem_width, dem_length, dem_posting_lon, dem_posting_lat);
 
 %end % end-if
 

@@ -282,6 +282,6 @@ if ~isempty(oldscla)
     movefile([sclaname,'.mat'],['tmp_',sclaname(3:end),datestr(olddatenum,'_yyyymmdd_HHMMSS'),'.mat']);
 end
 
-stamps_save(sclaname,ph_scla,K_ps_uw,C_ps_uw,ph_ramp,ifg_vcm)
+stamps_save(sclaname, ph_scla, K_ps_uw, C_ps_uw, ph_ramp, ifg_vcm);
 
 logit(1);
