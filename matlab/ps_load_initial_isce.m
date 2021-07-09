@@ -108,22 +108,23 @@ n_ps=size(ij,1);
 if ~exist(calname,'file')
     calname= ['../',calname];
 end
+#Modified based from solution made by S-Nari
 if exist(calname,'file')
     [calfile,calconst]=textread(calname,'%s%f');
     caldate=zeros(length(calfile),1);
     for i = 1 : length(calfile)
         aa=strread(calfile{i},'%s','delimiter','/');
-        try 
-            bb=str2num(aa{end}(1:8));
+        % my modification start (originally, try & catch)
+        bb=str2num(aa{end}(1:8));
+        if isempty(bb)
+            bb=str2num(aa{end-1}(1:8));
             if isempty(bb)
-                bb=str2num(aa{end-1}(1:8));
-            end
-        catch
-            if strcmpi(aa{end-1},'master');
+                strcmpi(aa{end-1},'reference');
                 bb=str2num(aa{end-2}(end-7:end));
             end            
         end
-        caldate(i)=bb;    
+        % my modification end 
+        caldate(i)=bb;
     end
     not_master_ix=caldate~=master_day_yyyymmdd;
     caldate=caldate(not_master_ix);
