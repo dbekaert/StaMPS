@@ -51,7 +51,12 @@ ijname=['pscands.1.ij'];            % ID# Azimuth# Range# 1 line per PS candidat
 bperpname=['bperp.1.in'];           % in meters 1 line per slave image
 dayname=['day.1.in'];               % YYYYMMDD, 1 line per slave image
 ifgdayname=['ifgday.1.in'];         % YYYYMMDD YYYYMMDD, 1 line per ifg
-masterdayname=['master_day.1.in'];  % YYYYMMDD
+processor = getparm('insar_processor');
+if processor == 'isce'
+    masterdayname=['reference_day.1.in'];  % YYYYMMDD
+else
+    masterdayname=['master_day.1.in'];  % YYYYMMDD
+end
 llname=['pscands.1.ll'];            % 2 float values (lon and lat) per PS candidate
 daname=['pscands.1.da'];            % 1 float value per PS candidate
 hgtname=['pscands.1.hgt'];          % 1 float value per PS candidate
