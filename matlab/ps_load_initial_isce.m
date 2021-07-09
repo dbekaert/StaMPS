@@ -108,7 +108,7 @@ n_ps=size(ij,1);
 if ~exist(calname,'file')
     calname= ['../',calname];
 end
-#Modified based from solution made by S-Nari
+%Modified based from solution made by S-Nari
 if exist(calname,'file')
     [calfile,calconst]=textread(calname,'%s%f');
     caldate=zeros(length(calfile),1);
