@@ -5,7 +5,12 @@ fprintf('Loading info into matlab...\n')
 
 bperpname=['bperp.1.in'];           % in meters 1 line per ifg
 dayname=['day.1.in'];               % YYYYMMDD, 1 line per ifg
-masterdayname=['master_day.1.in'];  % YYYYMMDD
+processor = getparm('insar_processor');
+if processor == 'isce'
+    masterdayname=['reference_day.1.in'];  % YYYYMMDD
+else
+    masterdayname=['master_day.1.in'];  % YYYYMMDD
+end
 headingname=['heading.1.in'];       % satellite heading
 lambdaname=['lambda.1.in'];         % wavelength
 widthname=['width.txt'];            % width of interferograms

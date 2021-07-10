@@ -30,7 +30,7 @@ phname=['pscands.1.ph'];            % for each PS candidate, a float complex val
 ijname=['pscands.1.ij'];            % ID# Azimuth# Range# 1 line per PS candidate
 bperpname=['bperp.1.in'];           % in meters 1 line per ifg
 dayname=['day.1.in'];               % YYYYMMDD, 1 line per ifg
-masterdayname=['master_day.1.in'];  % YYYYMMDD
+masterdayname=['reference_day.1.in'];  % YYYYMMDD
 llname=['pscands.1.ll'];            % 2 float values (lon and lat) per PS candidate
 daname=['pscands.1.da'];            % 1 float value per PS candidate
 hgtname=['pscands.1.hgt'];          % 1 float value per PS candidate
@@ -108,22 +108,23 @@ n_ps=size(ij,1);
 if ~exist(calname,'file')
     calname= ['../',calname];
 end
+%Modified based from solution made by S-Nari
 if exist(calname,'file')
     [calfile,calconst]=textread(calname,'%s%f');
     caldate=zeros(length(calfile),1);
     for i = 1 : length(calfile)
         aa=strread(calfile{i},'%s','delimiter','/');
-        try 
-            bb=str2num(aa{end}(1:8));
+        % my modification start (originally, try & catch)
+        bb=str2num(aa{end}(1:8));
+        if isempty(bb)
+            bb=str2num(aa{end-1}(1:8));
             if isempty(bb)
-                bb=str2num(aa{end-1}(1:8));
-            end
-        catch
-            if strcmpi(aa{end-1},'master');
+                strcmpi(aa{end-1},'reference');
                 bb=str2num(aa{end-2}(end-7:end));
             end            
         end
-        caldate(i)=bb;    
+        % my modification end 
+        caldate(i)=bb;
     end
     not_master_ix=caldate~=master_day_yyyymmdd;
     caldate=caldate(not_master_ix);

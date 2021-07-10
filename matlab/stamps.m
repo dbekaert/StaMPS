@@ -129,7 +129,7 @@ if strcmpi(patches_flag,'y')
                 break
             end
         end
-	fclose(fid)
+	fclose(fid);
     else
         patchdir=dir('PATCH_*');
         patchdir = patchdir(find(~cellfun(@(x) strcmpi(x,'patch_noover.in'),{patchdir(:).name})));
