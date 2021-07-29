@@ -365,7 +365,7 @@ master_day=datenum(year,month,monthday);
 master_ix=sum(master_day>day)+1;
 n_image=size(day,1);
 psver=2;
-stamps_save('psver.mat', psver);
+save psver psver
 
 demname=dir(['..',filesep,'geo',filesep,'*dem.rdc']);
 demname=['..',filesep,'geo',filesep,demname(1).name];
@@ -398,8 +398,8 @@ if ~strcmpi(weed_zero_elevation,'n')
     ix=ix(nzix);
     n_ps=size(ph,1);
 end
-stamps_save('hgt2.mat', hgt);
-stamps_save('bp2.mat', bperp_mat);
+save('hgt2','hgt')
+save('bp2','bperp_mat')
 
 
 
@@ -411,8 +411,8 @@ if single_master_flag~=0
 else
     ph_rc=ph;
 end
-stamps_save('rc2.mat', ph_rc);
-stamps_save('pm2.mat', coh_ps);
+save('rc2','ph_rc');
+save('pm2','coh_ps')
 
 if single_master_flag==0
     sb_parms_initial

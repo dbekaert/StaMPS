@@ -640,7 +640,7 @@ ps_new.lonlat=lonlat;
 save(psname,'-struct','ps_new');
 clear ps_new
 
-stamps_save('psver.mat', psver);
+save psver psver
 
 vars=who;
 vars=setxor(vars,{'n_patch';'dirname'});

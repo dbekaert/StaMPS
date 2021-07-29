@@ -194,9 +194,10 @@ lonlat=lonlat(sort_ix,:);
 
 savename=['ps',num2str(psver)];
 stamps_save(savename,ij,lonlat,xy,bperp,day,master_day,master_ix,n_ifg,n_image,n_ps,sort_ix,ll0,calconst,master_ix,day_ix);
-stamps_save('psver.mat', psver);
+save psver psver
 
 phsavename=['ph',num2str(psver)];
+% save(phsavename,'ph');
 stamps_save(phsavename,ph);
 
 if exist(daname,'file')

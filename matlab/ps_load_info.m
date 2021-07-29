@@ -65,5 +65,5 @@ n_ps=0;
 
 savename=['ps',num2str(psver)];
 
-stamps_save(savename, n_ifg, bperp, day, master_day, master_ix, day_ix, n_ps);
-stamps_save('psver.mat', psver);
+save(savename,'n_ifg','bperp','day','master_day','master_ix','day_ix','n_ps');
+save psver psver

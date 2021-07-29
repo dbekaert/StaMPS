@@ -192,13 +192,13 @@ bperp_mat=bperp_mat(sort_ix,:);
 savename=['ps',num2str(psver)];
 
 save(savename,'ij','lonlat','xy','bperp','day','master_day','master_ix','n_ifg','n_image','n_ps','sort_ix','ll0','master_ix','mean_incidence','mean_range');
-stamps_save('psver.mat', psver);
+save psver psver
 
 phsavename=['ph',num2str(psver)];
-stamps_save(phsavename, ph);
+save(phsavename,'ph');
 
 bpsavename=['bp',num2str(psver)];
-stamps_save(bpsavename, bperp_mat);
+save(bpsavename,'bperp_mat');
 
 lasavename=['la',num2str(psver)];
 la=inc(sort_ix); % store incidence not look angle for GSAR
@@ -208,7 +208,7 @@ if exist(daname,'file')
   D_A=load(daname);
   D_A=D_A(sort_ix);
   dasavename=['da',num2str(psver)];
-  stamps_save(dasavename, D_A);
+  save(dasavename,'D_A');
 end
 
 if exist(hgtname,'file')
@@ -218,7 +218,7 @@ if exist(hgtname,'file')
     hgt=hgt(sort_ix);
     fclose(fid);
     hgtsavename=['hgt',num2str(psver)];
-    stamps_save(hgtsavename, hgt);
+    save(hgtsavename,'hgt');
 end
 
 logit(1);

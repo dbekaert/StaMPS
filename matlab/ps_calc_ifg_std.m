@@ -54,7 +54,7 @@ else
 end
 fprintf('\n')
 
-stamps_save(ifgstdname, ifg_std); 
+save(ifgstdname,'ifg_std'); 
     
     
 
