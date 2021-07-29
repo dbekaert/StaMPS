@@ -73,7 +73,7 @@ for i = 1:size(slave_corners,1)
 end
 corner_offsets=[deltaL(:)';deltaP(:)'];
 corner_offsets=corner_offsets(:);
-save('corner_offsets.txt','-ascii','corner_offsets');
+stamps_save('corner_offsets.txt','-ascii','corner_offsets')
 
 % we want mapping of slave to master w.r.t. master position
 l=[-2:0.05:2];
