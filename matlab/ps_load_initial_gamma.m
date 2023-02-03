@@ -47,7 +47,7 @@ ifgs=textscan(fid,'%s');
 fclose(fid);
 ifgs=ifgs{1}(2:end);
 nb=length(ifgs{1});
-master_day=str2num(ifgs{1}(nb-21:nb-14));
+master_day=str2num(ifgs{1}(nb-27:nb-20));
 n_ifg=length(ifgs);
 n_image=n_ifg;
 day=zeros(n_ifg,1);
