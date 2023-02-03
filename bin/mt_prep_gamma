@@ -140,7 +140,6 @@ else
 endif
 echo "Precision is" $prec
 
-end
 echo "gamma" > processor.txt
 if ($SB_FLAG == 1) then
     matlab -nojvm -nosplash -nodisplay < $STAMPS/matlab/sb_parms_initial.m > sb_parms_initial.log
